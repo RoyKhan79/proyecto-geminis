@@ -395,3 +395,63 @@ export async function addLinkResourceAction(
   revalidatePath(`/gestion/contenido/${padre.editionId}`);
   return { ok: true };
 }
+
+const richTextSchema = z.object({
+  parentId: z.string().min(1),
+  label: z.string().trim().min(1, "Escribe un nombre."),
+  html: z.string().max(200_000),
+});
+
+/**
+ * Apuntes escritos directamente en Proyecto Geminis.
+ *
+ * El HTML se SANEA aquí, antes de guardarlo. Volverá a sanearse al pintarlo:
+ * son dos barreras a propósito, porque un script guardado se ejecutaría con la
+ * sesión de cada alumno que abriera el tema.
+ */
+export async function saveRichTextAction(
+  _prev: ContentState,
+  formData: FormData,
+): Promise<ContentState> {
+  const ctx = await requirePermission("content.write");
+  const parsed = richTextSchema.safeParse(Object.fromEntries(formData.entries()));
+
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Revisa los datos." };
+  }
+
+  const padre = await ctx.db.contentNode.findUnique({
+    where: { id: parsed.data.parentId },
+    select: { id: true, editionId: true },
+  });
+  if (!padre) return { error: "El apartado de destino no existe." };
+
+  const limpio = sanitizeHtml(parsed.data.html);
+  if (limpio.length === 0) {
+    return { error: "El contenido ha quedado vacío tras revisarlo." };
+  }
+
+  const nodo = await createContentNode(ctx.db, {
+    editionId: padre.editionId,
+    parentId: padre.id,
+    kind: "RESOURCE",
+    label: parsed.data.label,
+    status: "DRAFT",
+  });
+
+  await prismaBase.contentResource.create({
+    data: { nodeId: nodo.id, type: "RICH_TEXT", richText: limpio },
+  });
+
+  await recordAudit({
+    academyId: ctx.academy.id,
+    actorId: ctx.user.id,
+    action: "content.rich_text",
+    entityType: "ContentNode",
+    entityId: nodo.id,
+    changes: { label: parsed.data.label, caracteres: limpio.length },
+  });
+
+  revalidatePath(`/gestion/contenido/${padre.editionId}`);
+  return { ok: true };
+}
