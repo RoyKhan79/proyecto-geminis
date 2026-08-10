@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { LogOut, ShieldAlert } from "lucide-react";
 import { signOutAction } from "@/lib/auth/actions";
+import { stopImpersonationAction } from "@/server/platform/actions";
 import { requireAcademy } from "@/lib/auth/context";
 import { MANAGER_NAV } from "@/components/manager/nav-config";
 import { ManagerSidebar } from "@/components/manager/sidebar";
@@ -47,10 +48,16 @@ export default async function ManagerLayout({
           </div>
 
           {ctx.impersonatedById ? (
-            <span className="flex items-center gap-1.5 rounded-full bg-caution-soft px-2.5 py-1 text-xs font-medium text-caution">
-              <ShieldAlert className="size-3.5" aria-hidden />
-              Sesión de soporte
-            </span>
+            <form action={stopImpersonationAction}>
+              <button
+                type="submit"
+                className="flex items-center gap-1.5 rounded-full bg-caution-soft px-2.5 py-1 text-xs font-medium text-caution hover:brightness-95"
+                title="Salir de la sesión de soporte"
+              >
+                <ShieldAlert className="size-3.5" aria-hidden />
+                Sesión de soporte · salir
+              </button>
+            </form>
           ) : null}
 
           {ctx.memberships.length > 1 ? (

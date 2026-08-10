@@ -1,7 +1,8 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { LogOut } from "lucide-react";
+import { LogOut, ShieldAlert } from "lucide-react";
 import { signOutAction } from "@/lib/auth/actions";
+import { stopImpersonationAction } from "@/server/platform/actions";
 import { requireAcademy } from "@/lib/auth/context";
 import { CampusTabBar } from "@/components/campus/tab-bar";
 import { InstallPrompt } from "@/components/campus/install-prompt";
@@ -39,6 +40,19 @@ export default async function CampusLayout({
         </Link>
 
         <div className="flex-1" />
+
+        {ctx.impersonatedById ? (
+          <form action={stopImpersonationAction}>
+            <button
+              type="submit"
+              className="flex items-center gap-1.5 rounded-full bg-caution-soft px-2.5 py-1 text-xs font-medium text-caution"
+              title="Salir de la sesión de soporte"
+            >
+              <ShieldAlert className="size-3.5" aria-hidden />
+              Soporte · salir
+            </button>
+          </form>
+        ) : null}
 
         {ctx.permissions.has("manager.access") ? (
           <Button asChild variant="ghost" size="sm">

@@ -15,6 +15,8 @@ import {
   Th,
 } from "@/components/ui/primitives";
 import { BRAND } from "@/lib/brand";
+import { setAcademyStatusAction } from "@/server/platform/actions";
+import { NewAcademyForm } from "./new-academy-form";
 import { formatDate } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Plataforma" };
@@ -49,11 +51,14 @@ export default async function PlataformaPage() {
         title={`Plataforma · ${BRAND.name}`}
         description={`Conectado como ${ctx.user.email}.`}
         actions={
+          <>
+          <NewAcademyForm />
           <form action={signOutAction}>
             <Button type="submit" variant="ghost" size="icon" aria-label="Cerrar sesión">
               <LogOut aria-hidden />
             </Button>
           </form>
+          </>
         }
       />
 
@@ -85,9 +90,31 @@ export default async function PlataformaPage() {
                 </Td>
                 <Td className="text-ink-soft">{formatDate(academia.createdAt)}</Td>
                 <Td>
-                  <Badge tone={academia.status === "ACTIVE" ? "positive" : "caution"}>
-                    {academia.status}
-                  </Badge>
+                  <form action={setAcademyStatusAction} className="flex items-center gap-2">
+                    <input type="hidden" name="academyId" value={academia.id} />
+                    <Badge tone={academia.status === "ACTIVE" ? "positive" : "caution"}>
+                      {academia.status}
+                    </Badge>
+                    {academia.status !== "ACTIVE" ? (
+                      <button
+                        type="submit"
+                        name="status"
+                        value="ACTIVE"
+                        className="text-xs text-accent hover:underline"
+                      >
+                        activar
+                      </button>
+                    ) : (
+                      <button
+                        type="submit"
+                        name="status"
+                        value="SUSPENDED"
+                        className="text-xs text-ink-muted hover:text-critical hover:underline"
+                      >
+                        suspender
+                      </button>
+                    )}
+                  </form>
                 </Td>
               </tr>
             ))}
@@ -97,13 +124,10 @@ export default async function PlataformaPage() {
 
       <Card>
         <CardContent className="p-5 pt-5 text-sm text-ink-muted">
-          El alta de academias, los límites por plan, el consumo de IA y la
-          impersonación de soporte se construyen en el módulo de plataforma. Hasta
-          entonces, las academias se crean con{" "}
-          <code className="rounded bg-surface-muted px-1 py-0.5 text-xs">
-            createAcademyWithRoles()
-          </code>
-          .{" "}
+          Esta consola no da acceso al contenido de ninguna academia. Para dar
+          soporte se usa la impersonación, que exige indicar el motivo, marca la
+          sesión de forma visible y queda registrada también en la auditoría de la
+          academia afectada.{" "}
           <Link href="/inicio" className="text-accent hover:underline">
             Volver
           </Link>

@@ -9,6 +9,7 @@ import {
   CardTitle,
   PageHeader,
 } from "@/components/ui/primitives";
+import { BrandingForm } from "./branding-form";
 import { formatDate } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Configuración" };
@@ -30,6 +31,9 @@ export default async function ConfiguracionPage() {
           slug: true,
           legalName: true,
           email: true,
+          phone: true,
+          primaryColor: true,
+          logoUrl: true,
           status: true,
           createdAt: true,
           timezone: true,
@@ -68,6 +72,20 @@ export default async function ConfiguracionPage() {
         title="Configuración"
         description="Datos de la academia, plan contratado y roles."
       />
+
+      {ctx.permissions.has("settings.write") && detalle ? (
+        <BrandingForm
+          valores={{
+            name: detalle.name,
+            legalName: detalle.legalName,
+            email: detalle.email,
+            phone: detalle.phone,
+            primaryColor: detalle.primaryColor,
+            logoUrl: detalle.logoUrl,
+          }}
+          puedeExportar={ctx.permissions.has("data.export")}
+        />
+      ) : null}
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
