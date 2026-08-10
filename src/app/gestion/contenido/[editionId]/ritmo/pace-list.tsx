@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useMemo, useState } from "react";
 import {
   AlertCircle,
   CalendarClock,
@@ -59,9 +59,12 @@ export function PaceList({
 
   const mensaje = state ?? upState;
 
+  // Se fija una sola vez: comparar contra un reloj que cambia en cada render
+  // haría que la lista se repintara sin motivo.
+  const ahora = useMemo(() => Date.now(), []);
+
   /** Estado de un tema para el grupo que se está mirando. */
   function estadoDe(tema: TemaRitmo) {
-    const ahora = Date.now();
     const paraTodos = tema.reglas.find((r) => r.groupId === null);
     const paraGrupo = grupoId
       ? tema.reglas.find((r) => r.groupId === grupoId)
