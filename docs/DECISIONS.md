@@ -144,3 +144,54 @@ el árbol de archivos rompe el escaneo de Turbopack.
 **Decisión.** Lo no implementado aparece apagado y con la etiqueta «Pronto».
 **Por qué.** Un menú lleno de enlaces que no llevan a ninguna parte destruye la
 confianza en una demostración comercial más que una lista corta y honesta.
+
+### ADR-0020 · Riesgo de abandono con reglas, no con un modelo
+**Decisión.** Se calcula con señales explícitas y ponderadas, no con aprendizaje
+automático.
+**Por qué.** El preparador tiene que poder discutir el resultado («¿por qué me
+sale María en rojo?») y actuar. Con pocos alumnos, un modelo daría resultados
+inestables con falsa autoridad. Las reglas se ajustan en una tarde.
+**Salida.** Estas mismas señales serán las variables de entrada de algo más fino
+cuando haya volumen.
+
+### ADR-0021 · La app del alumnado es una PWA
+**Decisión.** Aplicación instalable, no nativa.
+**Por qué.** Una sola base de código; las correcciones llegan sin pasar por
+revisión de tienda, que en un producto que cambia cada semana es determinante; y
+sin comisiones sobre lo que cobre la academia.
+**Salida.** Si hace falta estar en las tiendas, se envuelve o se hace nativa
+contra la misma API.
+**Detalle.** El service worker NO cachea documentos ni respuestas de la API: son
+material que depende de lo que cada alumno tenga contratado.
+
+### ADR-0022 · El radar corre como tarea programada del servidor
+**Decisión.** `npm run radar` desde cron, no dentro de la aplicación web.
+**Por qué.** La academia no tiene por qué tener nada abierto, la ejecución puede
+tardar minutos y no debe competir con las peticiones de los usuarios, y se puede
+reintentar sin afectar a nadie.
+
+### ADR-0023 · El radar nunca crea una oposición por su cuenta
+**Decisión.** Detecta, avisa y espera.
+**Por qué.** Un falso positivo que creara oposiciones generaría basura que
+alguien tendría que limpiar. Y la decisión de preparar una convocatoria es
+comercial, no técnica.
+
+### ADR-0024 · Los hilos de mensajes son del alumno y de la academia
+**Decisión.** No pertenecen a un profesor concreto.
+**Por qué.** Si el profesor cambia o está de baja, la conversación no se pierde
+ni hay que reenviar nada, y la academia conserva el historial de lo que se le ha
+dicho a cada alumno.
+
+### ADR-0025 · La nota vive en la entrega, no en la tarea
+**Decisión.** Cada alumno tiene su corrección, su comentario y su historial.
+**Por qué.** Permite devolver un trabajo para que se rehaga sin perder lo
+anterior, que es como se corrige de verdad un supuesto práctico.
+
+### ADR-0026 · Saneado de HTML por lista blanca, aplicado dos veces
+**Decisión.** Se permite lo que se sabe seguro y se descarta el resto, tanto al
+guardar como al pintar.
+**Por qué.** Listar lo peligroso siempre se queda corto. Y sanear solo al
+guardar deja sin cubrir el contenido almacenado antes de que existiera el
+saneador. En multi-tenant, un script inyectado corre con la sesión de cada
+alumno que abre el tema.
+**Origen.** Hallazgo H-02 de la auditoría interna.

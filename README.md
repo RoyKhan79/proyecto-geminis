@@ -12,19 +12,39 @@ capacidad sin perder el control de su contenido.
 
 ## Estado actual
 
+Las siete fases del plan están construidas y verificadas.
+
 | Fase | Contenido | Estado |
 |------|-----------|--------|
-| 0 | Arquitectura, base de datos, multi-tenancy, autenticación, permisos, auditoría, academia demo | **Terminada** |
-| 1 | Manager: alumnos, profesores, oposiciones, convocatorias, cursos, grupos, matrículas, derechos de acceso | **Terminada** |
-| 1b | Campus del alumno: inicio, estudiar, calendario, perfil, progreso | **Terminada** |
-| 2 | Geminis Import (Excel/CSV con previsualización y reversión) | Pendiente |
-| 3 | Contenido: subida de material, visor de PDF, clases, comunicaciones, pagos | Pendiente |
-| 4 | Tests, simulacros e histórico de errores | Pendiente |
-| 5 | Geminis IA (RAG con citas, copiloto del profesor) | Pendiente |
-| 6 | Normativa y alertas de cambio legislativo | Pendiente |
-| 7 | Analítica y riesgo de abandono | Pendiente |
+| 0 | Arquitectura, base de datos, multi-tenancy, autenticación, permisos, auditoría | ✅ |
+| 1 | Manager: alumnos, profesores, oposiciones, cursos, grupos, matrículas, accesos | ✅ |
+| 2 | Import: Excel y CSV con simulación, validación y reversión | ✅ |
+| 3 | Contenido, visor de documentos, clases, comunicaciones y pagos | ✅ |
+| 4 | Tests, corrección e histórico de errores | ✅ |
+| 5 | Geminis IA con recuperación por permisos y citas | ✅ |
+| 6 | Normativa y alertas de cambio legislativo | ✅ |
+| 7 | Analítica y riesgo de abandono | ✅ |
 
-El detalle vive en [docs/MVP_ROADMAP.md](docs/MVP_ROADMAP.md).
+Y además, sobre el plan inicial:
+
+| Añadido | Qué hace |
+|---------|----------|
+| **Ritmo del temario** | El profesor abre los temas según avanza la clase, con ritmo distinto por grupo |
+| **Radar de convocatorias** | Revisa el BOE cada mañana en el servidor y avisa por correo |
+| **Muro de clase** | El profesor escribe a su gente y el alumnado se ayuda entre sí |
+| **Mensajes internos** | Conversación privada alumno–academia |
+| **Tareas con evaluación** | Supuestos y simulacros escritos, con entrega y corrección |
+| **Salas online** | Aulas virtuales permanentes con entrada controlada |
+| **App móvil** | PWA instalable en el teléfono |
+| **Plataforma** | Alta de academias, soporte auditado, white-label, exportación y RGPD |
+
+En cifras: **64 tablas · 47 pantallas · 23.500 líneas · 72 pruebas automáticas ·
+24 comprobaciones de penetración**.
+
+El detalle está en [docs/MVP_ROADMAP.md](docs/MVP_ROADMAP.md), la revisión punto
+por punto del encargo en
+[docs/REQUISITOS_CUMPLIDOS.md](docs/REQUISITOS_CUMPLIDOS.md) y la auditoría en
+[docs/AUDITORIA.md](docs/AUDITORIA.md).
 
 ---
 
@@ -47,6 +67,13 @@ O todo de una vez:
 
 ```bash
 npm run setup && npm run dev
+```
+
+Para llenar la demo con material realista (PDFs, banco de preguntas y
+normativa):
+
+```bash
+npm run demo:todo
 ```
 
 ### Cuentas de la academia demo
@@ -83,6 +110,9 @@ vistazo cómo el contenido depende de lo contratado.
 | `npm run db:studio` | Explorador visual de la base de datos |
 | `npm run db:sql "SELECT …"` | Consulta rápida contra la base local |
 | `npm run db:reset` | Borra los datos locales y empieza de cero |
+| `npm run demo:todo` | Recrea la demo con PDFs, preguntas y normativa |
+| `npm run radar` | Revisa el BOE (pensado para cron cada mañana) |
+| `node scripts/auditoria.mjs` | Auditoría de seguridad por HTTP |
 
 ---
 
@@ -111,6 +141,22 @@ scripts/              PostgreSQL local y utilidades
 
 Regla de oro: **las páginas no consultan la base de datos directamente ni deciden
 permisos**. Piden a `src/server/**` y comprueban con `requirePermission()`.
+
+---
+
+## El radar del BOE
+
+Cada mañana, sin que nadie abra el programa, el servidor revisa el Boletín
+Oficial del Estado y avisa por correo a la academia cuando sale una convocatoria
+de las oposiciones que prepara. Si la acepta, se le crea la oposición lista para
+subir temario.
+
+```bash
+# En el crontab del servidor, a las 8:30
+30 8 * * *  cd /ruta/proyecto && npm run radar >> /var/log/geminis-radar.log 2>&1
+```
+
+Nunca crea una oposición por su cuenta: avisa y decide una persona.
 
 ---
 
@@ -147,3 +193,6 @@ la IA nunca podrá ser una puerta trasera para leer material no contratado.
 - [docs/AI_ARCHITECTURE.md](docs/AI_ARCHITECTURE.md) — Geminis IA y su gateway
 - [docs/MVP_ROADMAP.md](docs/MVP_ROADMAP.md) — plan por fases
 - [docs/DECISIONS.md](docs/DECISIONS.md) — decisiones tomadas y por qué
+- [docs/AUDITORIA.md](docs/AUDITORIA.md) — auditoría de seguridad, hallazgos y riesgos aceptados
+- [docs/REQUISITOS_CUMPLIDOS.md](docs/REQUISITOS_CUMPLIDOS.md) — los 136 puntos del encargo, uno a uno
+- [docs/PRESENTACION.md](docs/PRESENTACION.md) — guión para enseñárselo a una academia

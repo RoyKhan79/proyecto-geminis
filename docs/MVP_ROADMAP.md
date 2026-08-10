@@ -43,7 +43,7 @@ programa?
 
 ---
 
-## Fase 2 — Geminis Import *(A · D · F)*
+## ✅ Fase 2 — Geminis Import *(A · D · F)* · **terminada**
 
 La barrera número uno para que una academia cambie de programa es tener a sus
 alumnos en otro sitio. Esta fase es comercial, no técnica.
@@ -58,7 +58,7 @@ alumnos en otro sitio. Esta fase es comercial, no técnica.
 
 Modelo ya listo: `ImportJob`, `ImportRow`.
 
-## Fase 3 — Contenido y clases *(A · B · E)*
+## ✅ Fase 3 — Contenido y clases *(A · B · E)* · **terminada**
 
 - Subida de archivos con almacén S3 y URLs firmadas temporales
 - Editor del árbol de contenido: crear, renombrar, ordenar, publicar
@@ -69,7 +69,7 @@ Modelo ya listo: `ImportJob`, `ImportRow`.
 - Comunicaciones internas y por correo
 - Pagos y recibos
 
-## Fase 4 — Tests y simulacros *(B)*
+## ✅ Fase 4 — Tests y simulacros *(B)* · **terminada**
 
 - Banco de preguntas con estados y revisión
 - Tests por tema, bloque, aleatorios y personalizados
@@ -79,7 +79,7 @@ Modelo ya listo: `ImportJob`, `ImportRow`.
 - Repetición espaciada
 - Estadísticas por alumno, tema y pregunta
 
-## Fase 5 — Geminis IA *(A · B · E)*
+## ✅ Fase 5 — Geminis IA *(A · B · E)* · **terminada**
 
 - Gateway de IA con varios proveedores y registro de consumo
 - `pgvector` e indexación del contenido autorizado
@@ -89,7 +89,7 @@ Modelo ya listo: `ImportJob`, `ImportRow`.
 - Flujo generar → revisar → aprobar → publicar
 - Asistente de importación de temario
 
-## Fase 6 — Normativa *(E)*
+## ✅ Fase 6 — Normativa *(E)* · **terminada**
 
 - Alta manual de normas, versiones y artículos
 - Relación normativa ↔ temas y preguntas
@@ -98,7 +98,7 @@ Modelo ya listo: `ImportJob`, `ImportRow`.
 - Marcado de preguntas posiblemente desactualizadas
 - Más adelante: conexión con fuentes oficiales
 
-## Fase 7 — Analítica y retención *(C · D)*
+## ✅ Fase 7 — Analítica y retención *(C · D)* · **terminada**
 
 - Panel de la academia con métricas útiles
 - Analítica académica: temas flojos, preguntas problemáticas
