@@ -1,0 +1,347 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// CONTENIDO · Árbol libre, nombrado y organizado por cada academia
+//
+// Decisión ADR-0006 (CLAVE DEL PRODUCTO): el contenido NO tiene una jerarquía
+// fija en el código. Es un único árbol autorreferenciado (`ContentNode`) donde
+// cada academia crea los niveles que quiere y les pone el nombre que quiere.
+//
+// Motivo: la terminología cambia por especialidad y por ley. En Magisterio hoy
+// se habla de "Programación de aula" y "Situaciones de aprendizaje" donde antes
+// se decía "programación didáctica" y "unidades didácticas". Si esos nombres
+// estuvieran en el código, Geminis quedaría obsoleto con cada reforma y sería
+// inútil para cualquier oposición que no encaje en BLOQUE → TEMA → TEST.
+//
+// Por tanto:
+//   · `label`      lo escribe la academia (es un dato, no una constante).
+//   · `sectionKind` describe solo el COMPORTAMIENTO de una sección raíz
+//     (lector de documentos, tests, clases…), nunca su nombre visible.
+//   · La navegación del Campus se construye leyendo este árbol, no del código.
+//
+// Decisión ADR-0007: usamos ruta materializada (`path`) para poder consultar
+// una rama completa con un único LIKE indexado, que es la operación que más
+// veces se ejecuta (permisos por rama y navegación).
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum ContentNodeKind {
+  /// Nodo raíz que aparece como apartado del Campus. Ej.: "Temario", "Clases",
+  /// "Programación de aula", "Situaciones de aprendizaje", "Casos prácticos".
+  SECTION
+  /// Agrupador intermedio: bloque, unidad, carpeta… lo que decida la academia.
+  FOLDER
+  /// Unidad de estudio sobre la que se mide progreso y se enganchan preguntas.
+  TOPIC
+  /// Recurso concreto: PDF, vídeo, enlace, texto, audio…
+  RESOURCE
+}
+
+/// Comportamiento funcional de una sección raíz. Determina qué pantalla usa el
+/// Campus, NO cómo se llama el apartado para el alumno.
+enum SectionKind {
+  SYLLABUS // estudio con progreso
+  LIBRARY // biblioteca de documentos
+  CLASSES // clases y grabaciones
+  TESTS // tests y autoevaluación
+  SIMULATIONS // simulacros
+  LEGISLATION // normativa
+  VIDEO // videoteca
+  PRACTICAL // supuestos / casos prácticos
+  CUSTOM // carpeta libre
+}
+
+enum ContentStatus {
+  DRAFT
+  PUBLISHED
+  HIDDEN
+  ARCHIVED
+}
+
+enum ResourceType {
+  PDF
+  VIDEO
+  AUDIO
+  IMAGE
+  LINK
+  RICH_TEXT
+  DOWNLOADABLE
+  EMBED
+}
+
+enum ProgressStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  COMPLETED
+}
+
+/// Nodo del árbol de contenido. Todo el material de una academia vive aquí.
+model ContentNode {
+  id        String  @id @default(uuid(7))
+  academyId String  @default("SIN_TENANT")
+  academy   Academy @relation(fields: [academyId], references: [id], onDelete: Cascade)
+
+  editionId String
+  edition   OppositionEdition @relation(fields: [editionId], references: [id], onDelete: Cascade)
+
+  parentId String?
+  parent   ContentNode?  @relation("NodeTree", fields: [parentId], references: [id], onDelete: Cascade)
+  children ContentNode[] @relation("NodeTree")
+
+  /// Ruta materializada de ancestros: "/<idRaíz>/<idPadre>/". Permite recuperar
+  /// una rama entera con `path LIKE '/x/y/%'` y resolver permisos heredados.
+  path  String
+  depth Int    @default(0)
+  /// Orden entre hermanos.
+  position Int @default(0)
+
+  kind        ContentNodeKind
+  /// Solo en nodos SECTION.
+  sectionKind SectionKind?
+
+  /// Nombre visible. LO ESCRIBE LA ACADEMIA. Nunca lo impone Geminis.
+  label       String
+  slug        String
+  description String?
+  icon        String?
+  color       String?
+
+  status      ContentStatus @default(DRAFT)
+  publishedAt DateTime?
+
+  // ── Banderas de uso (§105). Heredables: null = heredar del padre. ──────────
+  /// Visible para el alumnado (si además tiene derecho de acceso).
+  visibleToStudents Boolean  @default(true)
+  /// Se puede descargar, o solo visualizar en el visor protegido (§113).
+  downloadable      Boolean?
+  /// Geminis IA puede indexar y citar este contenido (§105).
+  aiEnabled         Boolean?
+  /// Se puede usar como fuente para generar preguntas.
+  usableForTests    Boolean?
+  /// Marca de agua dinámica en el visor (§115).
+  watermark         Boolean?
+  /// Se vigilan cambios normativos que le afecten (§105).
+  trackLegislation  Boolean?
+
+  /// Acceso libre para cualquier alumno de la academia. Si es false (por
+  /// defecto) hace falta un derecho de acceso que cubra este nodo o un ancestro.
+  isFree Boolean @default(false)
+
+  estimatedMinutes Int?
+  /// Metadatos libres de la academia (etiquetas, campos propios…).
+  metadata         Json @default("{}")
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  resource        ContentResource?
+  versions        ContentNodeVersion[]
+  progress        StudentContentProgress[]
+  questions       Question[]
+  entitlements    EntitlementScope[]
+  productGrants   ProductGrant[]
+  classSessions   ClassSession[]
+  knowledgeSource KnowledgeSource[]
+  legislationLink ContentLegislationLink[]
+  testDefinitions TestDefinition[]
+
+  @@unique([editionId, parentId, slug])
+  @@index([academyId, editionId, parentId, position])
+  @@index([academyId, path])
+  @@index([academyId, kind, status])
+  @@map("content_nodes")
+}
+
+/// Contenido concreto de un nodo RESOURCE (o material principal de un TOPIC).
+model ContentResource {
+  id     String      @id @default(uuid(7))
+  nodeId String      @unique
+  node   ContentNode @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+
+  type ResourceType
+
+  /// Archivo en almacenamiento propio (S3-compatible).
+  fileId String?
+  file   StoredFile? @relation(fields: [fileId], references: [id], onDelete: SetNull)
+
+  /// Recurso externo: vídeo alojado en Vimeo/Bunny/Cloudflare, enlace, embed…
+  externalUrl String?
+  provider    String?
+  providerRef String?
+
+  /// Texto enriquecido (HTML saneado en servidor antes de guardar).
+  richText String?
+
+  durationSeconds Int?
+  pageCount       Int?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("content_resources")
+}
+
+/// Versionado de contenidos (§25, §123). Guarda una instantánea del nodo y de
+/// su recurso antes de cada cambio relevante, con autor y motivo.
+model ContentNodeVersion {
+  id     String      @id @default(uuid(7))
+  nodeId String
+  node   ContentNode @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+
+  version    Int
+  label      String?
+  /// Instantánea completa del nodo + recurso en el momento del cambio.
+  snapshot   Json
+  changeNote String?
+
+  authorId  String?
+  createdAt DateTime @default(now())
+
+  @@unique([nodeId, version])
+  @@index([nodeId])
+  @@map("content_node_versions")
+}
+
+/// Archivo almacenado. Nunca se sirve por URL pública permanente: el acceso
+/// pasa siempre por el backend, que comprueba permisos y firma una URL temporal.
+model StoredFile {
+  id        String  @id @default(uuid(7))
+  academyId String  @default("SIN_TENANT")
+  academy   Academy @relation(fields: [academyId], references: [id], onDelete: Cascade)
+
+  /// Clave en el almacén: academies/<academyId>/<uuid>/<nombre>
+  storageKey   String @unique
+  storageDriver String @default("local") // local | s3
+  originalName String
+  mimeType     String
+  sizeBytes    Int
+  checksumSha256 String?
+
+  uploadedById String?
+  createdAt    DateTime  @default(now())
+  deletedAt    DateTime?
+
+  resources ContentResource[]
+  documents KnowledgeSource[]
+
+  @@index([academyId, createdAt])
+  @@map("stored_files")
+}
+
+/// Progreso del alumno sobre un nodo (§7).
+model StudentContentProgress {
+  id        String      @id @default(uuid(7))
+  academyId String  @default("SIN_TENANT")
+  academy   Academy     @relation(fields: [academyId], references: [id], onDelete: Cascade)
+  studentId String
+  student   Membership  @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  nodeId    String
+  node      ContentNode @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+
+  status       ProgressStatus @default(NOT_STARTED)
+  secondsSpent Int            @default(0)
+  reviewCount  Int            @default(0)
+
+  /// Última posición en el visor (página del PDF, segundo del vídeo…).
+  /// Permite "continuar donde lo dejé" (§8).
+  lastPosition Json?
+
+  firstStartedAt DateTime?
+  lastViewedAt   DateTime?
+  completedAt    DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([studentId, nodeId])
+  @@index([academyId, studentId, status])
+  @@index([academyId, nodeId])
+  @@map("student_content_progress")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CLASES
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum ClassStatus {
+  SCHEDULED
+  LIVE
+  FINISHED
+  CANCELLED
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  EXCUSED
+  ONLINE
+  WATCHED_RECORDING
+}
+
+model ClassSession {
+  id        String  @id @default(uuid(7))
+  academyId String  @default("SIN_TENANT")
+  academy   Academy @relation(fields: [academyId], references: [id], onDelete: Cascade)
+
+  editionId String?
+  edition   OppositionEdition? @relation(fields: [editionId], references: [id], onDelete: SetNull)
+  courseId  String?
+  course    Course?            @relation(fields: [courseId], references: [id], onDelete: SetNull)
+  groupId   String?
+  group     Group?             @relation(fields: [groupId], references: [id], onDelete: SetNull)
+  teacherId String?
+  teacher   Membership?        @relation(fields: [teacherId], references: [id], onDelete: SetNull)
+
+  /// Nodo de contenido asociado (tema que se imparte), si aplica.
+  nodeId String?
+  node   ContentNode? @relation(fields: [nodeId], references: [id], onDelete: SetNull)
+
+  title       String
+  description String?
+  status      ClassStatus @default(SCHEDULED)
+
+  startsAt        DateTime
+  endsAt          DateTime
+  durationMinutes Int?
+  location        String?
+
+  /// Videoconferencia. Para el MVP basta con un enlace externo (§9); el
+  /// proveedor queda modelado para integrar Zoom/Meet/Teams más adelante.
+  meetingProvider String?
+  meetingUrl      String?
+  meetingRef      String?
+
+  recordingUrl      String?
+  recordingReadyAt  DateTime?
+  /// Resumen generado tras la clase (requiere revisión humana antes de publicar).
+  summary           String?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  attendances ClassAttendance[]
+
+  @@index([academyId, startsAt])
+  @@index([academyId, groupId, startsAt])
+  @@map("class_sessions")
+}
+
+model ClassAttendance {
+  id        String       @id @default(uuid(7))
+  academyId String  @default("SIN_TENANT")
+  academy   Academy      @relation(fields: [academyId], references: [id], onDelete: Cascade)
+  classId   String
+  class     ClassSession @relation(fields: [classId], references: [id], onDelete: Cascade)
+  studentId String
+  student   Membership   @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  status       AttendanceStatus @default(ABSENT)
+  watchedSeconds Int            @default(0)
+  notes        String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([classId, studentId])
+  @@index([academyId, studentId])
+  @@map("class_attendances")
+}

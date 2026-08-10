@@ -1,0 +1,259 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// ACADÉMICO · Oposiciones, convocatorias, cursos, grupos y matrículas
+//
+// Decisión ADR-0005: la jerarquía es OPOSICIÓN → CONVOCATORIA → CURSO → GRUPO,
+// pero solo la oposición es obligatoria. Toda academia recibe una convocatoria
+// y un curso por defecto, de modo que quien no quiera usar esos niveles no los ve.
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum OppositionStatus {
+  DRAFT
+  ACTIVE
+  ARCHIVED
+}
+
+enum EditionStatus {
+  PLANNED
+  OPEN
+  CLOSED
+  ARCHIVED
+}
+
+enum CourseModality {
+  PRESENCIAL
+  ONLINE
+  HIBRIDO
+}
+
+enum CourseStatus {
+  DRAFT
+  ACTIVE
+  FINISHED
+  ARCHIVED
+}
+
+enum EnrollmentStatus {
+  PENDING
+  ACTIVE
+  PAST_DUE
+  SUSPENDED
+  EXPIRED
+  CANCELLED
+}
+
+/// Familia de oposición. Es un catálogo EDITABLE por cada academia (§95): no se
+/// codifica ningún comportamiento a partir de estos nombres.
+model OppositionType {
+  id        String  @id @default(uuid(7))
+  academyId String  @default("SIN_TENANT")
+  academy   Academy @relation(fields: [academyId], references: [id], onDelete: Cascade)
+
+  key      String // ADMINISTRACION_GENERAL, MAGISTERIO, POLICIA…
+  name     String
+  /// Plantilla de secciones que se copia al crear una oposición de este tipo.
+  /// Es solo un punto de partida: después la academia lo cambia todo (§96).
+  template Json    @default("{}")
+  position Int     @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  oppositions Opposition[]
+
+  @@unique([academyId, key])
+  @@map("opposition_types")
+}
+
+model Opposition {
+  id        String  @id @default(uuid(7))
+  academyId String  @default("SIN_TENANT")
+  academy   Academy @relation(fields: [academyId], references: [id], onDelete: Cascade)
+
+  typeId String?
+  type   OppositionType? @relation(fields: [typeId], references: [id], onDelete: SetNull)
+
+  name        String
+  slug        String
+  code        String?
+  description String?
+  coverUrl    String?
+  status      OppositionStatus @default(ACTIVE)
+
+  /// Administración convocante y ámbito (estatal, autonómico, local).
+  authority String?
+  scope     String?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  editions    OppositionEdition[]
+  assignments TeacherAssignment[]
+  products    Product[]
+
+  @@unique([academyId, slug])
+  @@index([academyId, status])
+  @@map("oppositions")
+}
+
+/// Convocatoria (§122). Cada año/proceso selectivo es una edición independiente
+/// para no destruir el histórico al actualizar contenidos.
+model OppositionEdition {
+  id           String     @id @default(uuid(7))
+  academyId    String @default("SIN_TENANT")
+  academy      Academy    @relation(fields: [academyId], references: [id], onDelete: Cascade)
+  oppositionId String
+  opposition   Opposition @relation(fields: [oppositionId], references: [id], onDelete: Cascade)
+
+  name     String // "2026", "2026 · turno libre"
+  year     Int?
+  examDate DateTime?
+  /// Nº de plazas convocadas, si se conoce.
+  positions Int?
+  status   EditionStatus @default(OPEN)
+  /// Edición que se ofrece por defecto al matricular.
+  isDefault Boolean      @default(false)
+
+  /// Edición de la que se clonó el contenido, si aplica.
+  clonedFromId String?
+  clonedFrom   OppositionEdition?  @relation("EditionClone", fields: [clonedFromId], references: [id], onDelete: SetNull)
+  clones       OppositionEdition[] @relation("EditionClone")
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  courses        Course[]
+  contentNodes   ContentNode[]
+  classSessions  ClassSession[]
+  questions      Question[]
+  testDefinition TestDefinition[]
+  examBlueprints ExamBlueprint[]
+  assignments    TeacherAssignment[]
+  products       Product[]
+
+  @@index([academyId, oppositionId])
+  @@map("opposition_editions")
+}
+
+model Course {
+  id                  String            @id @default(uuid(7))
+  academyId           String @default("SIN_TENANT")
+  academy             Academy           @relation(fields: [academyId], references: [id], onDelete: Cascade)
+  oppositionEditionId String
+  oppositionEdition   OppositionEdition @relation(fields: [oppositionEditionId], references: [id], onDelete: Cascade)
+
+  name        String
+  code        String?
+  description String?
+  modality    CourseModality @default(PRESENCIAL)
+  status      CourseStatus   @default(ACTIVE)
+  startDate   DateTime?
+  endDate     DateTime?
+  capacity    Int?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  groups        Group[]
+  enrollments   Enrollment[]
+  classSessions ClassSession[]
+  assignments   TeacherAssignment[]
+  products      Product[]
+
+  @@index([academyId, status])
+  @@map("courses")
+}
+
+model Group {
+  id        String  @id @default(uuid(7))
+  academyId String  @default("SIN_TENANT")
+  academy   Academy @relation(fields: [academyId], references: [id], onDelete: Cascade)
+  courseId  String
+  course    Course  @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  name     String // "Mañana", "Tarde", "Online"
+  /// Horario en texto libre; la planificación fina vive en ClassSession.
+  schedule String?
+  capacity Int?
+  modality CourseModality @default(PRESENCIAL)
+  status   CourseStatus   @default(ACTIVE)
+  color    String?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  enrollments   Enrollment[]
+  classSessions ClassSession[]
+  assignments   TeacherAssignment[]
+
+  @@index([academyId, courseId])
+  @@map("groups")
+}
+
+/// Matrícula de un alumno en un curso (y opcionalmente en un grupo).
+model Enrollment {
+  id        String     @id @default(uuid(7))
+  academyId String  @default("SIN_TENANT")
+  academy   Academy    @relation(fields: [academyId], references: [id], onDelete: Cascade)
+  studentId String
+  student   Membership @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  courseId  String
+  course    Course     @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  groupId   String?
+  group     Group?     @relation(fields: [groupId], references: [id], onDelete: SetNull)
+
+  status    EnrollmentStatus @default(PENDING)
+  startDate DateTime         @default(now())
+  endDate   DateTime?
+
+  /// Importe acordado para esta matrícula (céntimos). La facturación real vive
+  /// en Payment; esto es lo pactado.
+  priceCents    Int?
+  discountCents Int     @default(0)
+  discountNote  String?
+  notes         String?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  entitlements Entitlement[]
+  payments     Payment[]
+
+  @@unique([studentId, courseId])
+  @@index([academyId, status])
+  @@index([academyId, courseId])
+  @@map("enrollments")
+}
+
+/// Asignación de un profesor a un ámbito. Define QUÉ puede ver y gestionar,
+/// además de lo que le permita su rol (§3: "solo lo asignado").
+model TeacherAssignment {
+  id        String     @id @default(uuid(7))
+  academyId String  @default("SIN_TENANT")
+  academy   Academy    @relation(fields: [academyId], references: [id], onDelete: Cascade)
+  teacherId String
+  teacher   Membership @relation(fields: [teacherId], references: [id], onDelete: Cascade)
+
+  // Ámbito: se rellena el nivel más concreto que aplique.
+  oppositionId String?
+  opposition   Opposition?        @relation(fields: [oppositionId], references: [id], onDelete: Cascade)
+  editionId    String?
+  edition      OppositionEdition? @relation(fields: [editionId], references: [id], onDelete: Cascade)
+  courseId     String?
+  course       Course?            @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  groupId      String?
+  group        Group?             @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  /// Coordinador del ámbito: puede gestionar el contenido, no solo impartir.
+  isCoordinator Boolean @default(false)
+
+  createdAt DateTime @default(now())
+
+  @@unique([teacherId, oppositionId, editionId, courseId, groupId])
+  @@index([academyId, teacherId])
+  @@map("teacher_assignments")
+}

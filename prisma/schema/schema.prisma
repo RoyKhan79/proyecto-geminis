@@ -1,0 +1,35 @@
+// Geminis · configuración base del esquema
+//
+// El esquema está dividido por dominios en esta misma carpeta:
+//   platform.prisma    → academias (tenants), planes SaaS
+//   identity.prisma    → usuarios, pertenencias, roles, sesiones
+//   academic.prisma    → oposiciones, convocatorias, cursos, grupos, matrículas
+//   content.prisma     → temario, documentos, clases, progreso
+//   assessment.prisma  → banco de preguntas, tests, simulacros, intentos
+//   commerce.prisma    → productos, derechos de acceso, pagos
+//   ops.prisma         → auditoría, notificaciones, importaciones
+//   ai.prisma          → base de conocimiento, RAG, conversaciones, consumo
+//   legislation.prisma → normativa, versiones, relaciones y alertas
+//
+// REGLA INVIOLABLE: toda tabla que contenga datos de una academia lleva
+// `academyId`. Sin excepciones. Ver docs/SECURITY_MODEL.md.
+//
+// Decisión ADR-0017: `academyId` lleva `@default("SIN_TENANT")`, un valor que NO
+// existe como academia. No es un dato: es un centinela. Sirve para dos cosas:
+//
+//   1. Que TypeScript no obligue a escribir `academyId` en cada create. Quien
+//      programa usa `tenantDb(academyId)` y la guardia lo rellena sola, así que
+//      pedirlo a mano sería ruido que además se puede equivocar.
+//   2. Que saltarse la guardia falle de inmediato y de forma ruidosa: si una
+//      escritura llega sin pasar por ella, PostgreSQL rechaza la fila por clave
+//      foránea y el error dice literalmente "SIN_TENANT". No se corrompe nada
+//      ni queda una fila huérfana silenciosa.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}

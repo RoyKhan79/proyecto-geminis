@@ -1,0 +1,180 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// OPERACIÓN · Auditoría, notificaciones e importaciones
+// ─────────────────────────────────────────────────────────────────────────────
+
+/// Registro de operaciones relevantes (§49). Solo se escribe desde
+/// src/lib/audit.ts; nunca se modifica ni se borra desde la aplicación.
+model AuditLog {
+  id        String   @id @default(uuid(7))
+  /// null solo para acciones de plataforma (superadmin) sin academia asociada.
+  academyId String?
+  academy   Academy? @relation(fields: [academyId], references: [id], onDelete: Cascade)
+
+  actorId   String?
+  actor     User?   @relation(fields: [actorId], references: [id], onDelete: SetNull)
+  /// Superadmin que actuaba suplantando, si procede.
+  impersonatorId String?
+
+  /// Verbo del catálogo: "student.create", "import.rollback", "question.publish"…
+  action     String
+  entityType String?
+  entityId   String?
+
+  /// Cambios relevantes. Nunca contraseñas ni tokens; los campos sensibles se
+  /// enmascaran en src/lib/audit.ts antes de escribir.
+  changes Json?
+  /// Contexto: ip, userAgent, ruta, motivo.
+  context Json?
+
+  createdAt DateTime @default(now())
+
+  @@index([academyId, createdAt])
+  @@index([academyId, entityType, entityId])
+  @@index([actorId, createdAt])
+  @@map("audit_logs")
+}
+
+enum NotificationChannel {
+  IN_APP
+  EMAIL
+  PUSH
+  SMS
+  WHATSAPP
+}
+
+enum NotificationStatus {
+  PENDING
+  SENT
+  READ
+  FAILED
+}
+
+/// Notificación dirigida a una persona concreta dentro de una academia.
+/// Los envíos masivos crean una fila por destinatario para poder auditar
+/// entregas y lecturas.
+model Notification {
+  id           String     @id @default(uuid(7))
+  academyId    String @default("SIN_TENANT")
+  academy      Academy    @relation(fields: [academyId], references: [id], onDelete: Cascade)
+  recipientId  String
+  recipient    Membership @relation(fields: [recipientId], references: [id], onDelete: Cascade)
+
+  channel NotificationChannel @default(IN_APP)
+  status  NotificationStatus  @default(PENDING)
+
+  /// Tipo del catálogo: "class.created", "test.available", "payment.due"…
+  type  String
+  title String
+  body  String?
+  /// Ruta interna a la que lleva la notificación.
+  actionUrl String?
+  data      Json?
+
+  sentAt DateTime?
+  readAt DateTime?
+
+  createdAt DateTime @default(now())
+
+  @@index([academyId, recipientId, readAt])
+  @@index([academyId, createdAt])
+  @@map("notifications")
+}
+
+enum ImportType {
+  STUDENTS
+  TEACHERS
+  QUESTIONS
+  ENROLLMENTS
+  CONTENT
+}
+
+enum ImportStatus {
+  UPLOADED
+  MAPPING
+  VALIDATED
+  SIMULATED
+  IMPORTING
+  COMPLETED
+  FAILED
+  ROLLED_BACK
+}
+
+enum ImportRowStatus {
+  PENDING
+  VALID
+  WARNING
+  ERROR
+  CREATED
+  UPDATED
+  SKIPPED
+  ROLLED_BACK
+}
+
+/// Trabajo de importación (§37-§40). Guarda el mapeo, el resultado de la
+/// simulación y lo suficiente para poder REVERTIR la importación completa.
+model ImportJob {
+  id        String  @id @default(uuid(7))
+  academyId String  @default("SIN_TENANT")
+  academy   Academy @relation(fields: [academyId], references: [id], onDelete: Cascade)
+
+  type   ImportType
+  status ImportStatus @default(UPLOADED)
+
+  fileName  String
+  fileId    String?
+  rowCount  Int     @default(0)
+
+  /// Mapeo columna del archivo → campo de Geminis, decidido por el usuario.
+  columnMapping Json @default("{}")
+  /// Opciones: qué hacer con duplicados, curso destino, etc.
+  options       Json @default("{}")
+
+  createdCount Int @default(0)
+  updatedCount Int @default(0)
+  skippedCount Int @default(0)
+  errorCount   Int @default(0)
+
+  createdById String?
+  startedAt   DateTime?
+  finishedAt  DateTime?
+  rolledBackAt DateTime?
+  /// Resumen de errores para mostrar el informe sin recorrer todas las filas.
+  errorSummary Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  rows ImportRow[]
+
+  @@index([academyId, type, status])
+  @@map("import_jobs")
+}
+
+model ImportRow {
+  id        String    @id @default(uuid(7))
+  academyId String  @default("SIN_TENANT")
+  academy   Academy   @relation(fields: [academyId], references: [id], onDelete: Cascade)
+  jobId     String
+  job       ImportJob @relation(fields: [jobId], references: [id], onDelete: Cascade)
+
+  rowNumber Int
+  /// Datos originales de la fila, tal cual venían del archivo.
+  rawData   Json
+  /// Datos normalizados tras aplicar el mapeo.
+  parsedData Json?
+
+  status   ImportRowStatus @default(PENDING)
+  messages Json            @default("[]")
+
+  /// Entidad creada o actualizada. Es lo que permite deshacer la importación.
+  entityType String?
+  entityId   String?
+  /// true si la fila creó la entidad (al revertir se borra) y false si solo la
+  /// actualizó (al revertir se restaura `previousData`).
+  wasCreated Boolean?
+  previousData Json?
+
+  @@unique([jobId, rowNumber])
+  @@index([academyId, jobId, status])
+  @@map("import_rows")
+}

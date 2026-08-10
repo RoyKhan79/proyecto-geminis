@@ -1,0 +1,254 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// IDENTIDAD · Usuarios globales, pertenencia a academias, roles y sesiones
+//
+// Decisión ADR-0003: `User` es una identidad GLOBAL (email único en toda la
+// plataforma) y `Membership` es su vínculo con una academia concreta. Motivo:
+// una misma persona puede ser alumna de dos academias, o profesora en una y
+// alumna en otra. Todo lo que pertenece a la academia cuelga de Membership,
+// nunca de User.
+//
+// Decisión ADR-0004: cada academia posee COPIAS de los roles del sistema
+// (isSystem = true). Así una academia puede crear roles propios más adelante
+// sin tocar los del resto, y los permisos siempre se resuelven dentro del tenant.
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum UserStatus {
+  ACTIVE
+  INVITED
+  DISABLED
+}
+
+enum MembershipStatus {
+  ACTIVE
+  INVITED
+  SUSPENDED
+  LEFT
+}
+
+/// Estados del alumno dentro de la academia (§26).
+enum StudentStatus {
+  PENDING
+  ACTIVE
+  ON_HOLD
+  INACTIVE
+  ALUMNI
+}
+
+/// Identidad global de una persona. NO contiene datos de academia.
+model User {
+  id    String @id @default(uuid(7))
+  email String @unique
+
+  /// scrypt (node:crypto). Formato: scrypt$N$r$p$salt$hash — ver src/lib/auth/password.ts
+  passwordHash String?
+
+  firstName String
+  lastName  String?
+  phone     String?
+  avatarUrl String?
+  locale    String  @default("es-ES")
+
+  status          UserStatus @default(ACTIVE)
+  emailVerifiedAt DateTime?
+  lastLoginAt     DateTime?
+
+  /// Superadmin de Geminis. No implica acceso al contenido de ninguna academia:
+  /// el acceso de soporte se realiza mediante impersonación auditada (§3).
+  isPlatformAdmin Boolean @default(false)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  /// Borrado lógico para RGPD: la anonimización real la ejecuta un caso de uso
+  /// específico que vacía los campos personales. Ver docs/SECURITY_MODEL.md.
+  deletedAt DateTime?
+
+  memberships         Membership[]
+  sessions            Session[]
+  impersonatedSession Session[]            @relation("SessionImpersonator")
+  passwordResets      PasswordResetToken[]
+  auditLogs           AuditLog[]
+
+  @@index([status])
+  @@map("users")
+}
+
+/// Vínculo persona ↔ academia. Es el "actor" dentro del tenant: todo lo demás
+/// (matrículas, intentos de test, asignaciones) apunta aquí, no a User.
+model Membership {
+  id        String  @id @default(uuid(7))
+  academyId String  @default("SIN_TENANT")
+  academy   Academy @relation(fields: [academyId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  status   MembershipStatus @default(ACTIVE)
+  joinedAt DateTime         @default(now())
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  roles           MembershipRole[]
+  studentProfile  StudentProfile?
+  teacherProfile  TeacherProfile?
+  enrollments     Enrollment[]
+  assignments     TeacherAssignment[]
+  contentProgress StudentContentProgress[]
+  attendances     ClassAttendance[]
+  taughtClasses   ClassSession[]
+  testAttempts    TestAttempt[]
+  questionStats   StudentQuestionStat[]
+  entitlements    Entitlement[]
+  payments        Payment[]
+  notifications   Notification[]
+  authoredQuestns Question[]             @relation("QuestionAuthor")
+  reviewedQuestns Question[]             @relation("QuestionReviewer")
+  aiConversations AIConversation[]
+  aiUsages        AIUsage[]
+
+  @@unique([academyId, userId])
+  @@index([academyId, status])
+  @@map("memberships")
+}
+
+/// Rol dentro de una academia. Los permisos concretos se guardan en
+/// RolePermission; el catálogo de claves válidas vive en src/lib/auth/permissions.ts.
+model Role {
+  id        String  @id @default(uuid(7))
+  academyId String  @default("SIN_TENANT")
+  academy   Academy @relation(fields: [academyId], references: [id], onDelete: Cascade)
+
+  /// Clave estable: ACADEMY_ADMIN | TEACHER | STAFF | STUDENT | <personalizado>
+  key         String
+  name        String
+  description String?
+  /// Los roles de sistema no se pueden borrar ni renombrar desde la interfaz.
+  isSystem    Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  permissions RolePermission[]
+  members     MembershipRole[]
+
+  @@unique([academyId, key])
+  @@map("roles")
+}
+
+model RolePermission {
+  id     String @id @default(uuid(7))
+  roleId String
+  role   Role   @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  /// Clave del catálogo, p. ej. "students.read" o "questions.publish".
+  permission String
+
+  @@unique([roleId, permission])
+  @@index([permission])
+  @@map("role_permissions")
+}
+
+model MembershipRole {
+  membershipId String
+  membership   Membership @relation(fields: [membershipId], references: [id], onDelete: Cascade)
+  roleId       String
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  assignedAt   DateTime   @default(now())
+
+  @@id([membershipId, roleId])
+  @@index([roleId])
+  @@map("membership_roles")
+}
+
+/// Datos del alumno propios de la academia.
+model StudentProfile {
+  id           String     @id @default(uuid(7))
+  membershipId String     @unique
+  membership   Membership @relation(fields: [membershipId], references: [id], onDelete: Cascade)
+
+  /// Número de expediente interno de la academia.
+  code      String?
+  status    StudentStatus @default(ACTIVE)
+  birthDate DateTime?
+  nationalId String?
+  address   String?
+  city      String?
+  province  String?
+  postalCode String?
+
+  /// Cómo llegó el alumno a la academia (para analítica comercial).
+  source String?
+  /// Observaciones internas. NUNCA visibles para el alumno.
+  notes  String?
+
+  /// Última actividad relevante en Campus. Base del cálculo de riesgo de abandono.
+  lastActivityAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@map("student_profiles")
+}
+
+/// Datos del profesor/preparador propios de la academia.
+model TeacherProfile {
+  id           String     @id @default(uuid(7))
+  membershipId String     @unique
+  membership   Membership @relation(fields: [membershipId], references: [id], onDelete: Cascade)
+
+  headline    String?
+  bio         String?
+  /// Especialidades en texto libre (p. ej. "Derecho Administrativo").
+  specialties String[] @default([])
+  isExternal  Boolean  @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("teacher_profiles")
+}
+
+/// Sesión de usuario. Token opaco guardado SOLO como hash (SHA-256).
+/// Sesiones en base de datos → se pueden revocar, listar dispositivos y auditar.
+model Session {
+  id        String @id @default(uuid(7))
+  userId    String
+  user      User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String @unique
+
+  /// Academia activa en esta sesión. Un usuario con varias academias cambia
+  /// de contexto creando/actualizando este campo, nunca desde el cliente.
+  activeAcademyId String?
+  activeAcademy   Academy? @relation(fields: [activeAcademyId], references: [id], onDelete: SetNull)
+
+  ipAddress String?
+  userAgent String?
+
+  /// Soporte: superadmin que está suplantando a este usuario (§3). Toda sesión
+  /// suplantada queda marcada y auditada.
+  impersonatedById String?
+  impersonatedBy   User?   @relation("SessionImpersonator", fields: [impersonatedById], references: [id], onDelete: SetNull)
+
+  createdAt  DateTime  @default(now())
+  lastSeenAt DateTime  @default(now())
+  expiresAt  DateTime
+  revokedAt  DateTime?
+
+  @@index([userId, revokedAt])
+  @@index([expiresAt])
+  @@map("sessions")
+}
+
+model PasswordResetToken {
+  id        String    @id @default(uuid(7))
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId])
+  @@map("password_reset_tokens")
+}

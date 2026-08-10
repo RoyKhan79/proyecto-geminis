@@ -1,0 +1,181 @@
+@import "tailwindcss";
+
+/*
+ * GEMINIS · DESIGN SYSTEM
+ * ───────────────────────
+ * Un único sitio donde viven color, tipografía, espaciado y radios. Ninguna
+ * pantalla inventa un color (§79). Si algo necesita un tono nuevo, se añade
+ * aquí como token y se usa por su nombre.
+ *
+ * El tema se define con tokens semánticos (superficie, borde, texto…) en lugar
+ * de con nombres de color, para que el modo oscuro y el white-label por
+ * academia sean un cambio de variables, no una reescritura de componentes.
+ */
+
+@theme {
+  /* Marca */
+  --color-brand-50: oklch(0.97 0.014 285);
+  --color-brand-100: oklch(0.94 0.03 285);
+  --color-brand-200: oklch(0.89 0.06 285);
+  --color-brand-300: oklch(0.81 0.1 285);
+  --color-brand-400: oklch(0.7 0.15 285);
+  --color-brand-500: oklch(0.6 0.19 285);
+  --color-brand-600: oklch(0.53 0.21 285);
+  --color-brand-700: oklch(0.46 0.19 285);
+  --color-brand-800: oklch(0.39 0.16 285);
+  --color-brand-900: oklch(0.33 0.13 285);
+
+  /* Estados */
+  --color-positive: oklch(0.62 0.15 155);
+  --color-positive-soft: oklch(0.95 0.04 155);
+  --color-caution: oklch(0.75 0.15 75);
+  --color-caution-soft: oklch(0.96 0.05 85);
+  --color-critical: oklch(0.58 0.21 25);
+  --color-critical-soft: oklch(0.95 0.04 25);
+  --color-info: oklch(0.62 0.14 240);
+  --color-info-soft: oklch(0.95 0.03 240);
+
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, "SF Mono", monospace;
+
+  --radius-card: 0.875rem;
+  --radius-control: 0.625rem;
+
+  --shadow-soft: 0 1px 2px 0 rgb(15 23 42 / 0.04), 0 1px 3px 0 rgb(15 23 42 / 0.06);
+  --shadow-raised: 0 4px 12px -2px rgb(15 23 42 / 0.08),
+    0 2px 6px -2px rgb(15 23 42 / 0.06);
+  --shadow-overlay: 0 24px 48px -12px rgb(15 23 42 / 0.24);
+}
+
+/* Tokens semánticos: claro por defecto. */
+:root {
+  --surface: oklch(1 0 0);
+  --surface-muted: oklch(0.985 0.002 285);
+  --surface-sunken: oklch(0.97 0.003 285);
+  --surface-inverse: oklch(0.21 0.01 285);
+
+  --border-subtle: oklch(0.92 0.004 285);
+  --border-strong: oklch(0.85 0.006 285);
+
+  --text-primary: oklch(0.24 0.012 285);
+  --text-secondary: oklch(0.5 0.012 285);
+  --text-muted: oklch(0.62 0.012 285);
+  --text-inverse: oklch(0.98 0 0);
+
+  /* Acento: lo puede sobrescribir cada academia (white-label, §60). */
+  --accent: var(--color-brand-600);
+  --accent-hover: var(--color-brand-700);
+  --accent-soft: var(--color-brand-50);
+  --accent-contrast: oklch(0.99 0 0);
+
+  --ring: var(--color-brand-500);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --surface: oklch(0.19 0.008 285);
+    --surface-muted: oklch(0.22 0.009 285);
+    --surface-sunken: oklch(0.16 0.008 285);
+    --surface-inverse: oklch(0.97 0 0);
+
+    --border-subtle: oklch(0.29 0.01 285);
+    --border-strong: oklch(0.37 0.012 285);
+
+    --text-primary: oklch(0.96 0.003 285);
+    --text-secondary: oklch(0.75 0.008 285);
+    --text-muted: oklch(0.62 0.01 285);
+    --text-inverse: oklch(0.19 0.008 285);
+
+    --accent: var(--color-brand-400);
+    --accent-hover: var(--color-brand-300);
+    --accent-soft: oklch(0.28 0.05 285);
+    --accent-contrast: oklch(0.16 0.01 285);
+  }
+}
+
+:root[data-theme="dark"] {
+  --surface: oklch(0.19 0.008 285);
+  --surface-muted: oklch(0.22 0.009 285);
+  --surface-sunken: oklch(0.16 0.008 285);
+  --surface-inverse: oklch(0.97 0 0);
+  --border-subtle: oklch(0.29 0.01 285);
+  --border-strong: oklch(0.37 0.012 285);
+  --text-primary: oklch(0.96 0.003 285);
+  --text-secondary: oklch(0.75 0.008 285);
+  --text-muted: oklch(0.62 0.01 285);
+  --text-inverse: oklch(0.19 0.008 285);
+  --accent: var(--color-brand-400);
+  --accent-hover: var(--color-brand-300);
+  --accent-soft: oklch(0.28 0.05 285);
+  --accent-contrast: oklch(0.16 0.01 285);
+}
+
+/* Exponemos los tokens semánticos como utilidades de Tailwind. */
+@theme inline {
+  --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
+  --color-surface-sunken: var(--surface-sunken);
+  --color-surface-inverse: var(--surface-inverse);
+  --color-line: var(--border-subtle);
+  --color-line-strong: var(--border-strong);
+  --color-ink: var(--text-primary);
+  --color-ink-soft: var(--text-secondary);
+  --color-ink-muted: var(--text-muted);
+  --color-ink-inverse: var(--text-inverse);
+  --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
+  --color-accent-soft: var(--accent-soft);
+  --color-accent-contrast: var(--accent-contrast);
+  --color-ring: var(--ring);
+}
+
+@layer base {
+  * {
+    border-color: var(--border-subtle);
+  }
+
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--surface-sunken);
+    color: var(--text-primary);
+    font-family: var(--font-sans);
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Accesibilidad: foco siempre visible y con contraste suficiente (§70). */
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    background: var(--accent-soft);
+    color: var(--text-primary);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@layer utilities {
+  /* Área táctil mínima cómoda en móvil (§70). */
+  .touch-target {
+    min-height: 2.75rem;
+    min-width: 2.75rem;
+  }
+
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+}

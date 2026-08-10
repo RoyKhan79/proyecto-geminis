@@ -1,0 +1,193 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// NORMATIVA · Leyes, versiones, relaciones con el contenido y alertas
+//
+// Decisión ADR-0012: empezamos por el MODELO y el FLUJO DE REVISIÓN, no por un
+// rastreador de boletines (§57). Una academia puede registrar a mano un cambio
+// normativo y Geminis ya calcula qué temas y preguntas quedan afectados. Cuando
+// conectemos fuentes oficiales, solo cambia el origen del dato.
+//
+// Decisión ADR-0013: Geminis NUNCA modifica el contenido de una academia por un
+// cambio legal. Genera una alerta con propuesta y espera decisión humana (§126).
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum LegislationScope {
+  EUROPEAN
+  STATE
+  REGIONAL
+  LOCAL
+  OTHER
+}
+
+enum LegislationStatus {
+  IN_FORCE
+  AMENDED
+  REPEALED
+  DRAFT
+}
+
+enum LegislationChangeType {
+  CREATED
+  AMENDED
+  REPEALED
+  CORRECTED
+}
+
+enum AlertStatus {
+  OPEN
+  IN_REVIEW
+  APPLIED
+  DISMISSED
+}
+
+/// Norma. Es propiedad de la academia: dos academias pueden mantener su propia
+/// ficha de la misma ley sin compartir nada (§92).
+model Legislation {
+  id        String  @id @default(uuid(7))
+  academyId String  @default("SIN_TENANT")
+  academy   Academy @relation(fields: [academyId], references: [id], onDelete: Cascade)
+
+  /// Referencia corta: "Ley 39/2015".
+  reference   String
+  title       String
+  scope       LegislationScope  @default(STATE)
+  status      LegislationStatus @default(IN_FORCE)
+  /// Identificador oficial (p. ej. BOE-A-2015-10565) para futuras integraciones.
+  officialId  String?
+  officialUrl String?
+
+  publishedAt DateTime?
+  inForceAt   DateTime?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  versions LegislationVersion[]
+  articles LegislationArticle[]
+  alerts   LegislationChangeAlert[]
+
+  @@unique([academyId, reference])
+  @@index([academyId, status])
+  @@map("legislations")
+}
+
+/// Versión consolidada de la norma en una fecha concreta (§25).
+model LegislationVersion {
+  id            String      @id @default(uuid(7))
+  academyId     String @default("SIN_TENANT")
+  academy       Academy     @relation(fields: [academyId], references: [id], onDelete: Cascade)
+  legislationId String
+  legislation   Legislation @relation(fields: [legislationId], references: [id], onDelete: Cascade)
+
+  version     Int
+  label       String?
+  publishedAt DateTime?
+  notes       String?
+  sourceUrl   String?
+
+  createdById String?
+  createdAt   DateTime @default(now())
+
+  articles LegislationArticle[]
+  alerts   LegislationChangeAlert[]
+
+  @@unique([legislationId, version])
+  @@map("legislation_versions")
+}
+
+/// Artículo concreto. Es la unidad que se enlaza con temas y preguntas, porque
+/// es el nivel al que realmente cambia la ley.
+model LegislationArticle {
+  id            String      @id @default(uuid(7))
+  academyId     String @default("SIN_TENANT")
+  academy       Academy     @relation(fields: [academyId], references: [id], onDelete: Cascade)
+  legislationId String
+  legislation   Legislation @relation(fields: [legislationId], references: [id], onDelete: Cascade)
+  versionId     String?
+  version       LegislationVersion? @relation(fields: [versionId], references: [id], onDelete: SetNull)
+
+  /// "16", "16.2", "Disposición adicional tercera".
+  number  String
+  title   String?
+  text    String?
+  position Int    @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  links  ContentLegislationLink[]
+  alerts LegislationChangeAlert[]
+
+  @@unique([legislationId, versionId, number])
+  @@index([academyId, legislationId])
+  @@map("legislation_articles")
+}
+
+/// Relación normativa ↔ contenido (§23, §128). Es lo que permite responder
+/// "el artículo 16 afecta a estos 2 temas y a estas 128 preguntas".
+model ContentLegislationLink {
+  id        String  @id @default(uuid(7))
+  academyId String  @default("SIN_TENANT")
+  academy   Academy @relation(fields: [academyId], references: [id], onDelete: Cascade)
+
+  articleId String
+  article   LegislationArticle @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  /// Se rellena uno de los dos extremos.
+  nodeId     String?
+  node       ContentNode? @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+  questionId String?
+  question   Question?    @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  /// MANUAL = lo marcó una persona · DETECTED = lo propuso Geminis al analizar
+  /// el texto. Se distingue porque la confianza no es la misma.
+  origin     String  @default("MANUAL")
+  confidence Decimal? @db.Decimal(4, 3)
+  excerpt    String?
+
+  createdAt DateTime @default(now())
+
+  @@unique([articleId, nodeId, questionId])
+  @@index([academyId, articleId])
+  @@index([academyId, nodeId])
+  @@index([academyId, questionId])
+  @@map("content_legislation_links")
+}
+
+/// Alerta de cambio normativo con su propuesta y su decisión (§24, §125).
+model LegislationChangeAlert {
+  id            String      @id @default(uuid(7))
+  academyId     String @default("SIN_TENANT")
+  academy       Academy     @relation(fields: [academyId], references: [id], onDelete: Cascade)
+  legislationId String
+  legislation   Legislation @relation(fields: [legislationId], references: [id], onDelete: Cascade)
+  versionId     String?
+  version       LegislationVersion? @relation(fields: [versionId], references: [id], onDelete: SetNull)
+  articleId     String?
+  article       LegislationArticle? @relation(fields: [articleId], references: [id], onDelete: SetNull)
+
+  changeType LegislationChangeType @default(AMENDED)
+  status     AlertStatus           @default(OPEN)
+
+  title       String
+  description String?
+  previousText String?
+  newText      String?
+
+  /// Recuento e identificadores del contenido posiblemente afectado, calculado
+  /// al abrir la alerta: { nodes: [...], questions: [...], tests: [...] }.
+  impact Json?
+
+  /// Propuesta de redacción generada por IA. Solo una sugerencia (§126).
+  aiProposal   Json?
+
+  reviewedById String?
+  reviewedAt   DateTime?
+  resolution   String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([academyId, status, createdAt])
+  @@map("legislation_change_alerts")
+}

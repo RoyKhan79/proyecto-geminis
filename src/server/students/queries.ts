@@ -1,0 +1,219 @@
+import type { StudentStatus } from "@/generated/prisma/enums";
+import type { TenantClient } from "@/lib/db/tenant";
+
+/**
+ * Consultas de alumnos.
+ *
+ * Toda la lógica de datos vive aquí, no en los componentes (§65). Las páginas
+ * solo deciden qué pintar con lo que reciben.
+ */
+
+export const PAGE_SIZE = 25;
+
+export type StudentFilters = {
+  search?: string;
+  status?: StudentStatus | "ALL";
+  courseId?: string;
+  groupId?: string;
+  page?: number;
+};
+
+export type StudentListItem = Awaited<
+  ReturnType<typeof listStudents>
+>["items"][number];
+
+export async function listStudents(db: TenantClient, filters: StudentFilters) {
+  const page = Math.max(1, filters.page ?? 1);
+  const search = filters.search?.trim();
+
+  const where = {
+    deletedAt: null,
+    studentProfile: {
+      isNot: null,
+      ...(filters.status && filters.status !== "ALL"
+        ? { is: { status: filters.status } }
+        : {}),
+    },
+    ...(search
+      ? {
+          OR: [
+            { user: { firstName: { contains: search, mode: "insensitive" as const } } },
+            { user: { lastName: { contains: search, mode: "insensitive" as const } } },
+            { user: { email: { contains: search, mode: "insensitive" as const } } },
+            { studentProfile: { is: { code: { contains: search, mode: "insensitive" as const } } } },
+          ],
+        }
+      : {}),
+    ...(filters.courseId || filters.groupId
+      ? {
+          enrollments: {
+            some: {
+              deletedAt: null,
+              ...(filters.courseId ? { courseId: filters.courseId } : {}),
+              ...(filters.groupId ? { groupId: filters.groupId } : {}),
+            },
+          },
+        }
+      : {}),
+  };
+
+  const [items, total] = await Promise.all([
+    db.membership.findMany({
+      where,
+      orderBy: [{ user: { lastName: "asc" } }, { user: { firstName: "asc" } }],
+      skip: (page - 1) * PAGE_SIZE,
+      take: PAGE_SIZE,
+      select: {
+        id: true,
+        createdAt: true,
+        user: {
+          select: { id: true, firstName: true, lastName: true, email: true, phone: true },
+        },
+        studentProfile: {
+          select: { code: true, status: true, lastActivityAt: true },
+        },
+        enrollments: {
+          where: { deletedAt: null },
+          select: {
+            id: true,
+            status: true,
+            course: { select: { id: true, name: true } },
+            group: { select: { id: true, name: true } },
+          },
+        },
+      },
+    }),
+    db.membership.count({ where }),
+  ]);
+
+  return {
+    items,
+    total,
+    page,
+    pageCount: Math.max(1, Math.ceil(total / PAGE_SIZE)),
+  };
+}
+
+export async function getStudent(db: TenantClient, membershipId: string) {
+  return db.membership.findUnique({
+    where: { id: membershipId },
+    select: {
+      id: true,
+      status: true,
+      createdAt: true,
+      joinedAt: true,
+      user: {
+        select: {
+          id: true,
+          firstName: true,
+          lastName: true,
+          email: true,
+          phone: true,
+          avatarUrl: true,
+          lastLoginAt: true,
+        },
+      },
+      studentProfile: true,
+      enrollments: {
+        where: { deletedAt: null },
+        orderBy: { startDate: "desc" },
+        select: {
+          id: true,
+          status: true,
+          startDate: true,
+          endDate: true,
+          priceCents: true,
+          discountCents: true,
+          notes: true,
+          course: {
+            select: {
+              id: true,
+              name: true,
+              oppositionEdition: {
+                select: {
+                  id: true,
+                  name: true,
+                  opposition: { select: { id: true, name: true } },
+                },
+              },
+            },
+          },
+          group: { select: { id: true, name: true } },
+        },
+      },
+      entitlements: {
+        where: { status: { in: ["ACTIVE", "PENDING", "PAST_DUE", "SUSPENDED"] } },
+        select: {
+          id: true,
+          source: true,
+          status: true,
+          startsAt: true,
+          endsAt: true,
+          note: true,
+          product: { select: { id: true, name: true } },
+          scopes: {
+            select: {
+              capability: true,
+              node: { select: { id: true, label: true } },
+            },
+          },
+        },
+      },
+      payments: {
+        orderBy: { dueDate: "desc" },
+        take: 12,
+        select: {
+          id: true,
+          concept: true,
+          amountCents: true,
+          status: true,
+          method: true,
+          dueDate: true,
+          paidAt: true,
+        },
+      },
+    },
+  });
+}
+
+/** Cursos y grupos disponibles, para los desplegables de filtros y matrícula. */
+export async function loadCourseOptions(db: TenantClient) {
+  return db.course.findMany({
+    where: { deletedAt: null, status: { in: ["ACTIVE", "DRAFT"] } },
+    orderBy: { name: "asc" },
+    select: {
+      id: true,
+      name: true,
+      oppositionEdition: {
+        select: {
+          name: true,
+          opposition: { select: { name: true } },
+        },
+      },
+      groups: {
+        where: { deletedAt: null },
+        orderBy: { name: "asc" },
+        select: { id: true, name: true },
+      },
+    },
+  });
+}
+
+export const STUDENT_STATUS_LABEL: Record<StudentStatus, string> = {
+  PENDING: "Pendiente",
+  ACTIVE: "Activo",
+  ON_HOLD: "Baja temporal",
+  INACTIVE: "Baja",
+  ALUMNI: "Antiguo alumno",
+};
+
+export const STUDENT_STATUS_TONE: Record<
+  StudentStatus,
+  "neutral" | "positive" | "caution" | "critical" | "info"
+> = {
+  PENDING: "caution",
+  ACTIVE: "positive",
+  ON_HOLD: "caution",
+  INACTIVE: "critical",
+  ALUMNI: "neutral",
+};

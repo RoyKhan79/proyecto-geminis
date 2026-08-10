@@ -1,0 +1,133 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// PLATAFORMA · La academia es el tenant
+//
+// Decisión ADR-0002: en Geminis `Academy` ES el tenant. No existe una tabla
+// `Tenant` separada porque hoy sería una indirección sin uso. Si en el futuro
+// aparecen grupos con varias academias, se añade `Organization` POR ENCIMA de
+// Academy, que es una migración aditiva y sencilla.
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum AcademyStatus {
+  TRIAL
+  ACTIVE
+  PAST_DUE
+  SUSPENDED
+  CANCELLED
+}
+
+enum PlanCode {
+  STARTER
+  PRO
+  BUSINESS
+  ENTERPRISE
+}
+
+/// Plan comercial de la plataforma. Los límites viven en columnas explícitas
+/// (no en un JSON opaco) para poder consultarlos y compararlos en SQL.
+model Plan {
+  id   String   @id @default(uuid(7))
+  code PlanCode @unique
+  name String
+
+  priceCents    Int    @default(0)
+  currency      String @default("EUR")
+  billingPeriod String @default("MONTHLY") // MONTHLY | YEARLY
+
+  maxStudents      Int? // null = sin límite
+  maxTeachers      Int?
+  maxAdmins        Int?
+  maxOppositions   Int?
+  storageGb        Int?
+  aiTokensPerMonth Int?
+
+  isPublic  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  academies Academy[]
+
+  @@map("plans")
+}
+
+/// Una academia = un tenant = una frontera de aislamiento total.
+model Academy {
+  id   String @id @default(uuid(7))
+  /// Identificador legible usado en URLs y subdominios. Inmutable en la práctica.
+  slug String @unique
+  name String
+
+  legalName String?
+  taxId     String?
+  email     String?
+  phone     String?
+  address   String?
+  city      String?
+  province  String?
+  country   String  @default("ES")
+
+  status      AcademyStatus @default(TRIAL)
+  trialEndsAt DateTime?
+  planId      String?
+  plan        Plan?         @relation(fields: [planId], references: [id], onDelete: SetNull)
+
+  locale   String @default("es-ES")
+  timezone String @default("Europe/Madrid")
+
+  // White-label (§60). Personalización ligera desde el día uno; dominio propio
+  // queda modelado pero sin resolución activa hasta la fase correspondiente.
+  logoUrl      String?
+  primaryColor String? @default("#4F46E5")
+  customDomain String? @unique
+
+  /// Ajustes de producto por academia (marcas de agua, descargas por defecto,
+  /// política de IA…). JSON porque son banderas heterogéneas y cambiantes.
+  settings Json @default("{}")
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  memberships       Membership[]
+  roles             Role[]
+  oppositionTypes   OppositionType[]
+  oppositions       Opposition[]
+  oppositionEdition OppositionEdition[]
+  courses           Course[]
+  groups            Group[]
+  enrollments       Enrollment[]
+  teacherAssignment TeacherAssignment[]
+  contentNodes      ContentNode[]
+  storedFiles       StoredFile[]
+  contentProgress   StudentContentProgress[]
+  classSessions     ClassSession[]
+  classAttendances  ClassAttendance[]
+  questions         Question[]
+  questionOptions   QuestionOption[]
+  examBlueprints    ExamBlueprint[]
+  testDefinitions   TestDefinition[]
+  testAttempts      TestAttempt[]
+  testAttemptAnswer TestAttemptAnswer[]
+  questionStats     StudentQuestionStat[]
+  products          Product[]
+  productGrants     ProductGrant[]
+  entitlements      Entitlement[]
+  payments          Payment[]
+  auditLogs         AuditLog[]
+  notifications     Notification[]
+  importJobs        ImportJob[]
+  importRows        ImportRow[]
+  knowledgeSources  KnowledgeSource[]
+  documentChunks    DocumentChunk[]
+  aiConversations   AIConversation[]
+  aiMessages        AIMessage[]
+  aiUsages          AIUsage[]
+  legislations      Legislation[]
+  legislationVers   LegislationVersion[]
+  legislationArts   LegislationArticle[]
+  contentLegLinks   ContentLegislationLink[]
+  legislationAlerts LegislationChangeAlert[]
+  sessions          Session[]
+
+  @@index([status])
+  @@map("academies")
+}

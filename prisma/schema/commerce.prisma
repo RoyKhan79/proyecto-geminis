@@ -1,0 +1,220 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// COMERCIAL · Productos, derechos de acceso y pagos
+//
+// Decisión ADR-0008: el acceso NUNCA se deduce de `pagado = true`. Existe una
+// entidad explícita, `Entitlement` (derecho de acceso), con su propio ciclo de
+// vida y su alcance. Un alumno ve una rama del contenido si —y solo si— tiene
+// un derecho activo que la cubra. Esto permite exactamente lo que pide el
+// negocio: packs distintos (solo clases, solo temario, temario + tests, curso
+// completo) y ajustes individuales hechos por el profesor para un alumno
+// concreto, sin tocar código.
+//
+// El motor de autorización de contenido es uno solo y vive en
+// src/lib/access/content-access.ts. Ver docs/SECURITY_MODEL.md.
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum ProductBilling {
+  ONE_TIME
+  MONTHLY
+  QUARTERLY
+  YEARLY
+}
+
+enum ProductStatus {
+  DRAFT
+  ACTIVE
+  ARCHIVED
+}
+
+/// Capacidades que un derecho de acceso puede otorgar sobre su alcance.
+enum Capability {
+  VIEW_CONTENT
+  DOWNLOAD_CONTENT
+  TAKE_TESTS
+  TAKE_SIMULATIONS
+  ATTEND_CLASSES
+  WATCH_RECORDINGS
+  USE_AI_TUTOR
+}
+
+enum EntitlementSource {
+  ENROLLMENT // derivado de la matrícula del curso
+  PRODUCT // compra de un producto/pack
+  MANUAL // concedido a mano por la academia o el profesor
+  TRIAL // acceso de prueba temporal
+}
+
+enum EntitlementStatus {
+  PENDING
+  ACTIVE
+  PAST_DUE
+  SUSPENDED
+  EXPIRED
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  PAID
+  FAILED
+  REFUNDED
+  CANCELLED
+}
+
+enum PaymentMethod {
+  CASH
+  TRANSFER
+  CARD
+  SEPA_DIRECT_DEBIT
+  OTHER
+}
+
+/// Producto vendible de la academia: curso completo, pack de tests, intensivo,
+/// simulacros premium… (§132, §133). Define qué desbloquea vía ProductGrant.
+model Product {
+  id        String  @id @default(uuid(7))
+  academyId String  @default("SIN_TENANT")
+  academy   Academy @relation(fields: [academyId], references: [id], onDelete: Cascade)
+
+  name        String
+  slug        String
+  description String?
+  priceCents  Int            @default(0)
+  currency    String         @default("EUR")
+  billing     ProductBilling @default(MONTHLY)
+  status      ProductStatus  @default(DRAFT)
+
+  // Ámbito comercial opcional, para catálogos ordenados.
+  oppositionId String?
+  opposition   Opposition?        @relation(fields: [oppositionId], references: [id], onDelete: SetNull)
+  editionId    String?
+  edition      OppositionEdition? @relation(fields: [editionId], references: [id], onDelete: SetNull)
+  courseId     String?
+  course       Course?            @relation(fields: [courseId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  grants       ProductGrant[]
+  entitlements Entitlement[]
+  payments     Payment[]
+
+  @@unique([academyId, slug])
+  @@index([academyId, status])
+  @@map("products")
+}
+
+/// Qué desbloquea un producto. Un producto puede tener varias concesiones:
+/// p. ej. "ver la rama Temario" + "hacer tests" pero no "descargar".
+model ProductGrant {
+  id        String  @id @default(uuid(7))
+  academyId String  @default("SIN_TENANT")
+  academy   Academy @relation(fields: [academyId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  /// Rama de contenido concedida (el nodo y todos sus descendientes).
+  /// null = toda la convocatoria/curso del producto.
+  nodeId String?
+  node   ContentNode? @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+
+  capability Capability @default(VIEW_CONTENT)
+
+  createdAt DateTime @default(now())
+
+  @@unique([productId, nodeId, capability])
+  @@index([academyId, productId])
+  @@map("product_grants")
+}
+
+/// Derecho de acceso efectivo de un alumno. Es lo que consulta el motor de
+/// permisos de contenido, tanto para abrir un PDF como para que la IA pueda
+/// recuperar ese fragmento (§111).
+model Entitlement {
+  id        String     @id @default(uuid(7))
+  academyId String  @default("SIN_TENANT")
+  academy   Academy    @relation(fields: [academyId], references: [id], onDelete: Cascade)
+  studentId String
+  student   Membership @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  source EntitlementSource
+  status EntitlementStatus @default(PENDING)
+
+  productId    String?
+  product      Product?    @relation(fields: [productId], references: [id], onDelete: SetNull)
+  enrollmentId String?
+  enrollment   Enrollment? @relation(fields: [enrollmentId], references: [id], onDelete: Cascade)
+
+  startsAt DateTime  @default(now())
+  endsAt   DateTime?
+
+  /// Quién lo concedió a mano (membershipId del profesor/administrador).
+  grantedById String?
+  note        String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  scopes EntitlementScope[]
+
+  @@index([academyId, studentId, status])
+  @@index([academyId, status, endsAt])
+  @@map("entitlements")
+}
+
+/// Alcance concreto de un derecho: qué rama y con qué capacidad.
+model EntitlementScope {
+  id            String      @id @default(uuid(7))
+  entitlementId String
+  entitlement   Entitlement @relation(fields: [entitlementId], references: [id], onDelete: Cascade)
+
+  /// null = todo el ámbito del derecho (curso/producto asociado).
+  nodeId String?
+  node   ContentNode? @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+
+  courseId String?
+
+  capability Capability @default(VIEW_CONTENT)
+
+  @@unique([entitlementId, nodeId, courseId, capability])
+  @@index([nodeId])
+  @@map("entitlement_scopes")
+}
+
+/// Cobro. La integración con pasarelas (Stripe, Redsys, SEPA) llegará después;
+/// el modelo ya contempla referencia externa y método.
+model Payment {
+  id        String     @id @default(uuid(7))
+  academyId String  @default("SIN_TENANT")
+  academy   Academy    @relation(fields: [academyId], references: [id], onDelete: Cascade)
+  studentId String
+  student   Membership @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  enrollmentId String?
+  enrollment   Enrollment? @relation(fields: [enrollmentId], references: [id], onDelete: SetNull)
+  productId    String?
+  product      Product?    @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  concept     String
+  amountCents Int
+  currency    String        @default("EUR")
+  status      PaymentStatus @default(PENDING)
+  method      PaymentMethod @default(TRANSFER)
+
+  dueDate DateTime?
+  paidAt  DateTime?
+
+  /// Referencia del proveedor de pago o número de recibo interno.
+  externalRef String?
+  receiptNo   String?
+  notes       String?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  @@index([academyId, status, dueDate])
+  @@index([academyId, studentId])
+  @@map("payments")
+}

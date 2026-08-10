@@ -1,0 +1,171 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// GEMINIS IA · Base de conocimiento privada por academia
+//
+// Decisión ADR-0010: los fragmentos indexados llevan SIEMPRE `academyId` y una
+// copia de los identificadores que permiten filtrar por derechos de acceso
+// (edición, nodo, rama). El filtro se aplica ANTES de la búsqueda semántica,
+// nunca después (§111, §112). Ningún contenido de una academia se usa para
+// responder a otra, ni para entrenar nada (§135).
+//
+// Decisión ADR-0011: el vector de embedding se añade en la fase de IA, cuando
+// exista pgvector en el entorno. Hasta entonces la tabla guarda el fragmento,
+// su metadato y su hash, que es lo que condiciona el diseño del resto. Así el
+// esquema es honesto: no declaramos una columna que hoy no podríamos crear.
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum KnowledgeSourceStatus {
+  PENDING
+  PROCESSING
+  INDEXED
+  FAILED
+  DISABLED
+}
+
+/// Documento de la academia admitido en la base de conocimiento de la IA.
+/// Solo entra aquí lo que la academia autoriza explícitamente (§105).
+model KnowledgeSource {
+  id        String  @id @default(uuid(7))
+  academyId String  @default("SIN_TENANT")
+  academy   Academy @relation(fields: [academyId], references: [id], onDelete: Cascade)
+
+  /// Nodo de contenido del que procede (mantiene la trazabilidad y los permisos).
+  nodeId String?
+  node   ContentNode? @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+  fileId String?
+  file   StoredFile?  @relation(fields: [fileId], references: [id], onDelete: SetNull)
+
+  title  String
+  status KnowledgeSourceStatus @default(PENDING)
+
+  /// Versión del contenido indexado. Al cambiar el documento se reindexa y se
+  /// incrementa, de forma que las citas antiguas siguen siendo interpretables.
+  version    Int    @default(1)
+  checksum   String?
+  chunkCount Int    @default(0)
+
+  lastIndexedAt DateTime?
+  error         String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  chunks DocumentChunk[]
+
+  @@index([academyId, status])
+  @@map("knowledge_sources")
+}
+
+/// Fragmento semántico indexado. La columna de embedding se añadirá con
+/// pgvector en la fase de IA (ver ADR-0011).
+model DocumentChunk {
+  id        String          @id @default(uuid(7))
+  academyId String  @default("SIN_TENANT")
+  academy   Academy         @relation(fields: [academyId], references: [id], onDelete: Cascade)
+  sourceId  String
+  source    KnowledgeSource @relation(fields: [sourceId], references: [id], onDelete: Cascade)
+
+  /// Copias desnormalizadas para poder filtrar por permisos en la misma consulta.
+  nodeId    String?
+  nodePath  String?
+  editionId String?
+
+  position Int
+  content  String
+  tokens   Int     @default(0)
+  /// Página, sección o marca temporal de origen: sirve para citar (§17).
+  locator  String?
+  checksum String?
+
+  createdAt DateTime @default(now())
+
+  @@unique([sourceId, position])
+  @@index([academyId, nodeId])
+  @@index([academyId, editionId])
+  @@map("document_chunks")
+}
+
+enum AIAssistantKind {
+  STUDENT_TUTOR
+  TEACHER_COPILOT
+}
+
+model AIConversation {
+  id        String     @id @default(uuid(7))
+  academyId String  @default("SIN_TENANT")
+  academy   Academy    @relation(fields: [academyId], references: [id], onDelete: Cascade)
+  memberId  String
+  member    Membership @relation(fields: [memberId], references: [id], onDelete: Cascade)
+
+  kind  AIAssistantKind @default(STUDENT_TUTOR)
+  title String?
+
+  /// Contexto de origen (§131): dónde estaba el usuario al abrir la IA.
+  contextNodeId String?
+  contextData   Json?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  messages AIMessage[]
+
+  @@index([academyId, memberId, updatedAt])
+  @@map("ai_conversations")
+}
+
+model AIMessage {
+  id             String         @id @default(uuid(7))
+  academyId      String @default("SIN_TENANT")
+  academy        Academy        @relation(fields: [academyId], references: [id], onDelete: Cascade)
+  conversationId String
+  conversation   AIConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  role    String // user | assistant | system
+  content String
+
+  /// Citas devueltas: [{ sourceId, chunkId, locator, label }]. Si va vacío, la
+  /// respuesta NO puede afirmar que se apoya en material de la academia (§56).
+  citations Json?
+  /// Nivel de confianza declarado por la capa RAG, cuando tiene sentido.
+  confidence String?
+
+  model            String?
+  provider         String?
+  promptTokens     Int?
+  completionTokens Int?
+
+  createdAt DateTime @default(now())
+
+  @@index([conversationId, createdAt])
+  @@map("ai_messages")
+}
+
+/// Consumo de IA para control de costes y planes (§54).
+model AIUsage {
+  id        String      @id @default(uuid(7))
+  academyId String  @default("SIN_TENANT")
+  academy   Academy     @relation(fields: [academyId], references: [id], onDelete: Cascade)
+  memberId  String?
+  member    Membership? @relation(fields: [memberId], references: [id], onDelete: SetNull)
+
+  /// Funcionalidad que consumió: "student.chat", "copilot.generate_questions"…
+  feature  String
+  provider String
+  model    String
+
+  promptTokens     Int @default(0)
+  completionTokens Int @default(0)
+  embeddingTokens  Int @default(0)
+  /// Coste estimado en milésimas de céntimo, para evitar decimales flotantes.
+  costMilliCents   Int @default(0)
+
+  latencyMs Int?
+  success   Boolean @default(true)
+  errorCode String?
+
+  createdAt DateTime @default(now())
+
+  @@index([academyId, createdAt])
+  @@index([academyId, feature, createdAt])
+  @@map("ai_usages")
+}

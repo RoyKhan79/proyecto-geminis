@@ -1,0 +1,300 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// EVALUACIÓN · Banco de preguntas, tests, simulacros e histórico de errores
+//
+// Decisión ADR-0009: una pregunta generada por IA entra SIEMPRE como DRAFT y
+// guarda su procedencia (modelo, fuentes, quién la pidió). No existe ninguna
+// ruta de código que publique contenido sin decisión humana (§22, §119).
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum QuestionType {
+  SINGLE_CHOICE
+  MULTIPLE_CHOICE
+  TRUE_FALSE
+  OPEN
+}
+
+enum QuestionDifficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+enum QuestionStatus {
+  DRAFT
+  PENDING_REVIEW
+  PUBLISHED
+  /// Marcada automáticamente cuando cambia normativa relacionada (§127).
+  POSSIBLY_OUTDATED
+  ARCHIVED
+}
+
+enum QuestionSource {
+  MANUAL
+  IMPORT
+  AI_GENERATED
+  OFFICIAL_EXAM
+}
+
+enum TestKind {
+  TOPIC
+  BLOCK
+  CUSTOM
+  RANDOM
+  ERRORS
+  REVIEW
+  FAVORITES
+  SIMULATION
+  OFFICIAL_EXAM
+  AI_GENERATED
+}
+
+enum AttemptStatus {
+  IN_PROGRESS
+  SUBMITTED
+  EXPIRED
+  ABANDONED
+}
+
+model Question {
+  id        String  @id @default(uuid(7))
+  academyId String  @default("SIN_TENANT")
+  academy   Academy @relation(fields: [academyId], references: [id], onDelete: Cascade)
+
+  editionId String?
+  edition   OppositionEdition? @relation(fields: [editionId], references: [id], onDelete: SetNull)
+  /// Tema/apartado del árbol de contenido al que pertenece.
+  nodeId    String?
+  node      ContentNode?       @relation(fields: [nodeId], references: [id], onDelete: SetNull)
+
+  type       QuestionType       @default(SINGLE_CHOICE)
+  difficulty QuestionDifficulty @default(MEDIUM)
+  status     QuestionStatus     @default(DRAFT)
+  source     QuestionSource     @default(MANUAL)
+
+  statement   String
+  /// Explicación del profesor que se muestra tras responder.
+  explanation String?
+  tags        String[] @default([])
+
+  /// Referencia al examen oficial del que procede, si aplica.
+  officialExamRef String?
+
+  authorId   String?
+  author     Membership? @relation("QuestionAuthor", fields: [authorId], references: [id], onDelete: SetNull)
+  reviewerId String?
+  reviewer   Membership? @relation("QuestionReviewer", fields: [reviewerId], references: [id], onDelete: SetNull)
+  reviewedAt DateTime?
+
+  /// Trazabilidad de generación por IA (§118): modelo, fecha, fragmentos fuente,
+  /// versión del contenido usado. Vacío si la pregunta no viene de IA.
+  aiProvenance Json?
+
+  /// Aviso de posible desactualización con su motivo legible.
+  outdatedReason String?
+  outdatedAt     DateTime?
+
+  // Estadísticas denormalizadas para analítica rápida (§36).
+  timesAnswered Int @default(0)
+  timesCorrect  Int @default(0)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  options         QuestionOption[]
+  attemptAnswers  TestAttemptAnswer[]
+  studentStats    StudentQuestionStat[]
+  legislationLink ContentLegislationLink[]
+
+  @@index([academyId, status])
+  @@index([academyId, nodeId, status])
+  @@index([academyId, editionId, status])
+  @@map("questions")
+}
+
+model QuestionOption {
+  id         String   @id @default(uuid(7))
+  academyId  String @default("SIN_TENANT")
+  academy    Academy  @relation(fields: [academyId], references: [id], onDelete: Cascade)
+  questionId String
+  question   Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  text      String
+  isCorrect Boolean @default(false)
+  position  Int     @default(0)
+  /// Explicación específica de por qué esta opción es (in)correcta.
+  feedback  String?
+
+  attemptAnswers TestAttemptAnswer[]
+
+  @@index([questionId, position])
+  @@map("question_options")
+}
+
+/// Estructura de un examen real (§121). Permite generar simulacros que se
+/// parezcan de verdad a la prueba oficial.
+model ExamBlueprint {
+  id        String  @id @default(uuid(7))
+  academyId String  @default("SIN_TENANT")
+  academy   Academy @relation(fields: [academyId], references: [id], onDelete: Cascade)
+  editionId String?
+  edition   OppositionEdition? @relation(fields: [editionId], references: [id], onDelete: SetNull)
+
+  name            String
+  totalQuestions  Int
+  reserveQuestions Int    @default(0)
+  optionsPerQuestion Int  @default(4)
+  durationMinutes Int
+  /// Penalización por fallo, en aciertos. Ej.: 0.333 = un fallo resta 1/3.
+  penaltyPerWrong Decimal @default(0) @db.Decimal(6, 3)
+  passingScore    Decimal? @db.Decimal(6, 3)
+
+  /// Distribución por bloques/temas: [{ nodeId, questions, weight }]
+  distribution Json @default("[]")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  tests TestDefinition[]
+
+  @@index([academyId])
+  @@map("exam_blueprints")
+}
+
+/// Plantilla de test o simulacro publicada por la academia.
+model TestDefinition {
+  id        String  @id @default(uuid(7))
+  academyId String  @default("SIN_TENANT")
+  academy   Academy @relation(fields: [academyId], references: [id], onDelete: Cascade)
+
+  editionId String?
+  edition   OppositionEdition? @relation(fields: [editionId], references: [id], onDelete: SetNull)
+  nodeId    String?
+  node      ContentNode?       @relation(fields: [nodeId], references: [id], onDelete: SetNull)
+  blueprintId String?
+  blueprint   ExamBlueprint?   @relation(fields: [blueprintId], references: [id], onDelete: SetNull)
+
+  title       String
+  description String?
+  kind        TestKind      @default(TOPIC)
+  status      ContentStatus @default(DRAFT)
+
+  questionCount   Int      @default(20)
+  timeLimitMinutes Int?
+  penaltyPerWrong Decimal  @default(0) @db.Decimal(6, 3)
+  shuffleQuestions Boolean @default(true)
+  shuffleOptions   Boolean @default(true)
+  /// IMMEDIATE = tras cada pregunta · AT_END = al finalizar · NEVER
+  revealMode      String   @default("AT_END")
+  maxAttempts     Int?
+
+  availableFrom  DateTime?
+  availableUntil DateTime?
+
+  createdById String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  attempts TestAttempt[]
+
+  @@index([academyId, status])
+  @@index([academyId, nodeId])
+  @@map("test_definitions")
+}
+
+model TestAttempt {
+  id        String     @id @default(uuid(7))
+  academyId String  @default("SIN_TENANT")
+  academy   Academy    @relation(fields: [academyId], references: [id], onDelete: Cascade)
+  studentId String
+  student   Membership @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  /// null cuando el test lo ha generado el propio alumno (aleatorio, errores…).
+  testDefinitionId String?
+  testDefinition   TestDefinition? @relation(fields: [testDefinitionId], references: [id], onDelete: SetNull)
+
+  kind   TestKind      @default(CUSTOM)
+  status AttemptStatus @default(IN_PROGRESS)
+
+  /// Copia de la configuración con la que se lanzó el intento: si la plantilla
+  /// cambia después, el histórico sigue siendo interpretable.
+  config Json @default("{}")
+
+  startedAt   DateTime  @default(now())
+  submittedAt DateTime?
+  expiresAt   DateTime?
+
+  totalQuestions Int      @default(0)
+  correctCount   Int      @default(0)
+  wrongCount     Int      @default(0)
+  blankCount     Int      @default(0)
+  /// Puntuación neta aplicando penalización.
+  score          Decimal? @db.Decimal(8, 3)
+  scorePercent   Decimal? @db.Decimal(6, 2)
+  timeSpentSeconds Int    @default(0)
+
+  answers TestAttemptAnswer[]
+
+  @@index([academyId, studentId, startedAt])
+  @@index([academyId, testDefinitionId])
+  @@map("test_attempts")
+}
+
+model TestAttemptAnswer {
+  id        String      @id @default(uuid(7))
+  academyId String  @default("SIN_TENANT")
+  academy   Academy     @relation(fields: [academyId], references: [id], onDelete: Cascade)
+  attemptId String
+  attempt   TestAttempt @relation(fields: [attemptId], references: [id], onDelete: Cascade)
+  questionId String
+  question   Question   @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  position Int @default(0)
+
+  selectedOptionId String?
+  selectedOption   QuestionOption? @relation(fields: [selectedOptionId], references: [id], onDelete: SetNull)
+  /// Respuesta libre para preguntas abiertas.
+  answerText       String?
+
+  isCorrect        Boolean?
+  timeSpentSeconds Int      @default(0)
+  flagged          Boolean  @default(false)
+
+  answeredAt DateTime?
+
+  @@unique([attemptId, questionId])
+  @@index([academyId, questionId])
+  @@map("test_attempt_answers")
+}
+
+/// Histórico inteligente de errores por alumno y pregunta (§13). Es la base del
+/// "test de mis errores" y de la repetición espaciada.
+model StudentQuestionStat {
+  id        String     @id @default(uuid(7))
+  academyId String  @default("SIN_TENANT")
+  academy   Academy    @relation(fields: [academyId], references: [id], onDelete: Cascade)
+  studentId String
+  student   Membership @relation(fields: [studentId], references: [id], onDelete: Cascade)
+  questionId String
+  question   Question  @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  timesSeen    Int     @default(0)
+  timesCorrect Int     @default(0)
+  timesWrong   Int     @default(0)
+  lastCorrect  Boolean?
+  isFavorite   Boolean @default(false)
+
+  lastSeenAt DateTime?
+  /// Repetición espaciada (SM-2 simplificado). Se activa en la fase de tests.
+  nextReviewAt DateTime?
+  intervalDays Int      @default(0)
+  easeFactor   Decimal  @default(2.5) @db.Decimal(4, 2)
+
+  updatedAt DateTime @updatedAt
+
+  @@unique([studentId, questionId])
+  @@index([academyId, studentId, nextReviewAt])
+  @@index([academyId, studentId, timesWrong])
+  @@map("student_question_stats")
+}
