@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowUpRight, GraduationCap, ListChecks, UserRound, Users } from "lucide-react";
 import { requireAcademy } from "@/lib/auth/context";
+import { loadAcademyOverview } from "@/server/dashboard/queries";
 import { Card, CardContent, PageHeader } from "@/components/ui/primitives";
 import { formatDate } from "@/lib/utils";
 
@@ -11,50 +12,21 @@ export default async function ManagerHomePage() {
   const ctx = await requireAcademy();
   const { db } = ctx;
 
-  const desde30 = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-
-  const [alumnos, altas30, profesores, matriculasActivas, oposiciones, ultimosAlumnos] =
-    await Promise.all([
-      db.membership.count({
-        where: { deletedAt: null, studentProfile: { is: { status: "ACTIVE" } } },
-      }),
-      db.membership.count({
-        where: {
-          deletedAt: null,
-          studentProfile: { isNot: null },
-          createdAt: { gte: desde30 },
-        },
-      }),
-      db.membership.count({
-        where: { deletedAt: null, teacherProfile: { isNot: null } },
-      }),
-      db.enrollment.count({ where: { status: "ACTIVE", deletedAt: null } }),
-      db.opposition.count({ where: { status: "ACTIVE", deletedAt: null } }),
-      db.membership.findMany({
-        where: { deletedAt: null, studentProfile: { isNot: null } },
-        orderBy: { createdAt: "desc" },
-        take: 5,
-        select: {
-          id: true,
-          createdAt: true,
-          user: { select: { firstName: true, lastName: true, email: true } },
-        },
-      }),
-    ]);
+  const resumen = await loadAcademyOverview(db);
 
   const metricas = [
-    { label: "Alumnos activos", value: alumnos, icon: Users, href: "/gestion/alumnos" },
-    { label: "Altas (30 días)", value: altas30, icon: ArrowUpRight, href: "/gestion/alumnos" },
-    { label: "Profesores", value: profesores, icon: UserRound, href: "/gestion/profesores" },
+    { label: "Alumnos activos", value: resumen.alumnosActivos, icon: Users, href: "/gestion/alumnos" },
+    { label: "Altas (30 días)", value: resumen.altasUltimos30, icon: ArrowUpRight, href: "/gestion/alumnos" },
+    { label: "Profesores", value: resumen.profesores, icon: UserRound, href: "/gestion/profesores" },
     {
       label: "Matrículas activas",
-      value: matriculasActivas,
+      value: resumen.matriculasActivas,
       icon: ListChecks,
       href: "/gestion/matriculas",
     },
     {
       label: "Oposiciones",
-      value: oposiciones,
+      value: resumen.oposiciones,
       icon: GraduationCap,
       href: "/gestion/oposiciones",
     },
@@ -103,13 +75,13 @@ export default async function ManagerHomePage() {
             </Link>
           </div>
 
-          {ultimosAlumnos.length === 0 ? (
+          {resumen.ultimasAltas.length === 0 ? (
             <p className="px-5 py-8 text-center text-sm text-ink-muted">
               Todavía no hay alumnos dados de alta.
             </p>
           ) : (
             <ul className="divide-y divide-[var(--border-subtle)]">
-              {ultimosAlumnos.map((alumno) => (
+              {resumen.ultimasAltas.map((alumno) => (
                 <li key={alumno.id}>
                   <Link
                     href={`/gestion/alumnos/${alumno.id}`}

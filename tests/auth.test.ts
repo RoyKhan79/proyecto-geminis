@@ -85,6 +85,14 @@ describe("catálogo de permisos", () => {
     expect(SYSTEM_ROLES.STAFF.permissions).not.toContain("content.publish");
   });
 
+  it("el personal administrativo no accede a la configuración ni a los roles", () => {
+    // La pantalla de Configuración muestra cómo está montado el acceso de toda
+    // la academia; no forma parte del trabajo administrativo.
+    expect(SYSTEM_ROLES.STAFF.permissions).not.toContain("settings.read");
+    expect(SYSTEM_ROLES.STAFF.permissions).not.toContain("settings.write");
+    expect(SYSTEM_ROLES.STAFF.permissions).not.toContain("roles.write");
+  });
+
   it("el administrador de academia no recibe permisos de alumno", () => {
     expect(SYSTEM_ROLES.ACADEMY_ADMIN.permissions).not.toContain("campus.access");
   });

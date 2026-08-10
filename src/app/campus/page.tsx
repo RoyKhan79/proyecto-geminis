@@ -8,6 +8,7 @@ import {
   loadStudentEditions,
   loadUpcomingClasses,
 } from "@/server/campus/queries";
+import { daysUntil } from "@/server/dashboard/queries";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, EmptyState } from "@/components/ui/primitives";
 import { formatDateTime } from "@/lib/utils";
@@ -28,11 +29,7 @@ export default async function CampusHomePage() {
   const proxima = clases[0];
   const oposicion = matriculas[0]?.course.oppositionEdition;
 
-  const diasParaExamen = oposicion?.examDate
-    ? Math.ceil(
-        (new Date(oposicion.examDate).getTime() - Date.now()) / (24 * 60 * 60 * 1000),
-      )
-    : null;
+  const diasParaExamen = daysUntil(oposicion?.examDate);
 
   return (
     <>
@@ -43,9 +40,7 @@ export default async function CampusHomePage() {
         {oposicion ? (
           <p className="text-sm text-ink-muted">
             {oposicion.opposition.name} · {oposicion.name}
-            {diasParaExamen && diasParaExamen > 0
-              ? ` · quedan ${diasParaExamen} días para el examen`
-              : ""}
+            {diasParaExamen ? ` · quedan ${diasParaExamen} días para el examen` : ""}
           </p>
         ) : null}
       </header>

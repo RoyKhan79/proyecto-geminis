@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
-import { requirePermission } from "@/lib/auth/context";
+import { requirePagePermission } from "@/lib/auth/context";
 import { createStudentAction } from "@/server/students/actions";
 import { loadCourseOptions } from "@/server/students/queries";
 import { PageHeader } from "@/components/ui/primitives";
@@ -10,7 +10,7 @@ import { StudentForm } from "../student-form";
 export const metadata: Metadata = { title: "Nuevo alumno" };
 
 export default async function NuevoAlumnoPage() {
-  const ctx = await requirePermission("students.write");
+  const ctx = await requirePagePermission("students.write");
   const courses = await loadCourseOptions(ctx.db);
 
   return (

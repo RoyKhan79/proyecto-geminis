@@ -186,8 +186,27 @@ export async function requirePermission(permission: Permission) {
   return ctx;
 }
 
+/**
+ * Guarda para PÁGINAS: si falta el permiso, lleva a una pantalla explicativa.
+ *
+ * Se diferencia de `requirePermission` a propósito. Una acción que no se puede
+ * ejecutar es un error y debe lanzarlo; una página a la que alguien llega sin
+ * permiso —por un enlace antiguo o por curiosidad— merece una explicación, no
+ * un error del servidor.
+ */
+export async function requirePagePermission(permission: Permission) {
+  const ctx = await requireAcademy();
+  if (!ctx.permissions.has(permission)) redirect("/sin-acceso");
+  return ctx;
+}
+
+/**
+ * Guarda de página para la consola de plataforma.
+ * Redirige en lugar de lanzar: una persona que llega a una URL que no le
+ * corresponde merece una pantalla clara, no un error del servidor.
+ */
 export async function requirePlatformAdmin(): Promise<AuthContext> {
   const ctx = await requireAuth();
-  if (!ctx.user.isPlatformAdmin) throw new ForbiddenError();
+  if (!ctx.user.isPlatformAdmin) redirect("/sin-acceso");
   return ctx;
 }

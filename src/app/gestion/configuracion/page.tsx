@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { requireAcademy } from "@/lib/auth/context";
+import { requirePagePermission } from "@/lib/auth/context";
 import { PERMISSIONS, PERMISSION_GROUPS, type Permission } from "@/lib/auth/permissions";
 import {
   Badge,
@@ -14,7 +14,9 @@ import { formatDate } from "@/lib/utils";
 export const metadata: Metadata = { title: "Configuración" };
 
 export default async function ConfiguracionPage() {
-  const ctx = await requireAcademy();
+  // El personal administrativo no ve la configuración ni los permisos de la
+  // academia: no forma parte de su trabajo y expone cómo está montado el acceso.
+  const ctx = await requirePagePermission("settings.read");
 
   const [academia, roles] = await Promise.all([
     ctx.db.membership.count({ where: { deletedAt: null } }).then(async (personas) => ({
