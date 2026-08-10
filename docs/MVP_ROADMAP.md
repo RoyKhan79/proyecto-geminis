@@ -69,25 +69,27 @@ Modelo ya listo: `ImportJob`, `ImportRow`.
 - Comunicaciones internas y por correo
 - Pagos y recibos
 
-## ✅ Fase 4 — Tests y simulacros *(B)* · **terminada**
+## ✅ Fase 4 — Tests *(B)* · **terminada**
 
-- Banco de preguntas con estados y revisión
-- Tests por tema, bloque, aleatorios y personalizados
-- Corrección con penalización configurable
-- Histórico de errores y **test de mis errores**
-- Simulacros con plantilla de examen (`ExamBlueprint`)
-- Repetición espaciada
-- Estadísticas por alumno, tema y pregunta
+- Banco de preguntas con estados y revisión ✅
+- Tests por tema, aleatorios y de errores ✅
+- Corrección con explicación del preparador ✅
+- Histórico de errores y **test de mis errores** ✅
+- Estadísticas por alumno, tema y pregunta ✅
+- Simulacros con plantilla de examen (`ExamBlueprint`) — modelado, sin interfaz
+- Repetición espaciada — campos listos (`nextReviewAt`, `easeFactor`), sin motor
 
 ## ✅ Fase 5 — Geminis IA *(A · B · E)* · **terminada**
 
-- Gateway de IA con varios proveedores y registro de consumo
-- `pgvector` e indexación del contenido autorizado
-- Recuperación con permisos: filtrar **antes** de buscar
-- Chat del alumno con citas
-- Copiloto del profesor: generar preguntas, detectar duplicados y ambigüedades
-- Flujo generar → revisar → aprobar → publicar
-- Asistente de importación de temario
+- Gateway con varios proveedores y registro de consumo ✅
+- Indexación del contenido autorizado ✅
+- Recuperación con permisos: filtrar **antes** de buscar ✅
+- Chat del alumno con citas ✅
+- Copiloto: generar preguntas desde el material ✅
+- Flujo generar → revisar → publicar ✅
+- Búsqueda vectorial con `pgvector` — pendiente (ADR-0011); hoy es léxica
+- Detección de duplicados y ambigüedades — pendiente
+- Asistente guiado de importación de temario — pendiente
 
 ## ✅ Fase 6 — Normativa *(E)* · **terminada**
 
@@ -95,8 +97,10 @@ Modelo ya listo: `ImportJob`, `ImportRow`.
 - Relación normativa ↔ temas y preguntas
 - Alerta de cambio con cálculo de impacto
 - Flujo aceptar / editar / ignorar
-- Marcado de preguntas posiblemente desactualizadas
-- Más adelante: conexión con fuentes oficiales
+- Marcado de preguntas posiblemente desactualizadas ✅
+- Detección automática de referencias en las preguntas ✅
+- Conexión con el BOE para convocatorias ✅ (radar)
+- Rastreo de modificaciones legislativas en boletines — pendiente
 
 ## ✅ Fase 7 — Analítica y retención *(C · D)* · **terminada**
 
@@ -108,12 +112,25 @@ Modelo ya listo: `ImportJob`, `ImportRow`.
 
 ---
 
-## Después del MVP
+## Construido además del plan
 
-Plataforma y planes SaaS con límites · impersonación de soporte auditada ·
-roles personalizados · Row Level Security como segunda barrera · PWA instalable
-con notificaciones · white-label con dominio propio · integración con Zoom,
-Meet y Teams · pasarelas de pago · API pública · aplicaciones nativas.
+Radar de convocatorias del BOE · ritmo del temario por profesor y grupo · muro
+de clase y red interna · mensajes internos · tareas con entrega y evaluación ·
+salas online · PWA instalable · consola de plataforma con alta de academias,
+impersonación auditada, white-label y exportación RGPD.
+
+## Lo siguiente, por orden de urgencia
+
+1. Simulacros con plantilla de examen y percentiles
+2. Importación específica de bancos de preguntas
+3. Asistente guiado de importación de temario
+4. Planificador de estudio y repetición espaciada
+5. Recuperación de contraseña y verificación de correo
+6. Pasarela de pago
+7. Boletines autonómicos en el radar
+8. Row Level Security como segunda barrera
+9. Notificaciones push
+10. Dominio propio por academia
 
 ---
 
