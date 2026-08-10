@@ -4,6 +4,7 @@ import { LogOut } from "lucide-react";
 import { signOutAction } from "@/lib/auth/actions";
 import { requireAcademy } from "@/lib/auth/context";
 import { CampusTabBar } from "@/components/campus/tab-bar";
+import { InstallPrompt } from "@/components/campus/install-prompt";
 import { BRAND } from "@/lib/brand";
 import { Button } from "@/components/ui/button";
 
@@ -57,6 +58,7 @@ export default async function CampusLayout({
       </main>
 
       <CampusTabBar />
+      <InstallPrompt />
     </div>
   );
 }
