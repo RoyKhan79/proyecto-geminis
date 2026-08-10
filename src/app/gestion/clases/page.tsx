@@ -2,13 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { CalendarDays, Users, Video } from "lucide-react";
 import { requirePagePermission } from "@/lib/auth/context";
-import {
-  Badge,
-  Card,
-  CardContent,
-  EmptyState,
-  PageHeader,
-} from "@/components/ui/primitives";
+import { Badge, Card, EmptyState, PageHeader } from "@/components/ui/primitives";
 import { formatDate } from "@/lib/utils";
 import { ClassForm } from "./class-form";
 
@@ -29,8 +23,9 @@ const hora = new Intl.DateTimeFormat("es-ES", { hour: "2-digit", minute: "2-digi
 export default async function ClasesPage() {
   const ctx = await requirePagePermission("classes.read");
 
-  const desde = new Date();
-  desde.setDate(desde.getDate() - 30);
+  // Se toma una sola referencia temporal para toda la página.
+  const ahora = Date.now();
+  const desde = new Date(ahora - 30 * 24 * 60 * 60 * 1000);
 
   const [clases, cursos, profesores, temas] = await Promise.all([
     ctx.db.classSession.findMany({
@@ -80,7 +75,6 @@ export default async function ClasesPage() {
     }),
   ]);
 
-  const ahora = Date.now();
   const proximas = clases.filter((c) => c.startsAt.getTime() >= ahora);
   const pasadas = clases.filter((c) => c.startsAt.getTime() < ahora).reverse();
 
