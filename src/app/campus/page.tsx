@@ -10,6 +10,7 @@ import {
 } from "@/server/campus/queries";
 import { daysUntil } from "@/server/dashboard/queries";
 import { Button } from "@/components/ui/button";
+import { QuickLinks } from "@/components/campus/quick-links";
 import { Card, CardContent, EmptyState } from "@/components/ui/primitives";
 import { formatDateTime } from "@/lib/utils";
 
@@ -44,6 +45,8 @@ export default async function CampusHomePage() {
           </p>
         ) : null}
       </header>
+
+      <QuickLinks />
 
       {matriculas.length === 0 ? (
         <Card>

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Bell, BookOpen, Home, ListChecks, UserRound } from "lucide-react";
+import { BookOpen, Home, ListChecks, Megaphone, UserRound } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 /**
@@ -14,7 +14,7 @@ const TABS = [
   { label: "Inicio", href: "/campus", icon: Home, ready: true },
   { label: "Estudiar", href: "/campus/estudiar", icon: BookOpen, ready: true },
   { label: "Tests", href: "/campus/tests", icon: ListChecks, ready: true },
-  { label: "Avisos", href: "/campus/avisos", icon: Bell, ready: true },
+  { label: "Muro", href: "/campus/muro", icon: Megaphone, ready: true },
   { label: "Perfil", href: "/campus/perfil", icon: UserRound, ready: true },
 ];
 
