@@ -206,6 +206,43 @@ describe("guardia de escritura", () => {
   });
 });
 
+describe("claves únicas compuestas", () => {
+  it("las respeta al comprobar la propiedad", async () => {
+    // Regresión: la guardia reescribía findUnique como findFirst añadiendo
+    // academyId, y findFirst no admite claves compuestas como
+    // `studentId_questionId`. El resultado era que el histórico de errores del
+    // alumnado nunca se guardaba y el "test de mis errores" quedaba vacío.
+    const dbA = tenantDb(academiaA.id);
+
+    const oposicion = await dbA.opposition.create({
+      data: { name: "Compuesta", slug: `compuesta-${SUFIJO}` },
+    });
+    const edicion = await dbA.oppositionEdition.create({
+      data: { oppositionId: oposicion.id, name: "2026" },
+    });
+
+    // El par (academyId, key) de OppositionType es una clave única compuesta.
+    const tipo = await dbA.oppositionType.create({
+      data: { key: `TIPO_${SUFIJO}`, name: "Tipo de prueba" },
+    });
+
+    const leido = await dbA.oppositionType.findUnique({
+      where: { academyId_key: { academyId: academiaA.id, key: `TIPO_${SUFIJO}` } },
+    });
+    expect(leido?.id).toBe(tipo.id);
+
+    // Y desde la otra academia, ese mismo `where` no devuelve nada.
+    const dbB = tenantDb(academiaB.id);
+    const desdeB = await dbB.oppositionType.findUnique({
+      where: { academyId_key: { academyId: academiaA.id, key: `TIPO_${SUFIJO}` } },
+    });
+    expect(desdeB).toBeNull();
+
+    await dbA.oppositionEdition.delete({ where: { id: edicion.id } });
+    await dbA.opposition.delete({ where: { id: oposicion.id } });
+  });
+});
+
 describe("modelos derivados", () => {
   it("no se pueden consultar directamente desde un cliente de academia", async () => {
     const dbA = tenantDb(academiaA.id);

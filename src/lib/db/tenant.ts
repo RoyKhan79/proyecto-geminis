@@ -127,20 +127,18 @@ export function tenantDb(academyId: string) {
           switch (operation) {
             case "findUnique":
             case "findUniqueOrThrow": {
-              const delegate = (
-                prismaBase as unknown as Record<
-                  string,
-                  { findFirst: (arg: unknown) => Promise<unknown> }
-                >
-              )[delegateKey(model)];
-              const found = await delegate.findFirst({
-                ...a,
-                where: mergeWhere(a.where, academyId),
-              });
-              if (!found && operation === "findUniqueOrThrow") {
-                throw new NotFoundInTenantError(model);
+              // Se comprueba la propiedad con el propio `where` único y después
+              // se ejecuta la consulta original. Antes se reescribía como
+              // findFirst añadiendo academyId, pero eso rompía con las claves
+              // únicas compuestas (p. ej. studentId_questionId), que findFirst
+              // no admite. Cuesta una consulta más y funciona siempre.
+              if (!(await ownsByUnique(model, a.where, academyId))) {
+                if (operation === "findUniqueOrThrow") {
+                  throw new NotFoundInTenantError(model);
+                }
+                return null;
               }
-              return found;
+              return query(a);
             }
 
             case "create":
@@ -166,17 +164,19 @@ export function tenantDb(academyId: string) {
 
             case "update":
             case "delete": {
-              await assertOwnership(model, a.where, academyId);
+              if (!(await ownsByUnique(model, a.where, academyId))) {
+                throw new NotFoundInTenantError(model);
+              }
               return query(a);
             }
 
             case "upsert": {
-              const exists = await findOwned(model, a.where, academyId);
-              if (!exists) {
-                // Si el registro existe pero es de otra academia, `findOwned`
-                // devuelve null; comprobamos para no crear un duplicado que
-                // chocaría contra un índice único.
-                await assertNotForeign(model, a.where, academyId);
+              // Si ya existe y es de otra academia, no se toca ni se duplica.
+              const propiedad = await ownershipOfUnique(model, a.where, academyId);
+              if (propiedad === "ajeno") {
+                throw new TenantViolationError(
+                  `El registro de ${model} pertenece a otra academia.`,
+                );
               }
               const payload = {
                 ...a,
@@ -202,40 +202,39 @@ export function tenantDb(academyId: string) {
   });
 }
 
-async function findOwned(model: string, where: unknown, academyId: string) {
+/**
+ * ¿De quién es el registro que señala este `where` único?
+ *
+ *   "propio"      → es de esta academia
+ *   "ajeno"       → existe pero es de otra
+ *   "inexistente" → no hay tal registro
+ *
+ * Se consulta con `findUnique`, que es el único que entiende las claves únicas
+ * compuestas, y se pide solo `academyId`.
+ */
+async function ownershipOfUnique(
+  model: string,
+  where: unknown,
+  academyId: string,
+): Promise<"propio" | "ajeno" | "inexistente"> {
   const delegate = (
     prismaBase as unknown as Record<
       string,
-      { findFirst: (arg: unknown) => Promise<{ id: string } | null> }
+      { findUnique: (arg: unknown) => Promise<{ academyId: string } | null> }
     >
   )[delegateKey(model)];
-  return delegate.findFirst({
-    where: mergeWhere(where, academyId),
-    select: { id: true },
-  });
-}
 
-async function assertOwnership(model: string, where: unknown, academyId: string) {
-  const owned = await findOwned(model, where, academyId);
-  if (!owned) throw new NotFoundInTenantError(model);
-}
-
-async function assertNotForeign(model: string, where: unknown, academyId: string) {
-  const delegate = (
-    prismaBase as unknown as Record<
-      string,
-      { findFirst: (arg: unknown) => Promise<{ academyId: string } | null> }
-    >
-  )[delegateKey(model)];
-  const foreign = await delegate.findFirst({
+  const encontrado = await delegate.findUnique({
     where: where as Record<string, unknown>,
     select: { academyId: true },
   });
-  if (foreign && foreign.academyId !== academyId) {
-    throw new TenantViolationError(
-      `El registro de ${model} pertenece a otra academia.`,
-    );
-  }
+
+  if (!encontrado) return "inexistente";
+  return encontrado.academyId === academyId ? "propio" : "ajeno";
+}
+
+async function ownsByUnique(model: string, where: unknown, academyId: string) {
+  return (await ownershipOfUnique(model, where, academyId)) === "propio";
 }
 
 export type TenantClient = ReturnType<typeof tenantDb>;

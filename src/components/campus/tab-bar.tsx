@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils";
 const TABS = [
   { label: "Inicio", href: "/campus", icon: Home, ready: true },
   { label: "Estudiar", href: "/campus/estudiar", icon: BookOpen, ready: true },
-  { label: "Tests", href: "/campus/tests", icon: ListChecks, ready: false },
+  { label: "Tests", href: "/campus/tests", icon: ListChecks, ready: true },
   { label: "Calendario", href: "/campus/calendario", icon: CalendarDays, ready: true },
   { label: "Perfil", href: "/campus/perfil", icon: UserRound, ready: true },
 ];

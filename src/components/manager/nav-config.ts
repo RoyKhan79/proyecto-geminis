@@ -117,9 +117,8 @@ export const MANAGER_NAV: NavSection[] = [
         label: "Tests",
         href: "/gestion/tests",
         icon: ListChecks,
-        permission: "tests.read",
-        status: "soon",
-        phase: "Fase 4",
+        permission: "questions.read",
+        status: "ready",
       },
       {
         label: "Normativa",

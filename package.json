@@ -20,7 +20,9 @@
     "db:seed": "prisma db seed",
     "db:studio": "prisma studio",
     "setup": "npm install && ./scripts/dev-db.sh start && prisma migrate deploy && prisma generate && prisma db seed",
-    "demo:contenido": "node --env-file=.env --import tsx scripts/demo-content.ts"
+    "demo:contenido": "node --env-file=.env --import tsx scripts/demo-content.ts",
+    "demo:preguntas": "node --env-file=.env --import tsx scripts/demo-questions.ts",
+    "demo:todo": "npm run db:seed && npm run demo:contenido && npm run demo:preguntas"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.7.1",
