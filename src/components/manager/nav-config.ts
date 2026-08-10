@@ -152,16 +152,14 @@ export const MANAGER_NAV: NavSection[] = [
         href: "/gestion/comunicaciones",
         icon: MessageSquare,
         permission: "communications.send",
-        status: "soon",
-        phase: "Fase 3",
+        status: "ready",
       },
       {
         label: "Pagos",
         href: "/gestion/pagos",
         icon: CreditCard,
         permission: "payments.read",
-        status: "soon",
-        phase: "Fase 3",
+        status: "ready",
       },
       {
         label: "Configuración",

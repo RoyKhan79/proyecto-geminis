@@ -4,6 +4,7 @@ import { CalendarDays, Users, Video } from "lucide-react";
 import { requirePagePermission } from "@/lib/auth/context";
 import { Badge, Card, EmptyState, PageHeader } from "@/components/ui/primitives";
 import { formatDate } from "@/lib/utils";
+import { loadClassBoard, type ClaseLista } from "@/server/classes/queries";
 import { ClassForm } from "./class-form";
 
 export const metadata: Metadata = { title: "Clases" };
@@ -22,62 +23,7 @@ const hora = new Intl.DateTimeFormat("es-ES", { hour: "2-digit", minute: "2-digi
 
 export default async function ClasesPage() {
   const ctx = await requirePagePermission("classes.read");
-
-  // Se toma una sola referencia temporal para toda la página.
-  const ahora = Date.now();
-  const desde = new Date(ahora - 30 * 24 * 60 * 60 * 1000);
-
-  const [clases, cursos, profesores, temas] = await Promise.all([
-    ctx.db.classSession.findMany({
-      where: { deletedAt: null, startsAt: { gte: desde } },
-      orderBy: { startsAt: "asc" },
-      take: 100,
-      select: {
-        id: true,
-        title: true,
-        status: true,
-        startsAt: true,
-        endsAt: true,
-        location: true,
-        meetingUrl: true,
-        recordingUrl: true,
-        group: { select: { name: true } },
-        course: { select: { name: true } },
-        teacher: { select: { user: { select: { firstName: true, lastName: true } } } },
-        _count: { select: { attendances: true } },
-      },
-    }),
-    ctx.db.course.findMany({
-      where: { deletedAt: null },
-      orderBy: { name: "asc" },
-      select: {
-        id: true,
-        name: true,
-        groups: {
-          where: { deletedAt: null },
-          orderBy: { name: "asc" },
-          select: { id: true, name: true },
-        },
-      },
-    }),
-    ctx.db.membership.findMany({
-      where: { deletedAt: null, teacherProfile: { isNot: null } },
-      select: {
-        id: true,
-        user: { select: { firstName: true, lastName: true } },
-      },
-    }),
-    ctx.db.contentNode.findMany({
-      where: { kind: "TOPIC", deletedAt: null },
-      orderBy: [{ path: "asc" }, { position: "asc" }],
-      take: 200,
-      select: { id: true, label: true },
-    }),
-  ]);
-
-  const proximas = clases.filter((c) => c.startsAt.getTime() >= ahora);
-  const pasadas = clases.filter((c) => c.startsAt.getTime() < ahora).reverse();
-
+  const tablero = await loadClassBoard(ctx.db);
   const puedeEscribir = ctx.permissions.has("classes.write");
 
   return (
@@ -88,18 +34,15 @@ export default async function ClasesPage() {
         actions={
           puedeEscribir ? (
             <ClassForm
-              cursos={cursos.map((c) => ({ id: c.id, name: c.name, grupos: c.groups }))}
-              profesores={profesores.map((p) => ({
-                id: p.id,
-                nombre: `${p.user.firstName} ${p.user.lastName ?? ""}`.trim(),
-              }))}
-              temas={temas}
+              cursos={tablero.cursos}
+              profesores={tablero.profesores}
+              temas={tablero.temas}
             />
           ) : null
         }
       />
 
-      {clases.length === 0 ? (
+      {tablero.total === 0 ? (
         <Card>
           <EmptyState
             icon={<CalendarDays className="size-5" />}
@@ -109,28 +52,19 @@ export default async function ClasesPage() {
         </Card>
       ) : (
         <>
-          <Seccion titulo={`Próximas (${proximas.length})`} clases={proximas} />
-          <Seccion titulo={`Impartidas (${pasadas.length})`} clases={pasadas} />
+          <Seccion
+            titulo={`Próximas (${tablero.proximas.length})`}
+            clases={tablero.proximas}
+          />
+          <Seccion
+            titulo={`Impartidas (${tablero.pasadas.length})`}
+            clases={tablero.pasadas}
+          />
         </>
       )}
     </>
   );
 }
-
-type ClaseLista = {
-  id: string;
-  title: string;
-  status: string;
-  startsAt: Date;
-  endsAt: Date;
-  location: string | null;
-  meetingUrl: string | null;
-  recordingUrl: string | null;
-  group: { name: string } | null;
-  course: { name: string } | null;
-  teacher: { user: { firstName: string; lastName: string | null } } | null;
-  _count: { attendances: number };
-};
 
 function Seccion({ titulo, clases }: { titulo: string; clases: ClaseLista[] }) {
   if (clases.length === 0) return null;

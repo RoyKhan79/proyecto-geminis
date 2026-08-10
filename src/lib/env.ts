@@ -34,6 +34,13 @@ const schema = z.object({
   ANTHROPIC_API_KEY: z.string().optional(),
   OPENAI_API_KEY: z.string().optional(),
 
+  /// Correo saliente. Sin configurar, en desarrollo se escribe en .dev/emails/.
+  SMTP_HOST: z.string().optional(),
+  SMTP_PORT: z.coerce.number().int().default(587),
+  SMTP_USER: z.string().optional(),
+  SMTP_PASSWORD: z.string().optional(),
+  SMTP_FROM: z.string().optional(),
+
   APP_URL: z.string().default("http://localhost:3000"),
 });
 
