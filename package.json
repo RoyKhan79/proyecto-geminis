@@ -22,8 +22,9 @@
     "setup": "npm install && ./scripts/dev-db.sh start && prisma migrate deploy && prisma generate && prisma db seed",
     "demo:contenido": "node --env-file=.env --import tsx scripts/demo-content.ts",
     "demo:preguntas": "node --env-file=.env --import tsx scripts/demo-questions.ts",
-    "demo:todo": "npm run db:seed && npm run demo:contenido && npm run demo:preguntas",
-    "radar": "node --env-file=.env --import tsx scripts/radar.ts"
+    "demo:todo": "npm run db:seed && npm run demo:contenido && npm run demo:preguntas && npm run demo:normativa",
+    "radar": "node --env-file=.env --import tsx scripts/radar.ts",
+    "demo:normativa": "node --env-file=.env --import tsx scripts/demo-legislation.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.7.1",
