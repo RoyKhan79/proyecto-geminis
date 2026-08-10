@@ -31,7 +31,7 @@ export default async function NodoPage({
   const { nodeId } = await params;
 
   const grants = await loadGrants(ctx.academy.id, ctx.membershipId);
-  const nodo = await loadNodeForStudent(ctx.db, grants, nodeId);
+  const nodo = await loadNodeForStudent(ctx.db, grants, nodeId, ctx.academy.id);
 
   // Si no tiene derecho de acceso, para el alumno el contenido simplemente no
   // existe. No revelamos que hay algo detrás que no ha pagado.

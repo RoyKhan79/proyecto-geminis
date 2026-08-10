@@ -18,6 +18,7 @@ export const TENANT_MODELS = new Set<string>([
   "Enrollment",
   "TeacherAssignment",
   "ContentNode",
+  "ContentRelease",
   "StoredFile",
   "StudentContentProgress",
   "ClassSession",

@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ChevronLeft, Info } from "lucide-react";
+import { ChevronLeft, Info, SlidersHorizontal } from "lucide-react";
 import { requirePagePermission } from "@/lib/auth/context";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, PageHeader } from "@/components/ui/primitives";
 import { ContentTree, type TreeNode } from "./tree";
 
@@ -98,6 +99,14 @@ export default async function ArbolContenidoPage({
             <ChevronLeft className="size-3.5" aria-hidden />
             Contenido
           </Link>
+        }
+        actions={
+          <Button asChild variant="secondary" size="sm">
+            <Link href={`/gestion/contenido/${editionId}/ritmo`}>
+              <SlidersHorizontal aria-hidden />
+              Ritmo del temario
+            </Link>
+          </Button>
         }
       />
 

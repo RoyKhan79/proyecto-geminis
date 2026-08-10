@@ -3,7 +3,11 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { requireAcademy } from "@/lib/auth/context";
-import { loadStudentGrants, studentCanAccessNode } from "@/lib/access/content-access";
+import {
+  isNodeReleased,
+  loadStudentGrants,
+  studentCanAccessNode,
+} from "@/lib/access/content-access";
 import { prismaBase } from "@/lib/db/client";
 
 const progressSchema = z.object({
@@ -43,6 +47,9 @@ export async function markProgressAction(formData: FormData) {
   const grants = await loadStudentGrants(ctx.academy.id, ctx.membershipId);
   if (!studentCanAccessNode(grants, node, "VIEW_CONTENT")) {
     throw new Error("No tienes acceso a este contenido.");
+  }
+  if (!(await isNodeReleased(ctx.academy.id, node.id, grants.groupIds))) {
+    throw new Error("Este tema todavía no está abierto.");
   }
 
   const now = new Date();

@@ -106,6 +106,10 @@ model ContentNode {
   status      ContentStatus @default(DRAFT)
   publishedAt DateTime?
 
+  /// Apertura programada: aunque esté publicado, no se ve hasta esta fecha.
+  /// Sirve para dejar el temario entero cargado y que se vaya abriendo solo.
+  availableFrom DateTime?
+
   // ── Banderas de uso (§105). Heredables: null = heredar del padre. ──────────
   /// Visible para el alumnado (si además tiene derecho de acceso).
   visibleToStudents Boolean  @default(true)
@@ -133,6 +137,7 @@ model ContentNode {
   deletedAt DateTime?
 
   resource        ContentResource?
+  releases        ContentRelease[]
   versions        ContentNodeVersion[]
   progress        StudentContentProgress[]
   questions       Question[]
@@ -148,6 +153,51 @@ model ContentNode {
   @@index([academyId, path])
   @@index([academyId, kind, status])
   @@map("content_nodes")
+}
+
+/// RITMO DE PUBLICACIÓN (§ liberación por grupo)
+///
+/// El profesor sube el temario completo desde el principio, pero decide qué ve
+/// el alumnado y cuándo. Cada fila abre un nodo (y su rama) a un grupo concreto
+/// a partir de una fecha.
+///
+/// Regla de resolución, por orden de prioridad:
+///   1. ¿hay fila para el grupo del alumno? → manda esa (abierta o cerrada);
+///   2. ¿hay fila para «todos los grupos»?  → manda esa;
+///   3. si no hay ninguna fila → manda el estado global del nodo.
+///
+/// Así el grupo de mañana puede ir por el tema 7 y el de tarde por el 5 sin
+/// duplicar contenido ni cursos.
+model ContentRelease {
+  id        String  @id @default(uuid(7))
+  academyId String  @default("SIN_TENANT")
+  academy   Academy @relation(fields: [academyId], references: [id], onDelete: Cascade)
+
+  nodeId String
+  node   ContentNode @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+
+  /// Grupo al que afecta. null = a todos los grupos del curso.
+  groupId String?
+  group   Group?  @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  /// true = abierto · false = cerrado explícitamente para ese grupo.
+  /// Guardar también los cierres es lo que permite decir "abre hasta el tema 7
+  /// y cierra el resto" para un grupo sin afectar a los demás.
+  isOpen Boolean @default(true)
+
+  /// Desde cuándo se ve. Si es futura, queda programada.
+  releasedAt DateTime @default(now())
+
+  createdById String?
+  createdAt   DateTime @default(now())
+
+  // Sin índice único sobre (nodeId, groupId) a propósito: PostgreSQL considera
+  // cada NULL distinto de los demás, así que no impediría duplicados en la
+  // regla «todos los grupos», que es justamente la más usada. La unicidad se
+  // garantiza en el servicio borrando antes de insertar.
+  @@index([academyId, nodeId])
+  @@index([academyId, groupId, releasedAt])
+  @@map("content_releases")
 }
 
 /// Contenido concreto de un nodo RESOURCE (o material principal de un TOPIC).

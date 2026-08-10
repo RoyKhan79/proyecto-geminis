@@ -48,6 +48,7 @@ function derechos(
     })),
     editionIds: new Set<string>(),
     editionCapabilities: new Map(),
+    groupIds: [],
   };
 }
 
@@ -93,6 +94,7 @@ describe("contenido de muestra", () => {
     prefixes: [],
     editionIds: new Set(),
     editionCapabilities: new Map(),
+    groupIds: [],
   };
 
   it("un nodo libre se puede ver sin haber pagado", () => {
@@ -135,6 +137,7 @@ describe("filtro para consultas", () => {
       prefixes: [],
       editionIds: new Set(),
       editionCapabilities: new Map(),
+      groupIds: [],
     });
     expect(filtro.OR).toEqual([{ isFree: true }]);
   });

@@ -97,6 +97,7 @@ model Academy {
   enrollments       Enrollment[]
   teacherAssignment TeacherAssignment[]
   contentNodes      ContentNode[]
+  contentReleases   ContentRelease[]
   storedFiles       StoredFile[]
   contentProgress   StudentContentProgress[]
   classSessions     ClassSession[]

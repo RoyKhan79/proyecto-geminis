@@ -1,5 +1,6 @@
 import type { TenantClient } from "@/lib/db/tenant";
 import {
+  isNodeReleased,
   loadStudentGrants,
   studentCanAccessNode,
   studentNodeWhere,
@@ -120,6 +121,7 @@ export async function loadNodeForStudent(
   db: TenantClient,
   grants: StudentGrants,
   nodeId: string,
+  academyId?: string,
 ) {
   const node = await db.contentNode.findUnique({
     where: { id: nodeId },
@@ -151,6 +153,13 @@ export async function loadNodeForStudent(
 
   if (!node) return null;
   if (!studentCanAccessNode(grants, node, "VIEW_CONTENT")) return null;
+
+  // El profesor puede tener el temario entero subido y haber abierto solo hasta
+  // el tema por el que va la clase. Lo no abierto no existe para el alumno.
+  if (academyId && !(await isNodeReleased(academyId, node.id, grants.groupIds))) {
+    return null;
+  }
+
   return node;
 }
 

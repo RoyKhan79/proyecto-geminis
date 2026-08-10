@@ -185,9 +185,10 @@ model Group {
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
 
-  enrollments   Enrollment[]
-  classSessions ClassSession[]
-  assignments   TeacherAssignment[]
+  enrollments     Enrollment[]
+  classSessions   ClassSession[]
+  assignments     TeacherAssignment[]
+  contentReleases ContentRelease[]
 
   @@index([academyId, courseId])
   @@map("groups")

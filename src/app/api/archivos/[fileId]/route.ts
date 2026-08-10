@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getAuthContext } from "@/lib/auth/context";
 import {
   getEffectiveFlags,
+  isNodeReleased,
   loadStudentGrants,
   studentCanAccessNode,
 } from "@/lib/access/content-access";
@@ -81,6 +82,12 @@ export async function GET(
 
     const grants = await loadStudentGrants(ctx.academy.id, ctx.membershipId);
     if (!studentCanAccessNode(grants, nodo, "VIEW_CONTENT")) {
+      return NextResponse.json({ error: "Archivo no encontrado." }, { status: 404 });
+    }
+
+    // Ritmo del temario: si el profesor aún no ha abierto este tema a su grupo,
+    // el documento tampoco se sirve.
+    if (!(await isNodeReleased(ctx.academy.id, nodo.id, grants.groupIds))) {
       return NextResponse.json({ error: "Archivo no encontrado." }, { status: 404 });
     }
 
