@@ -13,6 +13,7 @@ import {
   resourceTypeForMime,
   storage,
 } from "@/lib/storage";
+import { sanitizeHtml } from "@/lib/sanitize";
 import { createContentNode, subtreePrefix } from "./tree";
 
 /**

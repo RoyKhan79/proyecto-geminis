@@ -18,6 +18,7 @@ import { markProgressAction } from "@/server/campus/actions";
 import { DocumentViewer } from "@/components/campus/document-viewer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, EmptyState } from "@/components/ui/primitives";
+import { sanitizeHtml } from "@/lib/sanitize";
 import { formatDate } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Estudiar" };
@@ -73,8 +74,10 @@ export default async function NodoPage({
         <Card>
           <CardContent
             className="prose prose-sm max-w-none p-4 pt-4 text-ink"
-            // El HTML se sanea en servidor antes de guardarse (docs/SECURITY_MODEL.md).
-            dangerouslySetInnerHTML={{ __html: nodo.resource.richText }}
+            // Saneado también aquí, no solo al guardar: puede haber contenido
+            // almacenado antes de que existiera el saneador, y un script
+            // inyectado se ejecutaría con la sesión de quien lo lee.
+            dangerouslySetInnerHTML={{ __html: sanitizeHtml(nodo.resource.richText) }}
           />
         </Card>
       ) : null}
