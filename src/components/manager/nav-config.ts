@@ -110,8 +110,7 @@ export const MANAGER_NAV: NavSection[] = [
         href: "/gestion/clases",
         icon: CalendarDays,
         permission: "classes.read",
-        status: "soon",
-        phase: "Fase 3",
+        status: "ready",
       },
       {
         label: "Tests",
@@ -146,8 +145,7 @@ export const MANAGER_NAV: NavSection[] = [
         href: "/gestion/analitica",
         icon: BarChart3,
         permission: "analytics.read",
-        status: "soon",
-        phase: "Fase 7",
+        status: "ready",
       },
       {
         label: "Comunicaciones",
