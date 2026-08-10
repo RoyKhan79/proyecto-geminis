@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useMemo, useState } from "react";
+import { useActionState, useState } from "react";
 import {
   AlertCircle,
   CalendarClock,
@@ -42,10 +42,14 @@ export function PaceList({
   editionId,
   temas,
   grupos,
+  ahoraISO,
 }: {
   editionId: string;
   temas: TemaRitmo[];
   grupos: GrupoRitmo[];
+  /// El "ahora" llega del servidor: pedir la hora durante el render haría que
+  /// la lista se repintara con resultados distintos sin que cambien los datos.
+  ahoraISO: string;
 }) {
   const [grupoId, setGrupoId] = useState<string>("");
   const [state, formAction, pending] = useActionState<ReleaseState, FormData>(
@@ -59,9 +63,7 @@ export function PaceList({
 
   const mensaje = state ?? upState;
 
-  // Se fija una sola vez: comparar contra un reloj que cambia en cada render
-  // haría que la lista se repintara sin motivo.
-  const ahora = useMemo(() => Date.now(), []);
+  const ahora = new Date(ahoraISO).getTime();
 
   /** Estado de un tema para el grupo que se está mirando. */
   function estadoDe(tema: TemaRitmo) {

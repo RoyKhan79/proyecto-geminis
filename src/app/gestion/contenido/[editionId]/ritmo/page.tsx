@@ -125,7 +125,12 @@ export default async function RitmoPage({
           />
         </Card>
       ) : ctx.permissions.has("content.publish") ? (
-        <PaceList editionId={editionId} temas={temas} grupos={grupos} />
+        <PaceList
+          editionId={editionId}
+          temas={temas}
+          grupos={grupos}
+          ahoraISO={new Date().toISOString()}
+        />
       ) : (
         <Card>
           <EmptyState
