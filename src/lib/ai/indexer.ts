@@ -1,0 +1,238 @@
+import { createHash } from "node:crypto";
+import { prismaBase } from "@/lib/db/client";
+import { storage } from "@/lib/storage";
+
+/**
+ * INDEXADOR DE LA BASE DE CONOCIMIENTO
+ *
+ * Convierte el material autorizado de una academia en fragmentos consultables
+ * por Geminis IA. Solo entra aquí lo que la academia ha marcado como usable por
+ * la IA (§105), y cada fragmento guarda de dónde sale para poder citarlo.
+ *
+ * Los PDFs se procesan extrayendo el texto plano que llevan dentro. No se hace
+ * OCR: un temario escaneado sin capa de texto no se puede indexar, y es mejor
+ * decirlo que fingir que sí.
+ */
+
+/** Trocea un texto en fragmentos con solape, sin partir frases por la mitad. */
+export function trocear(
+  texto: string,
+  tamano = 1200,
+  solape = 150,
+): { content: string; position: number }[] {
+  const limpio = texto.replace(/\s+/g, " ").trim();
+  if (limpio.length === 0) return [];
+
+  const trozos: { content: string; position: number }[] = [];
+  let inicio = 0;
+  let posicion = 0;
+
+  while (inicio < limpio.length) {
+    let fin = Math.min(inicio + tamano, limpio.length);
+
+    // Se corta en un punto y seguido si hay uno cerca: partir una frase por la
+    // mitad estropea tanto la búsqueda como la cita.
+    if (fin < limpio.length) {
+      const corte = limpio.lastIndexOf(". ", fin);
+      if (corte > inicio + tamano * 0.5) fin = corte + 1;
+    }
+
+    trozos.push({ content: limpio.slice(inicio, fin).trim(), position: posicion });
+    posicion += 1;
+
+    const siguiente = fin - solape;
+    inicio = siguiente > inicio ? siguiente : fin;
+  }
+
+  return trozos.filter((t) => t.content.length > 40);
+}
+
+/**
+ * Extrae el texto de un PDF sin dependencias externas.
+ *
+ * Lee los flujos de contenido y recupera lo que hay entre paréntesis de los
+ * operadores de texto. Funciona con PDFs generados digitalmente, que son la
+ * mayoría de los temarios; con escaneados devuelve vacío, y el indexador lo
+ * marca como no indexable en lugar de guardar basura.
+ */
+export function extraerTextoPdf(buffer: Buffer): string {
+  const crudo = buffer.toString("latin1");
+  const partes: string[] = [];
+
+  for (const flujo of crudo.matchAll(/stream\r?\n([\s\S]*?)endstream/g)) {
+    const contenido = flujo[1];
+
+    for (const texto of contenido.matchAll(/\(([^()\\]*(?:\\.[^()\\]*)*)\)\s*Tj/g)) {
+      const limpio = texto[1]
+        .replace(/\\([()\\])/g, "$1")
+        .replace(/\\n/g, " ")
+        .trim();
+      if (limpio) partes.push(limpio);
+    }
+
+    for (const bloque of contenido.matchAll(/\[((?:[^[\]\\]|\\.)*)\]\s*TJ/g)) {
+      for (const texto of bloque[1].matchAll(/\(([^()\\]*(?:\\.[^()\\]*)*)\)/g)) {
+        const limpio = texto[1].replace(/\\([()\\])/g, "$1").trim();
+        if (limpio) partes.push(limpio);
+      }
+    }
+  }
+
+  return partes.join(" ").replace(/\s+/g, " ").trim();
+}
+
+export type ResultadoIndexado = {
+  fuente: string;
+  fragmentos: number;
+  estado: "INDEXED" | "FAILED";
+  motivo?: string;
+};
+
+/** Indexa un nodo de contenido, comprobando antes que la academia lo autoriza. */
+export async function indexarNodo(
+  academyId: string,
+  nodeId: string,
+): Promise<ResultadoIndexado> {
+  const nodo = await prismaBase.contentNode.findFirst({
+    where: { id: nodeId, academyId, deletedAt: null },
+    select: {
+      id: true,
+      label: true,
+      path: true,
+      editionId: true,
+      aiEnabled: true,
+      resource: {
+        select: {
+          type: true,
+          richText: true,
+          file: { select: { id: true, storageKey: true, mimeType: true } },
+        },
+      },
+    },
+  });
+
+  if (!nodo) {
+    return { fuente: nodeId, fragmentos: 0, estado: "FAILED", motivo: "No existe." };
+  }
+
+  // La bandera se hereda; aquí basta con respetar la negación explícita.
+  if (nodo.aiEnabled === false) {
+    return {
+      fuente: nodo.label,
+      fragmentos: 0,
+      estado: "FAILED",
+      motivo: "La academia ha excluido este contenido de la IA.",
+    };
+  }
+
+  let texto = "";
+  if (nodo.resource?.richText) {
+    texto = nodo.resource.richText.replace(/<[^>]+>/g, " ");
+  } else if (
+    nodo.resource?.file &&
+    nodo.resource.file.mimeType === "application/pdf"
+  ) {
+    const stream = await storage().getStream(nodo.resource.file.storageKey);
+    const trozos: Buffer[] = [];
+    for await (const trozo of stream) trozos.push(Buffer.from(trozo));
+    texto = extraerTextoPdf(Buffer.concat(trozos));
+  }
+
+  if (texto.trim().length < 60) {
+    return {
+      fuente: nodo.label,
+      fragmentos: 0,
+      estado: "FAILED",
+      motivo:
+        "No se ha podido extraer texto. Si es un PDF escaneado, hará falta pasarle OCR antes.",
+    };
+  }
+
+  const checksum = createHash("sha256").update(texto).digest("hex");
+
+  const existente = await prismaBase.knowledgeSource.findFirst({
+    where: { academyId, nodeId: nodo.id },
+    select: { id: true, checksum: true, version: true },
+  });
+
+  // Si el contenido no ha cambiado, no se reindexa: es tiempo y dinero.
+  if (existente?.checksum === checksum) {
+    return {
+      fuente: nodo.label,
+      fragmentos: 0,
+      estado: "INDEXED",
+      motivo: "Sin cambios.",
+    };
+  }
+
+  const fuente = existente
+    ? await prismaBase.knowledgeSource.update({
+        where: { id: existente.id },
+        data: {
+          status: "PROCESSING",
+          checksum,
+          version: existente.version + 1,
+          error: null,
+        },
+      })
+    : await prismaBase.knowledgeSource.create({
+        data: {
+          academyId,
+          nodeId: nodo.id,
+          fileId: nodo.resource?.file?.id ?? null,
+          title: nodo.label,
+          status: "PROCESSING",
+          checksum,
+        },
+      });
+
+  await prismaBase.documentChunk.deleteMany({ where: { sourceId: fuente.id } });
+
+  const trozos = trocear(texto);
+
+  await prismaBase.documentChunk.createMany({
+    data: trozos.map((trozo) => ({
+      academyId,
+      sourceId: fuente.id,
+      nodeId: nodo.id,
+      nodePath: nodo.path,
+      editionId: nodo.editionId,
+      position: trozo.position,
+      content: trozo.content,
+      tokens: Math.ceil(trozo.content.length / 4),
+      locator: `fragmento ${trozo.position + 1}`,
+    })),
+  });
+
+  await prismaBase.knowledgeSource.update({
+    where: { id: fuente.id },
+    data: {
+      status: "INDEXED",
+      chunkCount: trozos.length,
+      lastIndexedAt: new Date(),
+    },
+  });
+
+  return { fuente: nodo.label, fragmentos: trozos.length, estado: "INDEXED" };
+}
+
+/** Indexa todo el material indexable de una academia. */
+export async function indexarAcademia(academyId: string) {
+  const nodos = await prismaBase.contentNode.findMany({
+    where: {
+      academyId,
+      deletedAt: null,
+      OR: [
+        { resource: { is: { type: "PDF" } } },
+        { resource: { is: { type: "RICH_TEXT" } } },
+      ],
+    },
+    select: { id: true },
+  });
+
+  const resultados: ResultadoIndexado[] = [];
+  for (const nodo of nodos) {
+    resultados.push(await indexarNodo(academyId, nodo.id));
+  }
+  return resultados;
+}

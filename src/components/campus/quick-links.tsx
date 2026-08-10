@@ -1,6 +1,6 @@
 import Link from "next/link";
 import {
-  Bell,
+  Sparkles,
   CalendarDays,
   ClipboardList,
   MessageSquare,
@@ -19,7 +19,7 @@ const ENLACES = [
   { href: "/campus/mensajes", label: "Mensajes", icon: MessageSquare },
   { href: "/campus/calendario", label: "Calendario", icon: CalendarDays },
   { href: "/campus/salas", label: "Salas", icon: Video },
-  { href: "/campus/avisos", label: "Avisos", icon: Bell },
+  { href: "/campus/ia", label: "Geminis IA", icon: Sparkles },
 ];
 
 export function QuickLinks() {

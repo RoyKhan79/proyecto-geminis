@@ -145,6 +145,7 @@ model ContentNode {
   productGrants   ProductGrant[]
   classSessions   ClassSession[]
   knowledgeSource KnowledgeSource[]
+  documentChunks  DocumentChunk[]
   legislationLink ContentLegislationLink[]
   wallPosts       WallPost[]
   tasks           Assignment[]

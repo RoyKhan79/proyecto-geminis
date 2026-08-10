@@ -64,8 +64,12 @@ model DocumentChunk {
   sourceId  String
   source    KnowledgeSource @relation(fields: [sourceId], references: [id], onDelete: Cascade)
 
-  /// Copias desnormalizadas para poder filtrar por permisos en la misma consulta.
+  /// Relación con el nodo de origen: es lo que permite filtrar por permisos y
+  /// por la bandera `aiEnabled` en la MISMA consulta de búsqueda, sin traer
+  /// primero los fragmentos y descartarlos después.
   nodeId    String?
+  node      ContentNode? @relation(fields: [nodeId], references: [id], onDelete: Cascade)
+  /// Copias desnormalizadas para ordenar y agrupar sin más joins.
   nodePath  String?
   editionId String?
 

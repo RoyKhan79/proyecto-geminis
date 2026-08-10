@@ -157,12 +157,11 @@ export const MANAGER_NAV: NavSection[] = [
     title: "Academia",
     items: [
       {
-        label: "IA",
+        label: "Geminis IA",
         href: "/gestion/ia",
         icon: Sparkles,
         permission: "ai.copilot",
-        status: "soon",
-        phase: "Fase 5",
+        status: "ready",
       },
       {
         label: "Analítica",
