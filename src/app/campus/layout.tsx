@@ -4,6 +4,7 @@ import { LogOut } from "lucide-react";
 import { signOutAction } from "@/lib/auth/actions";
 import { requireAcademy } from "@/lib/auth/context";
 import { CampusTabBar } from "@/components/campus/tab-bar";
+import { BRAND } from "@/lib/brand";
 import { Button } from "@/components/ui/button";
 
 /**
@@ -29,7 +30,7 @@ export default async function CampusLayout({
       <header className="sticky top-0 z-20 flex h-14 items-center gap-3 border-b border-line bg-surface px-4">
         <Link href="/campus" className="flex items-center gap-2">
           <span className="flex size-8 items-center justify-center rounded-lg bg-accent text-sm font-semibold text-accent-contrast">
-            G
+            {BRAND.initial}
           </span>
           <span className="truncate text-sm font-medium text-ink">
             {ctx.academy.name}

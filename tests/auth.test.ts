@@ -93,6 +93,15 @@ describe("catálogo de permisos", () => {
     expect(SYSTEM_ROLES.STAFF.permissions).not.toContain("roles.write");
   });
 
+  it("el alumnado NUNCA lleva content.read (permiso de personal)", () => {
+    // Regresión de un fallo real: la ruta de archivos usaba content.read para
+    // distinguir al personal del alumnado. Con ese permiso, cualquier alumno
+    // se saltaba la comprobación de derechos y podía abrir material no
+    // contratado. Si alguien vuelve a añadirlo, esta prueba falla.
+    expect(SYSTEM_ROLES.STUDENT.permissions).not.toContain("content.read");
+    expect(SYSTEM_ROLES.STUDENT.permissions).not.toContain("manager.access");
+  });
+
   it("el administrador de academia no recibe permisos de alumno", () => {
     expect(SYSTEM_ROLES.ACADEMY_ADMIN.permissions).not.toContain("campus.access");
   });

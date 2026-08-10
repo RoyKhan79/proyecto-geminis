@@ -139,6 +139,7 @@ export async function loadNodeForStudent(
       resource: {
         select: {
           type: true,
+          fileId: true,
           externalUrl: true,
           richText: true,
           durationSeconds: true,

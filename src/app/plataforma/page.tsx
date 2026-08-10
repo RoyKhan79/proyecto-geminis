@@ -14,6 +14,7 @@ import {
   Td,
   Th,
 } from "@/components/ui/primitives";
+import { BRAND } from "@/lib/brand";
 import { formatDate } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Plataforma" };
@@ -45,7 +46,7 @@ export default async function PlataformaPage() {
   return (
     <main className="mx-auto w-full max-w-5xl space-y-6 p-6">
       <PageHeader
-        title="Plataforma Geminis"
+        title={`Plataforma · ${BRAND.name}`}
         description={`Conectado como ${ctx.user.email}.`}
         actions={
           <form action={signOutAction}>

@@ -1,0 +1,178 @@
+import ExcelJS from "exceljs";
+import Papa from "papaparse";
+
+/**
+ * Lectura de archivos de importación.
+ *
+ * Acepta CSV, XLS y XLSX y devuelve siempre lo mismo: cabeceras y filas como
+ * texto. La interpretación (qué columna es el correo, qué es un teléfono) se
+ * hace después, en el mapeo, porque es una decisión del usuario y no del
+ * formato del archivo.
+ */
+
+export type ParsedSheet = {
+  headers: string[];
+  rows: Record<string, string>[];
+  /// Filas descartadas por estar completamente vacías.
+  emptyRows: number;
+};
+
+export class ImportParseError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "ImportParseError";
+  }
+}
+
+const MAX_ROWS = 20000;
+
+export async function parseImportFile(
+  fileName: string,
+  buffer: ArrayBuffer,
+): Promise<ParsedSheet> {
+  const extension = fileName.split(".").pop()?.toLowerCase() ?? "";
+
+  if (extension === "csv" || extension === "txt") return parseCsv(buffer);
+  if (extension === "xlsx" || extension === "xls") return parseExcel(buffer);
+
+  throw new ImportParseError(
+    "Formato no admitido. Sube un archivo CSV, XLS o XLSX.",
+  );
+}
+
+function parseCsv(buffer: ArrayBuffer): ParsedSheet {
+  // Muchos exportadores españoles generan CSV en Windows-1252 y con punto y
+  // coma. Papa detecta el separador solo; para la codificación probamos UTF-8 y
+  // caemos a latin1 si aparecen caracteres de sustitución.
+  let texto = new TextDecoder("utf-8").decode(buffer);
+  if (texto.includes("�")) {
+    texto = new TextDecoder("windows-1252").decode(buffer);
+  }
+
+  const resultado = Papa.parse<Record<string, string>>(texto, {
+    header: true,
+    skipEmptyLines: "greedy",
+    transformHeader: (header) => header.trim(),
+  });
+
+  if (resultado.errors.length > 0 && resultado.data.length === 0) {
+    throw new ImportParseError(
+      `No se ha podido leer el archivo: ${resultado.errors[0].message}`,
+    );
+  }
+
+  const headers = (resultado.meta.fields ?? []).filter(Boolean);
+  const rows = resultado.data
+    .map((row) => normalizeRow(row, headers))
+    .filter((row) => !isEmptyRow(row));
+
+  return {
+    headers,
+    rows: rows.slice(0, MAX_ROWS),
+    emptyRows: resultado.data.length - rows.length,
+  };
+}
+
+async function parseExcel(buffer: ArrayBuffer): Promise<ParsedSheet> {
+  const workbook = new ExcelJS.Workbook();
+  await workbook.xlsx.load(buffer);
+
+  const sheet = workbook.worksheets[0];
+  if (!sheet) throw new ImportParseError("El archivo no contiene ninguna hoja.");
+
+  const headerRow = sheet.getRow(1);
+  const headers: string[] = [];
+  headerRow.eachCell({ includeEmpty: true }, (cell, col) => {
+    headers[col - 1] = String(cellText(cell.value) ?? "").trim();
+  });
+
+  const limpias = headers.map((header, index) =>
+    header || `Columna ${index + 1}`,
+  );
+
+  const rows: Record<string, string>[] = [];
+  let vacias = 0;
+
+  sheet.eachRow({ includeEmpty: false }, (row, numero) => {
+    if (numero === 1) return;
+    if (rows.length >= MAX_ROWS) return;
+
+    const registro: Record<string, string> = {};
+    limpias.forEach((header, index) => {
+      registro[header] = String(cellText(row.getCell(index + 1).value) ?? "").trim();
+    });
+
+    if (isEmptyRow(registro)) {
+      vacias += 1;
+      return;
+    }
+    rows.push(registro);
+  });
+
+  return { headers: limpias, rows, emptyRows: vacias };
+}
+
+/** Convierte cualquier valor de celda de Excel en texto legible. */
+function cellText(value: ExcelJS.CellValue): string {
+  if (value === null || value === undefined) return "";
+  if (value instanceof Date) return value.toISOString().slice(0, 10);
+  if (typeof value === "object") {
+    if ("text" in value && typeof value.text === "string") return value.text;
+    if ("result" in value) return String(value.result ?? "");
+    if ("richText" in value && Array.isArray(value.richText)) {
+      return value.richText.map((part) => part.text).join("");
+    }
+    if ("hyperlink" in value && typeof value.hyperlink === "string") {
+      return value.hyperlink;
+    }
+    return "";
+  }
+  return String(value);
+}
+
+function normalizeRow(row: Record<string, string>, headers: string[]) {
+  const salida: Record<string, string> = {};
+  for (const header of headers) {
+    salida[header] = String(row[header] ?? "").trim();
+  }
+  return salida;
+}
+
+function isEmptyRow(row: Record<string, string>) {
+  return Object.values(row).every((valor) => !valor || valor.trim() === "");
+}
+
+/**
+ * Propone un mapeo automático entre las columnas del archivo y los campos de
+ * Geminis. Es solo una propuesta: el usuario la revisa siempre. Acierta en la
+ * mayoría de exportaciones porque las academias usan cabeceras parecidas.
+ */
+export function suggestMapping(
+  headers: string[],
+  fields: { key: string; aliases: string[] }[],
+): Record<string, string> {
+  const mapping: Record<string, string> = {};
+  const usados = new Set<string>();
+
+  for (const field of fields) {
+    const encontrada = headers.find((header) => {
+      if (usados.has(header)) return false;
+      const normalizada = normalizeKey(header);
+      return field.aliases.some((alias) => normalizeKey(alias) === normalizada);
+    });
+    if (encontrada) {
+      mapping[field.key] = encontrada;
+      usados.add(encontrada);
+    }
+  }
+
+  return mapping;
+}
+
+function normalizeKey(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "");
+}

@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { MANAGER_NAV, type NavSection } from "./nav-config";
+import { BRAND } from "@/lib/brand";
 import { cn } from "@/lib/utils";
 
 /**
@@ -32,12 +33,12 @@ export function ManagerSidebar({
     >
       <div className="flex items-center gap-2.5 px-2">
         <span className="flex size-8 items-center justify-center rounded-lg bg-accent text-sm font-semibold text-accent-contrast">
-          G
+          {BRAND.initial}
         </span>
         <div className="min-w-0">
           <p className="truncate text-sm font-semibold text-ink">{academyName}</p>
           <p className="text-[0.6875rem] uppercase tracking-wide text-ink-muted">
-            Manager
+            {BRAND.manager}
           </p>
         </div>
       </div>

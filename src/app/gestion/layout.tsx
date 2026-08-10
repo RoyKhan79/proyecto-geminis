@@ -6,6 +6,7 @@ import { requireAcademy } from "@/lib/auth/context";
 import { MANAGER_NAV } from "@/components/manager/nav-config";
 import { ManagerSidebar } from "@/components/manager/sidebar";
 import { Button } from "@/components/ui/button";
+import { BRAND } from "@/lib/brand";
 import { initials } from "@/lib/utils";
 
 export default async function ManagerLayout({
@@ -35,7 +36,7 @@ export default async function ManagerLayout({
         <header className="sticky top-0 z-20 flex h-14 items-center gap-3 border-b border-line bg-surface px-4">
           <Link href="/gestion" className="lg:hidden">
             <span className="flex size-8 items-center justify-center rounded-lg bg-accent text-sm font-semibold text-accent-contrast">
-              G
+              {BRAND.initial}
             </span>
           </Link>
 

@@ -173,7 +173,10 @@ const STAFF_PERMISSIONS: Permission[] = [
 
 const STUDENT_PERMISSIONS: Permission[] = [
   "campus.access",
-  "content.read",
+  // OJO: el alumnado NO lleva "content.read". Ese permiso significa "ver el
+  // contenido de la academia como personal" y se usa para distinguir al equipo
+  // del alumnado. Lo que un alumno puede ver lo deciden sus derechos de acceso,
+  // no un permiso. Dárselo abriría un agujero: cualquiera pasaría por personal.
   "classes.read",
   "tests.read",
   "attempts.take",

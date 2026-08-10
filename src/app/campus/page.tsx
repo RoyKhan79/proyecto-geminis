@@ -151,7 +151,7 @@ export default async function CampusHomePage() {
             <CardContent className="flex items-center gap-3 p-4 pt-4">
               <Sparkles className="size-4 shrink-0 text-accent" aria-hidden />
               <p className="text-sm text-ink-muted">
-                Geminis IA llegará en una próxima fase y responderá usando el
+                La IA de Proyecto Geminis llegará en una próxima fase y responderá con el
                 material de tu academia, citando siempre de dónde sale cada dato.
               </p>
             </CardContent>

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { getAuthContext } from "@/lib/auth/context";
+import { BRAND } from "@/lib/brand";
 import { SignInForm } from "./sign-in-form";
 
 export const metadata: Metadata = { title: "Entrar" };
@@ -14,9 +15,11 @@ export default async function SignInPage() {
       <div className="w-full max-w-sm space-y-8">
         <div className="space-y-2 text-center">
           <div className="mx-auto flex size-12 items-center justify-center rounded-2xl bg-accent text-lg font-semibold text-accent-contrast">
-            G
+            {BRAND.initial}
           </div>
-          <h1 className="text-2xl font-semibold tracking-tight text-ink">Geminis</h1>
+          <h1 className="text-2xl font-semibold tracking-tight text-ink">
+            {BRAND.name}
+          </h1>
           <p className="text-sm text-ink-muted">
             Accede a tu academia para continuar.
           </p>

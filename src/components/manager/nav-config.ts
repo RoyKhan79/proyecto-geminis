@@ -1,6 +1,7 @@
 import type { LucideIcon } from "lucide-react";
 import {
   BarChart3,
+  ArrowDownToLine,
   BookOpen,
   CalendarDays,
   CreditCard,
@@ -64,6 +65,13 @@ export const MANAGER_NAV: NavSection[] = [
         permission: "teachers.read",
         status: "ready",
       },
+      {
+        label: "Importar",
+        href: "/gestion/importar",
+        icon: ArrowDownToLine,
+        permission: "imports.run",
+        status: "ready",
+      },
     ],
   },
   {
@@ -95,8 +103,7 @@ export const MANAGER_NAV: NavSection[] = [
         href: "/gestion/contenido",
         icon: FileText,
         permission: "content.read",
-        status: "soon",
-        phase: "Fase 3",
+        status: "ready",
       },
       {
         label: "Clases",
@@ -128,7 +135,7 @@ export const MANAGER_NAV: NavSection[] = [
     title: "Academia",
     items: [
       {
-        label: "Geminis IA",
+        label: "IA",
         href: "/gestion/ia",
         icon: Sparkles,
         permission: "ai.copilot",

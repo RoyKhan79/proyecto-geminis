@@ -1,12 +1,24 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { CheckCircle2, ChevronLeft, ChevronRight, Circle, Clock } from "lucide-react";
+import {
+  CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
+  Circle,
+  Clock,
+  ExternalLink,
+  FileText,
+  PlayCircle,
+} from "lucide-react";
 import { requireAcademy } from "@/lib/auth/context";
+import { getEffectiveFlags, grantsCover } from "@/lib/access/content-access";
 import { loadChildren, loadGrants, loadNodeForStudent } from "@/server/campus/queries";
 import { markProgressAction } from "@/server/campus/actions";
+import { DocumentViewer } from "@/components/campus/document-viewer";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, EmptyState } from "@/components/ui/primitives";
+import { formatDate } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Estudiar" };
 
@@ -26,6 +38,16 @@ export default async function NodoPage({
   if (!nodo) notFound();
 
   const hijos = await loadChildren(ctx.db, grants, ctx.membershipId, nodo.id);
+  const flags = await getEffectiveFlags(ctx.academy.id, nodo.id);
+
+  // Descargar es un permiso distinto de ver: hacen falta las dos cosas.
+  const puedeDescargar =
+    (flags?.downloadable ?? false) &&
+    grantsCover(grants, nodo, "DOWNLOAD_CONTENT");
+
+  const marcaDeAgua = flags?.watermark
+    ? `${ctx.academy.name} · ${ctx.user.firstName} ${ctx.user.lastName ?? ""} · ${formatDate(new Date())}`
+    : null;
 
   const volverHref = nodo.parentId
     ? `/campus/estudiar/${nodo.parentId}`
@@ -51,9 +73,35 @@ export default async function NodoPage({
         <Card>
           <CardContent
             className="prose prose-sm max-w-none p-4 pt-4 text-ink"
-            // El HTML se sanea en servidor antes de guardarse (ver docs/SECURITY_MODEL.md).
+            // El HTML se sanea en servidor antes de guardarse (docs/SECURITY_MODEL.md).
             dangerouslySetInnerHTML={{ __html: nodo.resource.richText }}
           />
+        </Card>
+      ) : null}
+
+      {nodo.resource?.type === "PDF" && nodo.resource.fileId ? (
+        <DocumentViewer
+          fileId={nodo.resource.fileId}
+          fileName={nodo.label}
+          puedeDescargar={puedeDescargar}
+          marcaDeAgua={marcaDeAgua}
+        />
+      ) : null}
+
+      {nodo.resource?.externalUrl ? (
+        <Card>
+          <CardContent className="p-4 pt-4">
+            <Button asChild variant="secondary" className="w-full">
+              <a href={nodo.resource.externalUrl} target="_blank" rel="noreferrer">
+                {nodo.resource.type === "VIDEO" ? (
+                  <PlayCircle aria-hidden />
+                ) : (
+                  <ExternalLink aria-hidden />
+                )}
+                {nodo.resource.type === "VIDEO" ? "Ver el vídeo" : "Abrir el enlace"}
+              </a>
+            </Button>
+          </CardContent>
         </Card>
       ) : null}
 
@@ -66,27 +114,29 @@ export default async function NodoPage({
                 ? `${nodo.estimatedMinutes} min estimados`
                 : "Tema de estudio"}
             </div>
-            <form action={markProgressAction} className="flex gap-2">
-              <input type="hidden" name="nodeId" value={nodo.id} />
-              <input type="hidden" name="status" value="IN_PROGRESS" />
-              <Button type="submit" variant="secondary" size="sm">
-                Marcar en curso
-              </Button>
-            </form>
-            <form action={markProgressAction}>
-              <input type="hidden" name="nodeId" value={nodo.id} />
-              <input type="hidden" name="status" value="COMPLETED" />
-              <Button type="submit" size="sm">
-                <CheckCircle2 aria-hidden />
-                Completado
-              </Button>
-            </form>
+            <div className="flex gap-2">
+              <form action={markProgressAction}>
+                <input type="hidden" name="nodeId" value={nodo.id} />
+                <input type="hidden" name="status" value="IN_PROGRESS" />
+                <Button type="submit" variant="secondary" size="sm">
+                  En curso
+                </Button>
+              </form>
+              <form action={markProgressAction}>
+                <input type="hidden" name="nodeId" value={nodo.id} />
+                <input type="hidden" name="status" value="COMPLETED" />
+                <Button type="submit" size="sm">
+                  <CheckCircle2 aria-hidden />
+                  Completado
+                </Button>
+              </form>
+            </div>
           </CardContent>
         </Card>
       ) : null}
 
       {hijos.length === 0 ? (
-        nodo.kind !== "TOPIC" ? (
+        nodo.kind !== "TOPIC" && !nodo.resource ? (
           <Card>
             <EmptyState
               title="Todavía no hay contenido publicado aquí"
@@ -98,13 +148,16 @@ export default async function NodoPage({
         <Card className="divide-y divide-[var(--border-subtle)]">
           {hijos.map((hijo) => {
             const estado = hijo.progress[0]?.status ?? "NOT_STARTED";
+            const esRecurso = hijo.kind === "RESOURCE";
             return (
               <Link
                 key={hijo.id}
                 href={`/campus/estudiar/${hijo.id}`}
                 className="flex items-center gap-3 p-4 transition-colors hover:bg-surface-muted"
               >
-                {estado === "COMPLETED" ? (
+                {esRecurso ? (
+                  <FileText className="size-4 shrink-0 text-ink-muted" aria-hidden />
+                ) : estado === "COMPLETED" ? (
                   <CheckCircle2
                     className="size-4 shrink-0 text-positive"
                     aria-label="Completado"
@@ -120,11 +173,9 @@ export default async function NodoPage({
                   />
                 )}
                 <div className="min-w-0 flex-1">
-                  <p className="font-medium text-ink">{hijo.label}</p>
+                  <p className="truncate font-medium text-ink">{hijo.label}</p>
                   {hijo.estimatedMinutes ? (
-                    <p className="text-xs text-ink-muted">
-                      {hijo.estimatedMinutes} min
-                    </p>
+                    <p className="text-xs text-ink-muted">{hijo.estimatedMinutes} min</p>
                   ) : null}
                 </div>
                 <ChevronRight className="size-4 shrink-0 text-ink-muted" aria-hidden />
