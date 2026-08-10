@@ -146,6 +146,8 @@ model ContentNode {
   classSessions   ClassSession[]
   knowledgeSource KnowledgeSource[]
   legislationLink ContentLegislationLink[]
+  wallPosts       WallPost[]
+  tasks           Assignment[]
   testDefinitions TestDefinition[]
 
   @@unique([editionId, parentId, slug])
@@ -269,8 +271,9 @@ model StoredFile {
   createdAt    DateTime  @default(now())
   deletedAt    DateTime?
 
-  resources ContentResource[]
-  documents KnowledgeSource[]
+  resources       ContentResource[]
+  documents       KnowledgeSource[]
+  submissionFiles SubmissionFile[]
 
   @@index([academyId, createdAt])
   @@map("stored_files")
@@ -394,4 +397,75 @@ model ClassAttendance {
   @@unique([classId, studentId])
   @@index([academyId, studentId])
   @@map("class_attendances")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MURO DE LA CLASE
+//
+// Donde el profesor escribe a su gente: avisos del día, correcciones sobre lo
+// dado en clase, ánimos antes de un simulacro. Es lo que hoy ocurre en un grupo
+// de WhatsApp y acaba perdiéndose entre memes.
+//
+// Se diferencia de Comunicaciones a propósito: una comunicación es un aviso
+// dirigido (cambio de aula, impago) y el muro es conversación de clase, que se
+// lee cuando toca y queda ordenada por curso o grupo.
+// ─────────────────────────────────────────────────────────────────────────────
+
+model WallPost {
+  id        String  @id @default(uuid(7))
+  academyId String  @default("SIN_TENANT")
+  academy   Academy @relation(fields: [academyId], references: [id], onDelete: Cascade)
+
+  authorId String
+  author   Membership @relation("WallAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+
+  /// Alcance. Cuanto más concreto, menos ruido para quien no le toca.
+  editionId String?
+  edition   OppositionEdition? @relation(fields: [editionId], references: [id], onDelete: Cascade)
+  courseId  String?
+  course    Course?            @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  groupId   String?
+  group     Group?             @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  title String?
+  body  String
+
+  /// Fijado arriba del muro. Para lo importante que no debe perderse.
+  pinned Boolean @default(false)
+
+  /// Enlace opcional a un recurso ya subido (un tema, un documento).
+  nodeId String?
+  node   ContentNode? @relation(fields: [nodeId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  comments WallComment[]
+
+  @@index([academyId, groupId, createdAt])
+  @@index([academyId, courseId, createdAt])
+  @@map("wall_posts")
+}
+
+/// Respuestas del alumnado. Se pueden desactivar por publicación desde la
+/// configuración de la academia cuando exista esa opción.
+model WallComment {
+  id        String  @id @default(uuid(7))
+  academyId String  @default("SIN_TENANT")
+  academy   Academy @relation(fields: [academyId], references: [id], onDelete: Cascade)
+
+  postId String
+  post   WallPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  authorId String
+  author   Membership @relation("WallCommentAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+
+  body String
+
+  createdAt DateTime  @default(now())
+  deletedAt DateTime?
+
+  @@index([academyId, postId, createdAt])
+  @@map("wall_comments")
 }

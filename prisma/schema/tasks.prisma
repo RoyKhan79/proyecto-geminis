@@ -1,0 +1,166 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// TAREAS Y ENTREGAS
+//
+// El profesor manda un trabajo —un supuesto práctico, un simulacro escrito, una
+// programación de aula—, el alumno sube su archivo y el profesor lo corrige y
+// lo puntúa. Es el flujo que en oposiciones importa de verdad: los tipo test se
+// corrigen solos, pero un supuesto lo tiene que leer una persona.
+//
+// Decisión ADR-0025: la nota vive en la entrega, no en la tarea. Cada alumno
+// tiene su corrección, su comentario y su historial de reintentos, y así se
+// puede devolver un trabajo para que lo rehaga sin perder lo anterior.
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum AssignmentStatus {
+  DRAFT
+  PUBLISHED
+  CLOSED
+}
+
+enum SubmissionStatus {
+  PENDING // aún no ha entregado
+  SUBMITTED // entregado, sin corregir
+  LATE // entregado fuera de plazo
+  RETURNED // devuelto para rehacer
+  GRADED // corregido y puntuado
+}
+
+model Assignment {
+  id        String  @id @default(uuid(7))
+  academyId String  @default("SIN_TENANT")
+  academy   Academy @relation(fields: [academyId], references: [id], onDelete: Cascade)
+
+  editionId String?
+  edition   OppositionEdition? @relation(fields: [editionId], references: [id], onDelete: SetNull)
+  courseId  String?
+  course    Course?            @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  groupId   String?
+  group     Group?             @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  /// Tema del temario con el que se relaciona, si aplica.
+  nodeId    String?
+  node      ContentNode?       @relation(fields: [nodeId], references: [id], onDelete: SetNull)
+
+  title        String
+  instructions String?
+  status       AssignmentStatus @default(DRAFT)
+
+  dueAt DateTime?
+  /// Se admite entregar después de la fecha, marcándolo como fuera de plazo.
+  allowLate Boolean @default(true)
+  /// Nota máxima. 10 por defecto porque es como puntúan las academias.
+  maxScore  Decimal @default(10) @db.Decimal(5, 2)
+
+  /// Archivo de enunciado que sube el profesor (opcional).
+  briefFileId String?
+
+  createdById String?
+  createdBy   Membership? @relation("AssignmentAuthor", fields: [createdById], references: [id], onDelete: SetNull)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  submissions Submission[]
+
+  @@index([academyId, status, dueAt])
+  @@index([academyId, groupId])
+  @@map("assignments")
+}
+
+model Submission {
+  id        String  @id @default(uuid(7))
+  academyId String  @default("SIN_TENANT")
+  academy   Academy @relation(fields: [academyId], references: [id], onDelete: Cascade)
+
+  assignmentId String
+  assignment   Assignment @relation(fields: [assignmentId], references: [id], onDelete: Cascade)
+  studentId    String
+  student      Membership @relation("SubmissionStudent", fields: [studentId], references: [id], onDelete: Cascade)
+
+  status SubmissionStatus @default(PENDING)
+
+  /// Texto que escribe el alumno junto a los archivos.
+  body        String?
+  submittedAt DateTime?
+
+  // ── Corrección ────────────────────────────────────────────────────────────
+  score      Decimal? @db.Decimal(5, 2)
+  feedback   String?
+  gradedById String?
+  gradedBy   Membership? @relation("SubmissionGrader", fields: [gradedById], references: [id], onDelete: SetNull)
+  gradedAt   DateTime?
+
+  /// Cuántas veces se ha devuelto para rehacer. Ayuda a ver el esfuerzo.
+  returnCount Int @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  files SubmissionFile[]
+
+  @@unique([assignmentId, studentId])
+  @@index([academyId, status])
+  @@index([academyId, studentId])
+  @@map("submissions")
+}
+
+/// Archivos que sube el alumno. Pasan por el mismo almacén y la misma ruta
+/// protegida que el resto: nadie ve la entrega de otro.
+model SubmissionFile {
+  id        String  @id @default(uuid(7))
+  academyId String  @default("SIN_TENANT")
+  academy   Academy @relation(fields: [academyId], references: [id], onDelete: Cascade)
+
+  submissionId String
+  submission   Submission @relation(fields: [submissionId], references: [id], onDelete: Cascade)
+
+  fileId String
+  file   StoredFile @relation(fields: [fileId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([academyId, submissionId])
+  @@map("submission_files")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// SALAS ONLINE
+//
+// Salas permanentes a las que el alumnado puede entrar: el aula virtual de un
+// grupo, la sala de tutorías, la de dudas antes del examen. Se diferencian de
+// una clase porque no tienen fecha: están ahí.
+// ─────────────────────────────────────────────────────────────────────────────
+
+model LiveRoom {
+  id        String  @id @default(uuid(7))
+  academyId String  @default("SIN_TENANT")
+  academy   Academy @relation(fields: [academyId], references: [id], onDelete: Cascade)
+
+  name        String
+  description String?
+
+  /// Alcance: cuanto más concreto, menos gente entra donde no toca.
+  editionId String?
+  edition   OppositionEdition? @relation(fields: [editionId], references: [id], onDelete: Cascade)
+  courseId  String?
+  course    Course?            @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  groupId   String?
+  group     Group?             @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  /// Proveedor y enlace. El enlace NO se enseña al alumnado directamente: se
+  /// entra por una ruta del servidor que comprueba antes quién es (§113).
+  provider String  @default("external")
+  url      String
+  /// Horario en texto libre, para que el alumno sepa cuándo hay alguien.
+  schedule String?
+
+  isOpen Boolean @default(true)
+
+  createdById String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  deletedAt   DateTime?
+
+  @@index([academyId, isOpen])
+  @@map("live_rooms")
+}

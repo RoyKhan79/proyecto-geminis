@@ -1,0 +1,75 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// MENSAJES INTERNOS
+//
+// Conversación privada entre un alumno y su academia (su profesor o quien esté
+// de guardia). Es lo que hoy ocurre por WhatsApp al móvil personal del
+// preparador a las once de la noche.
+//
+// Decisión ADR-0024: la conversación pertenece al ALUMNO y a la ACADEMIA, no a
+// un profesor concreto. Así, si el profesor cambia o está de baja, el hilo no
+// se pierde ni hay que reenviar nada, y la academia conserva el historial de lo
+// que se le ha dicho a cada alumno.
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum ThreadStatus {
+  OPEN
+  ANSWERED
+  CLOSED
+}
+
+model MessageThread {
+  id        String  @id @default(uuid(7))
+  academyId String  @default("SIN_TENANT")
+  academy   Academy @relation(fields: [academyId], references: [id], onDelete: Cascade)
+
+  /// Alumno que abre el hilo. Siempre hay uno: la academia no se escribe sola.
+  studentId String
+  student   Membership @relation("ThreadStudent", fields: [studentId], references: [id], onDelete: Cascade)
+
+  /// Profesor asignado, si lo hay. Puede cambiar sin romper el hilo.
+  teacherId String?
+  teacher   Membership? @relation("ThreadTeacher", fields: [teacherId], references: [id], onDelete: SetNull)
+
+  /// Contexto opcional: sobre qué oposición o tema pregunta.
+  editionId String?
+  nodeId    String?
+
+  subject String
+  status  ThreadStatus @default(OPEN)
+
+  lastMessageAt DateTime @default(now())
+  /// Marcas de no leído, una por lado. Es más simple y más rápido que calcular
+  /// el estado recorriendo todos los mensajes en cada listado.
+  unreadForStudent Boolean @default(false)
+  unreadForStaff   Boolean @default(true)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  messages Message[]
+
+  @@index([academyId, status, lastMessageAt])
+  @@index([academyId, studentId, lastMessageAt])
+  @@map("message_threads")
+}
+
+model Message {
+  id        String  @id @default(uuid(7))
+  academyId String  @default("SIN_TENANT")
+  academy   Academy @relation(fields: [academyId], references: [id], onDelete: Cascade)
+
+  threadId String
+  thread   MessageThread @relation(fields: [threadId], references: [id], onDelete: Cascade)
+
+  authorId String
+  author   Membership @relation("MessageAuthor", fields: [authorId], references: [id], onDelete: Cascade)
+
+  body String
+
+  createdAt DateTime  @default(now())
+  deletedAt DateTime?
+
+  @@index([academyId, threadId, createdAt])
+  @@map("messages")
+}

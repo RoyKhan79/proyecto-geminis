@@ -2,6 +2,7 @@ import type { LucideIcon } from "lucide-react";
 import {
   BarChart3,
   ArrowDownToLine,
+  Radar,
   BookOpen,
   CalendarDays,
   CreditCard,
@@ -117,6 +118,13 @@ export const MANAGER_NAV: NavSection[] = [
         href: "/gestion/tests",
         icon: ListChecks,
         permission: "questions.read",
+        status: "ready",
+      },
+      {
+        label: "Convocatorias",
+        href: "/gestion/convocatorias",
+        icon: Radar,
+        permission: "oppositions.read",
         status: "ready",
       },
       {

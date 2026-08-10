@@ -90,6 +90,7 @@ model Opposition {
   editions    OppositionEdition[]
   assignments TeacherAssignment[]
   products    Product[]
+  watches     OppositionWatch[]
 
   @@unique([academyId, slug])
   @@index([academyId, status])
@@ -125,6 +126,9 @@ model OppositionEdition {
 
   courses        Course[]
   contentNodes   ContentNode[]
+  wallPosts      WallPost[]
+  tasks          Assignment[]
+  liveRooms      LiveRoom[]
   classSessions  ClassSession[]
   questions      Question[]
   testDefinition TestDefinition[]
@@ -161,6 +165,9 @@ model Course {
   classSessions ClassSession[]
   assignments   TeacherAssignment[]
   products      Product[]
+  wallPosts     WallPost[]
+  tasks         Assignment[]
+  liveRooms     LiveRoom[]
 
   @@index([academyId, status])
   @@map("courses")
@@ -189,6 +196,9 @@ model Group {
   classSessions   ClassSession[]
   assignments     TeacherAssignment[]
   contentReleases ContentRelease[]
+  wallPosts       WallPost[]
+  tasks           Assignment[]
+  liveRooms       LiveRoom[]
 
   @@index([academyId, courseId])
   @@map("groups")

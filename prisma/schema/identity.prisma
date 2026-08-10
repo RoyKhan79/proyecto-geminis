@@ -105,6 +105,14 @@ model Membership {
   reviewedQuestns Question[]             @relation("QuestionReviewer")
   aiConversations AIConversation[]
   aiUsages        AIUsage[]
+  wallPosts       WallPost[]    @relation("WallAuthor")
+  wallComments    WallComment[] @relation("WallCommentAuthor")
+  threadsAsStudent MessageThread[] @relation("ThreadStudent")
+  threadsAsTeacher MessageThread[] @relation("ThreadTeacher")
+  messagesSent     Message[]       @relation("MessageAuthor")
+  assignmentsMade  Assignment[]    @relation("AssignmentAuthor")
+  submissions      Submission[]    @relation("SubmissionStudent")
+  submissionsGraded Submission[]   @relation("SubmissionGrader")
 
   @@unique([academyId, userId])
   @@index([academyId, status])

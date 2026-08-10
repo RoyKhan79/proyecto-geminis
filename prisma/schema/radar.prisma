@@ -1,0 +1,140 @@
+// ─────────────────────────────────────────────────────────────────────────────
+// RADAR DE CONVOCATORIAS
+//
+// Cada mañana, sin que nadie abra el programa, Proyecto Geminis consulta los
+// boletines oficiales y avisa por correo a la academia cuando sale una
+// convocatoria de las oposiciones que prepara. Si la acepta, se le crea la
+// oposición lista para subir temario.
+//
+// Decisión ADR-0022: el radar se ejecuta como TAREA PROGRAMADA en el servidor
+// (`npm run radar`, lanzado por cron), no dentro de la aplicación web. Motivos:
+// la academia no tiene por qué tener nada abierto, la ejecución puede tardar
+// minutos y no debe competir con las peticiones de los usuarios, y así se puede
+// reintentar sin afectar a nadie.
+//
+// Decisión ADR-0023: lo que se detecta NUNCA crea una oposición por su cuenta.
+// Se avisa, y una persona decide. Un falso positivo que creara oposiciones
+// solo generaría basura que alguien tendría que limpiar.
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum OfficialSource {
+  BOE // Boletín Oficial del Estado
+  REGIONAL // Boletín autonómico
+  PROVINCIAL // Boletín provincial
+  LOCAL // Ayuntamiento
+  OTHER
+}
+
+enum CallStatus {
+  NEW // detectada, sin revisar
+  REVIEWING // alguien la está mirando
+  ACCEPTED // aceptada: se ha creado o vinculado la oposición
+  DISMISSED // descartada: no interesa
+}
+
+/// Qué vigila una academia. Totalmente configurable desde su perfil.
+model OppositionWatch {
+  id        String  @id @default(uuid(7))
+  academyId String  @default("SIN_TENANT")
+  academy   Academy @relation(fields: [academyId], references: [id], onDelete: Cascade)
+
+  /// Nombre para la academia: "Administrativo del Estado", "Maestros Andalucía".
+  name String
+
+  /// Palabras que deben aparecer. Se busca cualquiera de ellas.
+  keywords String[] @default([])
+  /// Palabras que descartan el resultado aunque coincida ("nombramiento",
+  /// "cese", "lista definitiva"…). Evita el ruido de resoluciones de trámite.
+  excludeKeywords String[] @default([])
+
+  /// Ámbitos vigilados. Vacío = todos.
+  sources OfficialSource[] @default([])
+  /// Comunidades o provincias vigiladas, por su código. Vacío = todas.
+  regions String[] @default([])
+
+  /// Oposición existente a la que pertenece lo que se encuentre, si ya la
+  /// prepara. Si está vacío, al aceptar se crea una nueva.
+  oppositionId String?
+  opposition   Opposition? @relation(fields: [oppositionId], references: [id], onDelete: SetNull)
+
+  /// A quién se avisa. Si está vacío se usa el correo de la academia.
+  notifyEmails String[] @default([])
+
+  /// Exige que el anuncio hable de convocar plazas y no de un trámite. Es lo
+  /// que separa "se convoca proceso selectivo" de "se corrigen errores en la
+  /// relación de plazas". Se puede desactivar si la academia quiere verlo todo.
+  requireCallPhrase Boolean @default(true)
+
+  isActive Boolean @default(true)
+
+  createdById String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  calls OfficialCall[]
+
+  @@index([academyId, isActive])
+  @@map("opposition_watches")
+}
+
+/// Convocatoria detectada en un boletín oficial.
+model OfficialCall {
+  id        String  @id @default(uuid(7))
+  academyId String  @default("SIN_TENANT")
+  academy   Academy @relation(fields: [academyId], references: [id], onDelete: Cascade)
+
+  watchId String?
+  watch   OppositionWatch? @relation(fields: [watchId], references: [id], onDelete: SetNull)
+
+  source OfficialSource @default(BOE)
+  /// Identificador del boletín (p. ej. BOE-A-2026-12345). Junto a la academia
+  /// evita avisar dos veces de lo mismo.
+  externalId String
+  title      String
+  summary    String?
+  department String?
+  region     String?
+
+  publishedAt DateTime
+  url         String?
+  pdfUrl      String?
+
+  status CallStatus @default(NEW)
+
+  /// Oposición creada o vinculada al aceptarla.
+  oppositionId String?
+  editionId    String?
+
+  reviewedById String?
+  reviewedAt   DateTime?
+  notes        String?
+
+  notifiedAt DateTime?
+  createdAt  DateTime @default(now())
+
+  @@unique([academyId, externalId])
+  @@index([academyId, status, publishedAt])
+  @@map("official_calls")
+}
+
+/// Registro de cada pasada del radar. Sirve para saber si el cron está vivo y
+/// para no repetir trabajo si se ejecuta dos veces el mismo día.
+model RadarRun {
+  id     String         @id @default(uuid(7))
+  source OfficialSource @default(BOE)
+
+  /// Día del boletín analizado.
+  bulletinDate DateTime
+
+  itemsScanned Int @default(0)
+  matches      Int @default(0)
+  notified     Int @default(0)
+
+  startedAt  DateTime  @default(now())
+  finishedAt DateTime?
+  ok         Boolean   @default(true)
+  error      String?
+
+  @@unique([source, bulletinDate])
+  @@map("radar_runs")
+}

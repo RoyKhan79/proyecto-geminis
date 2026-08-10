@@ -127,6 +127,16 @@ model Academy {
   legislationArts   LegislationArticle[]
   contentLegLinks   ContentLegislationLink[]
   legislationAlerts LegislationChangeAlert[]
+  oppositionWatches OppositionWatch[]
+  officialCalls     OfficialCall[]
+  wallPosts         WallPost[]
+  wallComments      WallComment[]
+  messageThreads    MessageThread[]
+  messages          Message[]
+  assignments       Assignment[]
+  submissions       Submission[]
+  submissionFiles   SubmissionFile[]
+  liveRooms         LiveRoom[]
   sessions          Session[]
 
   @@index([status])
