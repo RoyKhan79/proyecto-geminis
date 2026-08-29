@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { signOutAction } from "@/lib/auth/actions";
 import { requireAcademy } from "@/lib/auth/context";
 import { loadGrants, loadStudentEditions } from "@/server/campus/queries";
@@ -10,6 +11,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/primitives";
+import { VerifyBanner } from "@/components/campus/verify-banner";
+import { SesionesAbiertas } from "@/components/campus/sesiones";
+import { sesionesActivas } from "@/lib/auth/session";
 import { formatDate, initials } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Perfil" };
@@ -17,9 +21,14 @@ export const metadata: Metadata = { title: "Perfil" };
 export default async function PerfilPage() {
   const ctx = await requireAcademy();
 
-  const [matriculas, grants] = await Promise.all([
+  const [matriculas, grants, sesiones, academia] = await Promise.all([
     loadStudentEditions(ctx.db, ctx.membershipId),
     loadGrants(ctx.academy.id, ctx.membershipId),
+    sesionesActivas(ctx.user.id),
+    ctx.db.academy.findUnique({
+      where: { id: ctx.academy.id },
+      select: { maxSessionsPerStudent: true },
+    }),
   ]);
 
   const derechos = await ctx.db.entitlement.findMany({
@@ -34,6 +43,8 @@ export default async function PerfilPage() {
   return (
     <>
       <h1 className="text-xl font-semibold tracking-tight text-ink">Perfil</h1>
+
+      {ctx.user.emailVerifiedAt ? null : <VerifyBanner />}
 
       <Card>
         <CardContent className="flex items-center gap-4 p-4 pt-4">
@@ -110,11 +121,27 @@ export default async function PerfilPage() {
         </CardContent>
       </Card>
 
+      <SesionesAbiertas
+        sesiones={sesiones}
+        actual={ctx.sessionId}
+        limite={academia?.maxSessionsPerStudent ?? 0}
+      />
+
       <form action={signOutAction}>
         <Button type="submit" variant="secondary" className="w-full">
           Cerrar sesión
         </Button>
       </form>
+
+      <p className="pb-2 text-center text-xs text-ink-muted">
+        <Link href="/privacidad" className="underline-offset-2 hover:underline">
+          Privacidad
+        </Link>
+        <span aria-hidden> · </span>
+        <Link href="/condiciones" className="underline-offset-2 hover:underline">
+          Condiciones de uso
+        </Link>
+      </p>
     </>
   );
 }

@@ -100,6 +100,9 @@ model Membership {
   questionStats   StudentQuestionStat[]
   entitlements    Entitlement[]
   payments        Payment[]
+  billingProfile  BillingProfile?
+  recurringCharge RecurringCharge?
+  invoices        Invoice[]
   notifications   Notification[]
   authoredQuestns Question[]             @relation("QuestionAuthor")
   reviewedQuestns Question[]             @relation("QuestionReviewer")
@@ -232,6 +235,10 @@ model Session {
 
   ipAddress String?
   userAgent String?
+  /// Huella del dispositivo: navegador y sistema, deducidos del `userAgent`.
+  /// Sirve para contar dispositivos distintos sin guardar nada más de lo que ya
+  /// se guarda, y para que la persona reconozca sus sesiones en su perfil.
+  deviceLabel String?
 
   /// Soporte: superadmin que está suplantando a este usuario (§3). Toda sesión
   /// suplantada queda marcada y auditada.
@@ -259,4 +266,22 @@ model PasswordResetToken {
 
   @@index([userId])
   @@map("password_reset_tokens")
+}
+
+/// Contador de intentos para el limitador (ADR-0016 revisado).
+///
+/// Vive en la base de datos y no en la memoria del proceso por un motivo
+/// concreto: con varias instancias detrás de un balanceador, un contador en
+/// memoria deja pasar tantos intentos como instancias haya. Es la diferencia
+/// entre limitar de verdad y aparentar que se limita.
+model RateLimitCounter {
+  /// La clave del cubo: "login:ip:1.2.3.4", "login:acct:correo@…".
+  key       String   @id
+  count     Int      @default(0)
+  /// Cuándo se reinicia la cuenta.
+  resetAt   DateTime
+  updatedAt DateTime @updatedAt
+
+  @@index([resetAt])
+  @@map("rate_limit_counters")
 }

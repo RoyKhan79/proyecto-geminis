@@ -469,6 +469,9 @@ export async function rollbackImport(db: TenantClient, jobId: string) {
       if (membership) {
         await db.membership.delete({ where: { id: membership.id } });
 
+        // tenant-ok · la pregunta es justo si esta persona pertenece a ALGUNA
+        // otra academia. Acotar por la nuestra daría siempre cero y borraría
+        // usuarios que son alumnos en otro sitio.
         const otras = await prismaBase.membership.count({
           where: { userId: membership.userId },
         });

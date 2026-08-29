@@ -89,13 +89,37 @@ export async function recuperarFragmentos(params: {
     if (nodosPermitidos.length === 0) return [];
   }
 
+  // 1b. Si se pregunta por un tema concreto, la rama entera y no solo el nodo.
+  //     Los documentos cuelgan DENTRO del tema, así que filtrar por el id del
+  //     tema a secas no encontraba ni un fragmento: el material está en sus
+  //     hijos. Se usa la ruta materializada (ADR-0007).
+  let rama: string[] | null = null;
+
+  if (params.nodeId) {
+    const nodo = await prismaBase.contentNode.findFirst({
+      where: { id: params.nodeId, academyId: params.academyId },
+      select: { id: true, path: true },
+    });
+    if (!nodo) return [];
+
+    const descendientes = await prismaBase.contentNode.findMany({
+      where: {
+        academyId: params.academyId,
+        deletedAt: null,
+        path: { startsWith: `${nodo.path}${nodo.id}/` },
+      },
+      select: { id: true },
+    });
+    rama = [nodo.id, ...descendientes.map((d) => d.id)];
+  }
+
   // 2. Fragmentos de fuentes indexadas y activas, dentro de esos nodos.
   const fragmentos = await prismaBase.documentChunk.findMany({
     where: {
       academyId: params.academyId,
       source: { status: "INDEXED" },
       ...(nodosPermitidos ? { nodeId: { in: nodosPermitidos } } : {}),
-      ...(params.nodeId ? { nodeId: params.nodeId } : {}),
+      ...(rama ? { nodeId: { in: rama } } : {}),
       // Solo material que la academia ha autorizado para la IA.
       OR: [
         { node: { aiEnabled: true } },

@@ -28,6 +28,22 @@ import { createContentNode } from "../src/server/content/tree";
 const DEMO_SLUG = "geminis-demo";
 const DEMO_PASSWORD = "Geminis2026!";
 
+/**
+ * El superadministrador de la plataforma.
+ *
+ * Es el nivel de arriba del todo: da de alta academias y da soporte, pero NO
+ * pertenece a ninguna academia y por tanto no ve el contenido de ninguna. Para
+ * entrar en una tiene que impersonar, y eso queda registrado (§3).
+ *
+ * Se pueden cambiar con variables de entorno al sembrar, para no dejar unas
+ * credenciales conocidas en un despliegue real:
+ *
+ *   SUPERADMIN_EMAIL=... SUPERADMIN_PASSWORD=... npm run db:seed
+ */
+const SUPERADMIN_EMAIL =
+  process.env.SUPERADMIN_EMAIL ?? "antonio.fusterverdu@gmail.com";
+const SUPERADMIN_PASSWORD = process.env.SUPERADMIN_PASSWORD ?? "licantropiA1!";
+
 async function main() {
   console.log("→ Sembrando datos de demostración…");
 
@@ -62,7 +78,7 @@ async function main() {
   console.log(`   Administración   admin@academiademo.test      / ${DEMO_PASSWORD}`);
   console.log(`   Profesor         laura@academiademo.test      / ${DEMO_PASSWORD}`);
   console.log(`   Alumna           alumno1@academiademo.test    / ${DEMO_PASSWORD}`);
-  console.log(`   Superadmin       superadmin@geminis.test      / ${DEMO_PASSWORD}`);
+  console.log(`   Superadmin       ${SUPERADMIN_EMAIL}  / ${SUPERADMIN_PASSWORD}`);
   console.log(`   (admin: ${admin.membership.id.slice(0, 8)}…)`);
 }
 
@@ -102,15 +118,19 @@ async function limpiarDemo() {
 }
 
 async function seedSuperadmin() {
+  const passwordHash = await hashPassword(SUPERADMIN_PASSWORD);
+
   await prismaBase.user.upsert({
-    where: { email: "superadmin@geminis.test" },
-    update: { isPlatformAdmin: true },
+    where: { email: SUPERADMIN_EMAIL },
+    // La contraseña se actualiza también en `update`: si no, volver a sembrar
+    // sobre una base existente dejaría la anterior y nadie entendería por qué.
+    update: { isPlatformAdmin: true, passwordHash },
     create: {
-      email: "superadmin@geminis.test",
-      firstName: "Soporte",
-      lastName: "Geminis",
+      email: SUPERADMIN_EMAIL,
+      firstName: "Antonio",
+      lastName: "Fuster",
       isPlatformAdmin: true,
-      passwordHash: await hashPassword(DEMO_PASSWORD),
+      passwordHash,
       emailVerifiedAt: new Date(),
     },
   });

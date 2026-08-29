@@ -29,15 +29,17 @@ export function ManagerSidebar({
   return (
     <nav
       aria-label="Navegación principal"
-      className="flex h-full w-60 shrink-0 flex-col gap-5 overflow-y-auto border-r border-line bg-surface px-3 py-4"
+      className="flex h-full w-64 shrink-0 flex-col gap-6 overflow-y-auto border-r border-line bg-surface/80 px-3 py-5 backdrop-blur-xl"
     >
-      <div className="flex items-center gap-2.5 px-2">
-        <span className="flex size-8 items-center justify-center rounded-lg bg-accent text-sm font-semibold text-accent-contrast">
+      <div className="flex items-center gap-3 px-2">
+        <span className="flex size-9 items-center justify-center rounded-xl bg-linear-to-br from-accent to-accent-hover text-sm font-bold text-accent-contrast shadow-[inset_0_1px_0_0_oklch(1_0_0/0.25),var(--shadow-soft)]">
           {BRAND.initial}
         </span>
         <div className="min-w-0">
-          <p className="truncate text-sm font-semibold text-ink">{academyName}</p>
-          <p className="text-[0.6875rem] uppercase tracking-wide text-ink-muted">
+          <p className="line-clamp-2 font-display text-[0.9375rem] font-semibold leading-tight text-ink">
+            {academyName}
+          </p>
+          <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.08em] text-ink-muted">
             {BRAND.manager}
           </p>
         </div>
@@ -47,7 +49,7 @@ export function ManagerSidebar({
         {sections.map((section, index) => (
           <div key={section.title ?? index} className="space-y-1">
             {section.title ? (
-              <p className="px-2 text-[0.6875rem] font-semibold uppercase tracking-wide text-ink-muted">
+              <p className="px-2 pb-1 text-[0.6875rem] font-bold uppercase tracking-[0.09em] text-ink-muted">
                 {section.title}
               </p>
             ) : null}
@@ -64,9 +66,9 @@ export function ManagerSidebar({
                     key={item.href}
                     aria-disabled
                     title={`Disponible en ${item.phase ?? "una próxima fase"}`}
-                    className="flex cursor-not-allowed items-center gap-2.5 rounded-[var(--radius-control)] px-2 py-1.5 text-sm text-ink-muted opacity-60"
+                    className="flex cursor-not-allowed items-center gap-2.5 rounded-[var(--radius-control)] px-2.5 py-2 text-sm text-ink-muted opacity-55"
                   >
-                    <Icon className="size-4 shrink-0" aria-hidden />
+                    <Icon className="size-[1.05rem] shrink-0" aria-hidden />
                     <span className="truncate">{item.label}</span>
                     <span className="ml-auto rounded-full bg-surface-muted px-1.5 py-0.5 text-[0.625rem] font-medium">
                       Pronto
@@ -81,13 +83,17 @@ export function ManagerSidebar({
                   href={item.href}
                   aria-current={active ? "page" : undefined}
                   className={cn(
-                    "flex items-center gap-2.5 rounded-[var(--radius-control)] px-2 py-1.5 text-sm transition-colors",
+                    // La marca de la izquierda señala dónde estás sin repintar
+                    // media barra: se lee de un vistazo y no compite con el
+                    // contenido.
+                    "relative flex items-center gap-2.5 rounded-[var(--radius-control)] px-2.5 py-2 text-sm transition-colors",
+                    "before:absolute before:left-0 before:top-1/2 before:h-4 before:w-[3px] before:-translate-y-1/2 before:rounded-r-full before:bg-accent before:transition-opacity",
                     active
-                      ? "bg-accent-soft font-medium text-accent"
-                      : "text-ink-soft hover:bg-surface-muted hover:text-ink",
+                      ? "bg-accent-soft font-semibold text-accent before:opacity-100"
+                      : "text-ink-soft before:opacity-0 hover:bg-surface-muted hover:text-ink",
                   )}
                 >
-                  <Icon className="size-4 shrink-0" aria-hidden />
+                  <Icon className="size-[1.05rem] shrink-0" aria-hidden />
                   <span className="truncate">{item.label}</span>
                 </Link>
               );

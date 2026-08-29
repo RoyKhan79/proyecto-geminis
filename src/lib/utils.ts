@@ -44,6 +44,26 @@ const currencyFormatter = new Intl.NumberFormat("es-ES", {
 });
 
 /** Los importes se guardan en céntimos para no perder precisión. */
+/**
+ * Fecha para un `<input type="date">`.
+ *
+ * NO se usa `toISOString()`. En España, un `Date` del 5 de septiembre a las
+ * 00:00 es el 4 de septiembre a las 22:00 en UTC: el formulario mostraría el
+ * día anterior y, al guardar, la fecha retrocedería un día en cada edición. Es
+ * un fallo que se acumula sin que nadie lo note hasta que la fecha del examen
+ * está una semana antes de lo que debería.
+ */
+export function fechaParaInput(value: Date | string | null | undefined) {
+  if (!value) return "";
+  const fecha = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(fecha.getTime())) return "";
+
+  const anio = fecha.getFullYear();
+  const mes = String(fecha.getMonth() + 1).padStart(2, "0");
+  const dia = String(fecha.getDate()).padStart(2, "0");
+  return `${anio}-${mes}-${dia}`;
+}
+
 export function formatCents(cents: number | null | undefined) {
   if (cents === null || cents === undefined) return "—";
   return currencyFormatter.format(cents / 100);

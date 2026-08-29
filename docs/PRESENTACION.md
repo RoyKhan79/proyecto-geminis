@@ -184,6 +184,39 @@ Y el remate importante:
 > «Cuando la IA genera preguntas para vosotros, entran siempre como borrador.
 > Nunca publica nada. La última palabra es del preparador, siempre.»
 
+Una frase más, que es la que sorprende:
+
+> «Y esto no os cuesta nada. Geminis lleva su propio motor dentro: no hay que
+> contratar ninguna API, y con esa configuración vuestro temario **no sale del
+> servidor**. Si algún día queréis respuestas más redactadas, se conecta un
+> modelo y la barrera de permisos es exactamente la misma.»
+
+---
+
+## 8b · La IA que os conoce (2 minutos) ⭐
+
+Esto es lo que separa a Geminis de un buscador.
+
+En la ventana del alumno, entra en el inicio del Campus. Arriba, **«Geminis te
+propone»**:
+
+> «Fíjate en que no dice "estudia el tema 4". Dice *por qué*: llevas doce fallos
+> de veinte en ese tema. Una recomendación sin el dato delante no la sigue
+> nadie.»
+
+Ahora ve a **Tests**. Si hay repaso pendiente, sale arriba:
+
+> «Geminis lleva la cuenta de cuándo está a punto de olvidar cada pregunta y se
+> la devuelve justo a tiempo. Es lo que hace que lo del tema 1 siga en pie el día
+> del examen. El alumno no organiza nada: le llega hecho.»
+
+Y en la corrección de un test, en una pregunta fallada, pulsa **«¿Por qué he
+fallado?»**:
+
+> «El momento en que más se aprende es justo después de equivocarse, y es
+> justo cuando no tenéis a nadie delante. Aquí le da vuestra explicación y la
+> refuerza con lo que dice vuestro temario, citando la página.»
+
 ---
 
 ## 9 · El móvil (1 minuto)
@@ -219,9 +252,10 @@ Y una que conviene decir en voz alta:
 ## Preguntas que os van a hacer
 
 **«¿Y si otra academia ve mi temario?»**
-No puede. No es que esté oculto: la base de datos no se lo devuelve. Hay 72
-pruebas automáticas que lo comprueban en cada cambio, y una auditoría en
-`docs/AUDITORIA.md`.
+No puede. No es que esté oculto: la base de datos no se lo devuelve. Hay 109
+pruebas automáticas y 66 comprobaciones de auditoría que lo verifican en cada
+cambio, y el informe completo está en `docs/AUDITORIA_FINAL.md`, con lo que
+funciona y con lo que todavía no.
 
 **«¿Puedo evitar que se descarguen mis PDFs?»**
 Sí, se lee online y no se descarga, con marca de agua opcional con el nombre del
@@ -231,6 +265,20 @@ Lo que se consigue es que compartirlo cueste y deje rastro.
 **«¿La IA se va a inventar cosas?»**
 Si no encuentra la respuesta en vuestro material, lo dice. Y no puede publicar
 nada por su cuenta.
+
+**«¿Cuánto cuesta la IA?»**
+En su configuración por defecto, nada: lleva su propio motor dentro del
+servidor. Si queréis conectar un modelo externo, el consumo se mide por
+academia, por persona y por funcionalidad, y lo veis en euros.
+
+**«¿Y si tengo veinte años de preguntas en un Excel?»**
+Se importan. Se os propone qué columna es cada cosa, se avisa de las repetidas
+—que en un banco viejo son muchas—, se simula antes de tocar nada y entran en
+borrador para que las reviséis.
+
+**«¿Y si un alumno olvida su contraseña?»**
+Se la cambia él solo con un enlace que le llega al correo y que caduca en una
+hora. No tenéis que hacer nada, y vosotros nunca podéis ver su contraseña.
 
 **«¿Cuánto tardo en tenerlo funcionando?»**
 Importar los alumnos: minutos. Subir el temario: lo que tardéis en arrastrarlo.

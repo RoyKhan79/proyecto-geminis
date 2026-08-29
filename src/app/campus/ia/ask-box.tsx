@@ -86,6 +86,22 @@ export function AskBox({
               <p className="whitespace-pre-line text-sm text-ink">{state.respuesta}</p>
             </div>
 
+            {state.apunte ? (
+              <p className="rounded-[var(--radius-control)] bg-accent-soft/60 px-3 py-2 text-xs text-ink-soft">
+                {state.apunte}
+              </p>
+            ) : null}
+
+            {state.confianza ? (
+              <p className="text-xs text-ink-muted">
+                {state.confianza === "alta"
+                  ? "He encontrado esto claramente en tu material."
+                  : state.confianza === "media"
+                    ? "Esto es lo más parecido que dice tu material. Contrástalo con tu preparador."
+                    : "Tu material apenas habla de esto. Pregúntale a tu preparador."}
+              </p>
+            ) : null}
+
             {state.fuentes && state.fuentes.length > 0 ? (
               <div className="border-t border-line pt-3">
                 <p className="text-xs font-medium text-ink">Fuentes utilizadas</p>

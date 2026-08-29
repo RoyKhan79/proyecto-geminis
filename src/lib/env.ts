@@ -10,6 +10,11 @@ const schema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   DATABASE_URL: z.string().min(1, "DATABASE_URL es obligatoria"),
 
+  /// Conexión con el DUEÑO de las tablas. Solo la usan migraciones y semillas.
+  /// La aplicación NUNCA debe usarla: con el rol dueño, PostgreSQL se salta las
+  /// políticas de Row Level Security y la segunda barrera deja de existir.
+  DATABASE_URL_OWNER: z.string().optional(),
+
   /// Secreto para firmar/derivar valores de sesión. Mínimo 32 caracteres.
   AUTH_SECRET: z
     .string()
@@ -42,6 +47,27 @@ const schema = z.object({
   SMTP_FROM: z.string().optional(),
 
   APP_URL: z.string().default("http://localhost:3000"),
+
+  /// Clave para cifrar los campos sensibles en la base de datos: hoy, los
+  /// números de cuenta del alumnado. Genérala con `openssl rand -base64 48`.
+  ///
+  /// En producción es obligatoria. Sin ella, un volcado de la base de datos
+  /// enseñaría los IBAN de media academia en claro.
+  ///
+  /// OJO al rotarla: los valores cifrados con la clave anterior dejan de poder
+  /// leerse. Ver `npm run cifrar:rotar`.
+  FIELD_ENCRYPTION_KEY: z.string().optional(),
+
+  /// Segunda barrera de aislamiento: Row Level Security de PostgreSQL.
+  ///
+  /// Con `on`, cada consulta de una academia se envuelve en una transacción que
+  /// fija `geminis.academy_id`, y la base de datos comprueba la academia por su
+  /// cuenta además de la guardia de aplicación. Cuesta unos milisegundos por
+  /// consulta y se explica en docs/SECURITY_MODEL.md.
+  ///
+  /// Se puede apagar para medir el coste o para depurar, pero en producción va
+  /// encendida: es lo que protege de un fallo futuro en la guardia.
+  DB_RLS: z.enum(["on", "off"]).default("on"),
 });
 
 const parsed = schema.safeParse(process.env);

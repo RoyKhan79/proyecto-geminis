@@ -233,6 +233,7 @@ model Enrollment {
 
   entitlements Entitlement[]
   payments     Payment[]
+  recurringCharges RecurringCharge[]
 
   @@unique([studentId, courseId])
   @@index([academyId, status])

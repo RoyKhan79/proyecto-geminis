@@ -1,5 +1,6 @@
 import type { StudentStatus } from "@/generated/prisma/enums";
 import type { TenantClient } from "@/lib/db/tenant";
+import { descifrar } from "@/lib/crypto/field";
 
 /**
  * Consultas de alumnos.
@@ -95,7 +96,7 @@ export async function listStudents(db: TenantClient, filters: StudentFilters) {
 }
 
 export async function getStudent(db: TenantClient, membershipId: string) {
-  return db.membership.findUnique({
+  const alumno = await db.membership.findUnique({
     where: { id: membershipId },
     select: {
       id: true,
@@ -114,6 +115,28 @@ export async function getStudent(db: TenantClient, membershipId: string) {
         },
       },
       studentProfile: true,
+      // Cómo paga y su cuota mensual, si la tiene.
+      billingProfile: {
+        select: {
+          method: true,
+          iban: true,
+          holderName: true,
+          mandateRef: true,
+          mandateSignedAt: true,
+          mandateUsed: true,
+          chargeDay: true,
+          notes: true,
+        },
+      },
+      recurringCharge: {
+        select: {
+          concept: true,
+          amountCents: true,
+          startsOn: true,
+          endsOn: true,
+          status: true,
+        },
+      },
       enrollments: {
         where: { deletedAt: null },
         orderBy: { startDate: "desc" },
@@ -174,6 +197,17 @@ export async function getStudent(db: TenantClient, membershipId: string) {
       },
     },
   });
+
+  if (!alumno) return null;
+
+  // El IBAN se guarda cifrado. Se devuelve descifrado porque esta consulta
+  // alimenta el formulario donde se edita, y ahí hace falta el número completo.
+  return {
+    ...alumno,
+    billingProfile: alumno.billingProfile
+      ? { ...alumno.billingProfile, iban: descifrar(alumno.billingProfile.iban) }
+      : null,
+  };
 }
 
 /** Cursos y grupos disponibles, para los desplegables de filtros y matrícula. */

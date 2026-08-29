@@ -1,9 +1,13 @@
 import type { Metadata } from "next";
-import { CalendarDays, GraduationCap, Users } from "lucide-react";
+import { CalendarDays, GraduationCap, Pencil, Trash2, Users } from "lucide-react";
 import { requireAcademy } from "@/lib/auth/context";
 import {
   createEditionAction,
   createOppositionAction,
+  deleteEditionAction,
+  deleteOppositionAction,
+  updateEditionAction,
+  updateOppositionAction,
 } from "@/server/academic/actions";
 import { InlineCreate } from "@/components/manager/inline-create";
 import {
@@ -17,7 +21,7 @@ import {
   Select,
   Textarea,
 } from "@/components/ui/primitives";
-import { formatDate } from "@/lib/utils";
+import { fechaParaInput, formatDate } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Oposiciones" };
 
@@ -36,6 +40,8 @@ export default async function OposicionesPage() {
         authority: true,
         scope: true,
         status: true,
+        description: true,
+        typeId: true,
         type: { select: { name: true } },
         editions: {
           where: { deletedAt: null },
@@ -43,6 +49,7 @@ export default async function OposicionesPage() {
           select: {
             id: true,
             name: true,
+            year: true,
             examDate: true,
             positions: true,
             status: true,
@@ -137,9 +144,102 @@ export default async function OposicionesPage() {
                         .join(" · ") || "Sin clasificar"}
                     </p>
                   </div>
-                  <Badge tone={oposicion.status === "ACTIVE" ? "positive" : "neutral"}>
-                    {oposicion.status === "ACTIVE" ? "Activa" : "Archivada"}
-                  </Badge>
+                  <div className="flex shrink-0 flex-wrap items-center gap-2">
+                    <Badge tone={oposicion.status === "ACTIVE" ? "positive" : "neutral"}>
+                      {oposicion.status === "ACTIVE" ? "Activa" : "Archivada"}
+                    </Badge>
+
+                    {puedeEscribir ? (
+                      <>
+                        <InlineCreate
+                          action={updateOppositionAction}
+                          label="Editar"
+                          icon={<Pencil aria-hidden />}
+                          title={`Editar ${oposicion.name}`}
+                          successMessage="Oposición actualizada."
+                        >
+                          <input
+                            type="hidden"
+                            name="oppositionId"
+                            value={oposicion.id}
+                          />
+                          <div className="grid gap-4 sm:grid-cols-2">
+                            <Field label="Nombre" htmlFor={`n-${oposicion.id}`} required>
+                              <Input name="name" defaultValue={oposicion.name} required />
+                            </Field>
+                            <Field label="Familia" htmlFor={`t-${oposicion.id}`}>
+                              <Select name="typeId" defaultValue={oposicion.typeId ?? ""}>
+                                <option value="">Sin clasificar</option>
+                                {tipos.map((tipo) => (
+                                  <option key={tipo.id} value={tipo.id}>
+                                    {tipo.name}
+                                  </option>
+                                ))}
+                              </Select>
+                            </Field>
+                            <Field label="Código" htmlFor={`c-${oposicion.id}`}>
+                              <Input name="code" defaultValue={oposicion.code ?? ""} />
+                            </Field>
+                            <Field
+                              label="Administración convocante"
+                              htmlFor={`a-${oposicion.id}`}
+                            >
+                              <Input
+                                name="authority"
+                                defaultValue={oposicion.authority ?? ""}
+                              />
+                            </Field>
+                            <Field label="Ámbito" htmlFor={`s-${oposicion.id}`}>
+                              <Input name="scope" defaultValue={oposicion.scope ?? ""} />
+                            </Field>
+                            <Field
+                              label="Estado"
+                              htmlFor={`e-${oposicion.id}`}
+                              hint="Archivada deja de aparecer al dar de alta, pero conserva todo."
+                            >
+                              <Select name="status" defaultValue={oposicion.status}>
+                                <option value="ACTIVE">Activa</option>
+                                <option value="ARCHIVED">Archivada</option>
+                              </Select>
+                            </Field>
+                            <div className="sm:col-span-2">
+                              <Field label="Descripción" htmlFor={`d-${oposicion.id}`}>
+                                <Textarea
+                                  name="description"
+                                  rows={2}
+                                  defaultValue={oposicion.description ?? ""}
+                                />
+                              </Field>
+                            </div>
+                          </div>
+                        </InlineCreate>
+
+                        <InlineCreate
+                          action={deleteOppositionAction}
+                          label="Eliminar"
+                          icon={<Trash2 aria-hidden />}
+                          variant="ghost"
+                          submitLabel="Eliminar definitivamente"
+                          title={`Eliminar ${oposicion.name}`}
+                          successMessage="Oposición eliminada."
+                          aviso="Se eliminarán también sus convocatorias, sus cursos y su contenido. No se puede si hay alumnos matriculados: en ese caso archívala."
+                        >
+                          <input
+                            type="hidden"
+                            name="oppositionId"
+                            value={oposicion.id}
+                          />
+                          <Field
+                            label={`Escribe «${oposicion.name}» para confirmar`}
+                            htmlFor={`conf-${oposicion.id}`}
+                            required
+                          >
+                            <Input name="confirmacion" autoComplete="off" required />
+                          </Field>
+                        </InlineCreate>
+                      </>
+                    ) : null}
+                  </div>
                 </div>
 
                 <ul className="space-y-2">
@@ -166,6 +266,76 @@ export default async function OposicionesPage() {
                       {edicion.positions ? (
                         <span className="text-xs text-ink-muted">
                           {edicion.positions} plazas
+                        </span>
+                      ) : null}
+
+                      {puedeEscribir ? (
+                        <span className="ml-auto flex items-center gap-1">
+                          <InlineCreate
+                            action={updateEditionAction}
+                            label="Editar"
+                            icon={<Pencil aria-hidden />}
+                            variant="ghost"
+                            title={`Editar ${edicion.name}`}
+                            successMessage="Convocatoria actualizada."
+                          >
+                            <input type="hidden" name="editionId" value={edicion.id} />
+                            <div className="grid gap-4 sm:grid-cols-2">
+                              <Field label="Nombre" htmlFor={`en-${edicion.id}`} required>
+                                <Input name="name" defaultValue={edicion.name} required />
+                              </Field>
+                              <Field label="Año" htmlFor={`ey-${edicion.id}`}>
+                                <Input
+                                  name="year"
+                                  type="number"
+                                  min={2000}
+                                  max={2100}
+                                  defaultValue={edicion.year ?? ""}
+                                />
+                              </Field>
+                              <Field label="Fecha del examen" htmlFor={`ed-${edicion.id}`}>
+                                <Input
+                                  name="examDate"
+                                  type="date"
+                                  defaultValue={fechaParaInput(edicion.examDate)}
+                                />
+                              </Field>
+                              <Field label="Plazas convocadas" htmlFor={`ep-${edicion.id}`}>
+                                <Input
+                                  name="positions"
+                                  type="number"
+                                  min={0}
+                                  defaultValue={edicion.positions ?? ""}
+                                />
+                              </Field>
+                              <div className="sm:col-span-2">
+                                <Field label="Estado" htmlFor={`es-${edicion.id}`}>
+                                  <Select name="status" defaultValue={edicion.status}>
+                                    <option value="PLANNED">Prevista</option>
+                                    <option value="OPEN">Abierta</option>
+                                    <option value="CLOSED">Cerrada</option>
+                                    <option value="ARCHIVED">Archivada</option>
+                                  </Select>
+                                </Field>
+                              </div>
+                            </div>
+                          </InlineCreate>
+
+                          <InlineCreate
+                            action={deleteEditionAction}
+                            label="Eliminar"
+                            icon={<Trash2 aria-hidden />}
+                            variant="ghost"
+                            submitLabel="Eliminar convocatoria"
+                            title={`Eliminar ${edicion.name}`}
+                            successMessage="Convocatoria eliminada."
+                            aviso="Se eliminarán también sus cursos y su contenido. No se puede si hay alumnos matriculados."
+                          >
+                            <input type="hidden" name="editionId" value={edicion.id} />
+                            <p className="text-sm text-ink-soft">
+                              ¿Seguro que quieres eliminar «{edicion.name}»?
+                            </p>
+                          </InlineCreate>
                         </span>
                       ) : null}
                     </li>

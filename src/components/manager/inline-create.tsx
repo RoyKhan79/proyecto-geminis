@@ -5,6 +5,7 @@ import { AlertCircle, CheckCircle2, Plus, X } from "lucide-react";
 import type { FormState } from "@/server/academic/actions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/primitives";
+import type { ButtonProps } from "@/components/ui/button";
 
 /**
  * Formulario de alta desplegable.
@@ -19,12 +20,22 @@ export function InlineCreate({
   title,
   children,
   successMessage = "Creado correctamente.",
+  icon,
+  variant = "secondary",
+  submitLabel = "Guardar",
+  /// Texto de aviso que se muestra dentro del formulario abierto. Se usa en las
+  /// acciones que no tienen vuelta atrás.
+  aviso,
 }: {
   action: (prev: FormState, formData: FormData) => Promise<FormState>;
   label: string;
   title: string;
   children: React.ReactNode;
   successMessage?: string;
+  icon?: React.ReactNode;
+  variant?: ButtonProps["variant"];
+  submitLabel?: string;
+  aviso?: string;
 }) {
   const [open, setOpen] = useState(false);
   const [state, formAction, pending] = useActionState<FormState, FormData>(
@@ -34,8 +45,8 @@ export function InlineCreate({
 
   if (!open) {
     return (
-      <Button variant="secondary" size="sm" onClick={() => setOpen(true)}>
-        <Plus aria-hidden />
+      <Button variant={variant} size="sm" onClick={() => setOpen(true)}>
+        {icon ?? <Plus aria-hidden />}
         {label}
       </Button>
     );
@@ -76,14 +87,24 @@ export function InlineCreate({
           </p>
         ) : null}
 
+        {aviso ? (
+          <p className="rounded-[var(--radius-control)] bg-caution-soft px-3 py-2 text-sm text-ink">
+            {aviso}
+          </p>
+        ) : null}
+
         <form action={formAction} className="space-y-4">
           {children}
           <div className="flex justify-end gap-2">
             <Button type="button" variant="ghost" onClick={() => setOpen(false)}>
               Cancelar
             </Button>
-            <Button type="submit" loading={pending}>
-              Guardar
+            <Button
+              type="submit"
+              variant={variant === "danger" ? "danger" : "primary"}
+              loading={pending}
+            >
+              {submitLabel}
             </Button>
           </div>
         </form>

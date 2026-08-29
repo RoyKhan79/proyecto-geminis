@@ -64,16 +64,18 @@ export default async function IaPage() {
         description="Responde con VUESTRO material y cita de dónde sale cada dato. Nunca publica nada sin que lo apruebe una persona."
       />
 
-      {!aiDisponible() ? (
-        <Card className="border-caution">
-          <CardContent className="p-4 pt-4 text-sm text-ink">
-            La IA no está activada en esta instalación. Configura{" "}
-            <code className="rounded bg-surface-muted px-1 text-xs">AI_PROVIDER</code> y
-            la clave del proveedor en el servidor. Todo lo demás (indexación,
-            permisos, citas) ya funciona y se puede preparar mientras tanto.
-          </CardContent>
-        </Card>
-      ) : null}
+      <Card className={aiDisponible() ? "border-accent-soft" : undefined}>
+        <CardContent className="flex flex-wrap items-center gap-3 p-4 pt-4 text-sm text-ink">
+          <Badge tone={aiDisponible() ? "positive" : "neutral"}>
+            {aiDisponible() ? "Modo avanzado" : "Motor propio"}
+          </Badge>
+          <p className="min-w-0 flex-1 text-ink-muted">
+            {aiDisponible()
+              ? "Hay un proveedor configurado: las respuestas se redactan con el modelo, siempre sobre vuestro material y con sus citas."
+              : "Geminis IA funciona con su motor propio: lee vuestro material, localiza lo que responde a cada pregunta y lo cita. No hace falta contratar ninguna API. Si configuráis AI_PROVIDER, las respuestas pasan a redactarse además con un modelo."}
+          </p>
+        </CardContent>
+      </Card>
 
       <section className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <Metrica label="Documentos indexados" valor={indexadas.length} />

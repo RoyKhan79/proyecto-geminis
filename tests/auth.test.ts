@@ -141,16 +141,53 @@ describe("auditoría", () => {
 });
 
 describe("límite de intentos", () => {
-  it("bloquea al superar el límite y se puede reiniciar", () => {
+  it("bloquea al superar el límite y se puede reiniciar", async () => {
     const clave = `prueba:${Math.random()}`;
     for (let i = 0; i < 3; i += 1) {
-      expect(rateLimit(clave, { limit: 3, windowSeconds: 60 }).allowed).toBe(true);
+      expect((await rateLimit(clave, { limit: 3, windowSeconds: 60 })).allowed).toBe(
+        true,
+      );
     }
-    const bloqueado = rateLimit(clave, { limit: 3, windowSeconds: 60 });
+    const bloqueado = await rateLimit(clave, { limit: 3, windowSeconds: 60 });
     expect(bloqueado.allowed).toBe(false);
     expect(bloqueado.retryAfterSeconds).toBeGreaterThan(0);
 
-    resetRateLimit(clave);
-    expect(rateLimit(clave, { limit: 3, windowSeconds: 60 }).allowed).toBe(true);
+    await resetRateLimit(clave);
+    expect((await rateLimit(clave, { limit: 3, windowSeconds: 60 })).allowed).toBe(
+      true,
+    );
+  });
+
+  it("cuenta en la base de datos, no en la memoria del proceso", async () => {
+    // Es lo que hace que el límite sea real con varias instancias: dos
+    // procesos distintos comparten el mismo contador.
+    const clave = `prueba-compartida:${Math.random()}`;
+    await rateLimit(clave, { limit: 5, windowSeconds: 60 });
+
+    const { prismaBase } = await import("@/lib/db/client");
+    const fila = await prismaBase.rateLimitCounter.findUnique({
+      where: { key: clave },
+      select: { count: true },
+    });
+
+    expect(fila?.count).toBe(1);
+    await resetRateLimit(clave);
+  });
+
+  it("intentos simultáneos no se pisan la cuenta", async () => {
+    // Sin el incremento atómico, veinte peticiones a la vez leerían el mismo
+    // valor y escribirían el mismo resultado: el atacante conseguiría veinte
+    // intentos por el precio de uno.
+    const clave = `prueba-concurrente:${Math.random()}`;
+    const resultados = await Promise.all(
+      Array.from({ length: 20 }, () =>
+        rateLimit(clave, { limit: 5, windowSeconds: 60 }),
+      ),
+    );
+
+    const permitidos = resultados.filter((r) => r.allowed).length;
+    expect(permitidos).toBe(5);
+
+    await resetRateLimit(clave);
   });
 });

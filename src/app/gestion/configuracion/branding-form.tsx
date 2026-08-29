@@ -28,6 +28,7 @@ export function BrandingForm({
     email: string | null;
     phone: string | null;
     primaryColor: string | null;
+    maxSessionsPerStudent?: number;
     logoUrl: string | null;
   };
   puedeExportar: boolean;
@@ -106,12 +107,26 @@ export function BrandingForm({
                 <Input
                   name="primaryColor"
                   type="color"
-                  defaultValue={valores.primaryColor ?? "#4F46E5"}
+                  defaultValue={valores.primaryColor ?? "#2956c4"}
                   className="h-10 w-full p-1"
                 />
               </Field>
               <Field label="Logotipo" htmlFor="logoUrl" hint="Dirección de la imagen.">
                 <Input name="logoUrl" type="url" defaultValue={valores.logoUrl ?? ""} />
+              </Field>
+
+              <Field
+                label="Sesiones a la vez por alumno"
+                htmlFor="maxSessionsPerStudent"
+                hint="Al entrar desde un sitio más, se cierra la más antigua. 0 = sin límite. Es lo que frena que una cuenta la usen cuatro."
+              >
+                <Input
+                  name="maxSessionsPerStudent"
+                  type="number"
+                  min={0}
+                  max={10}
+                  defaultValue={valores.maxSessionsPerStudent ?? 2}
+                />
               </Field>
             </div>
 

@@ -1,0 +1,37 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="fondo" x1="0" y1="0" x2="0.35" y2="1">
+      <stop offset="0" stop-color="#2956c4"/>
+      <stop offset="1" stop-color="#1e409f"/>
+    </linearGradient>
+    <linearGradient id="filo" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffffff" stop-opacity="0.28"/>
+      <stop offset="0.5" stop-color="#ffffff" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+
+  <rect x="30.72" y="30.72" width="450.56" height="450.56" rx="105.88159999999999" fill="url(#fondo)"/>
+         <rect x="30.72" y="30.72" width="450.56" height="450.56" rx="105.88159999999999" fill="url(#filo)"/>
+
+  <!-- La G, en serif: es la tipografía de los titulares del producto. Va
+       dibujada como texto con familias genéricas para no depender de que la
+       fuente esté instalada en la máquina que genera los iconos. -->
+  <text
+    x="50%"
+    y="50%"
+    dy="0.335em"
+    text-anchor="middle"
+    font-family="Georgia, 'Times New Roman', serif"
+    font-size="252.31360000000004"
+    font-weight="600"
+    fill="#fefdfb"
+  >G</text>
+
+  <!-- El punto dorado: lo conseguido. Es el único acento del icono. -->
+  <circle
+    cx="379.904"
+    cy="379.904"
+    r="21.62688"
+    fill="#e1a536"
+  />
+</svg>

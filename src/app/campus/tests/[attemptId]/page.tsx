@@ -3,6 +3,9 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { CheckCircle2, ChevronLeft, RotateCcw, XCircle } from "lucide-react";
 import { requireAcademy } from "@/lib/auth/context";
+import { calcularPercentil } from "@/server/simulations/queries";
+import { ExamTimer } from "@/components/campus/exam-timer";
+import { ExplainButton } from "./explain-button";
 import {
   answerQuestionAction,
   submitAttemptAction,
@@ -35,7 +38,11 @@ export default async function IntentoPage({
       correctCount: true,
       wrongCount: true,
       blankCount: true,
+      score: true,
       scorePercent: true,
+      expiresAt: true,
+      config: true,
+      testDefinitionId: true,
       answers: {
         orderBy: { position: "asc" },
         select: {
@@ -65,7 +72,23 @@ export default async function IntentoPage({
   const respuestas = [...intento.answers].sort((a, b) => a.position - b.position);
   const terminado = intento.status !== "IN_PROGRESS";
 
-  if (terminado) return <Resultado intento={intento} respuestas={respuestas} />;
+  if (terminado) {
+    const percentil = intento.testDefinitionId
+      ? await calcularPercentil(
+          ctx.db,
+          intento.testDefinitionId,
+          Number(intento.scorePercent ?? 0),
+        )
+      : null;
+    return (
+      <Resultado
+        intento={intento}
+        respuestas={respuestas}
+        percentil={percentil}
+        puedeUsarIa={ctx.permissions.has("ai.student")}
+      />
+    );
+  }
 
   const indice = Math.min(
     Math.max(0, Number(typeof query.p === "string" ? query.p : 0) || 0),
@@ -73,6 +96,10 @@ export default async function IntentoPage({
   );
   const actual = respuestas[indice];
   const contestadas = respuestas.filter((r) => r.selectedOptionId).length;
+
+  const config = (intento.config ?? {}) as { penalizacion?: number };
+  const penalizacion = Number(config.penalizacion ?? 0);
+  const esSimulacro = intento.kind === "SIMULATION" && penalizacion > 0;
 
   return (
     <>
@@ -84,10 +111,23 @@ export default async function IntentoPage({
           <ChevronLeft className="size-3.5" aria-hidden />
           Salir
         </Link>
-        <span className="text-xs text-ink-muted">
-          {indice + 1} de {respuestas.length} · {contestadas} contestadas
-        </span>
+        <div className="flex items-center gap-3">
+          <span className="text-xs text-ink-muted">
+            {indice + 1} de {respuestas.length} · {contestadas} contestadas
+          </span>
+          {intento.expiresAt ? (
+            <ExamTimer expiraISO={intento.expiresAt.toISOString()} />
+          ) : null}
+        </div>
       </div>
+
+      {esSimulacro ? (
+        <p className="rounded-[var(--radius-control)] bg-caution-soft px-3 py-2 text-xs text-caution">
+          Simulacro en condiciones de examen: cada fallo resta{" "}
+          {penalizacion.toString().replace(".", ",")} aciertos. Si dudas, piensa si
+          te compensa arriesgar.
+        </p>
+      ) : null}
 
       <div
         className="h-1.5 overflow-hidden rounded-full bg-surface-muted"
@@ -221,6 +261,8 @@ type Respuesta = {
 function Resultado({
   intento,
   respuestas,
+  percentil,
+  puedeUsarIa,
 }: {
   intento: {
     id: string;
@@ -228,11 +270,18 @@ function Resultado({
     correctCount: number;
     wrongCount: number;
     blankCount: number;
+    score: unknown;
     scorePercent: unknown;
+    config: unknown;
   };
   respuestas: Respuesta[];
+  puedeUsarIa: boolean;
+  percentil: { percentil: number; muestra: number; media: number } | null;
 }) {
   const porcentaje = Number(intento.scorePercent ?? 0);
+  const config = (intento.config ?? {}) as { penalizacion?: number };
+  const penalizacion = Number(config.penalizacion ?? 0);
+  const notaNeta = intento.score !== null ? Number(intento.score) : null;
 
   return (
     <>
@@ -268,6 +317,26 @@ function Resultado({
             <span>{intento.wrongCount} fallos</span>
             <span>{intento.blankCount} en blanco</span>
           </div>
+
+          {penalizacion > 0 && notaNeta !== null ? (
+            <p className="text-xs text-ink-muted">
+              Nota neta {notaNeta.toString().replace(".", ",")} sobre{" "}
+              {intento.totalQuestions}, aplicando la penalización de{" "}
+              {penalizacion.toString().replace(".", ",")} por fallo.
+            </p>
+          ) : null}
+
+          {percentil ? (
+            <div className="rounded-[var(--radius-control)] bg-surface-muted p-3">
+              <p className="text-sm font-medium text-ink">
+                Estás por encima del {percentil.percentil}% de tu academia
+              </p>
+              <p className="text-xs text-ink-muted">
+                Sobre {percentil.muestra} personas que lo han hecho · media{" "}
+                {percentil.media}%
+              </p>
+            </div>
+          ) : null}
 
           <Button asChild variant="secondary" size="sm">
             <Link href="/campus/tests">
@@ -346,6 +415,10 @@ function Resultado({
                     </strong>
                     .
                   </p>
+                ) : null}
+
+                {!acerto && puedeUsarIa ? (
+                  <ExplainButton attemptId={intento.id} questionId={r.question.id} />
                 ) : null}
 
                 {r.question.explanation ? (

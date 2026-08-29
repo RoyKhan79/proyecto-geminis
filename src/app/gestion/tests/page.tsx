@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { ListChecks, Search } from "lucide-react";
+import Link from "next/link";
+import { FileSpreadsheet, ListChecks, Search } from "lucide-react";
 import { requirePagePermission } from "@/lib/auth/context";
 import { setQuestionStatusAction } from "@/server/assessment/actions";
 import {
@@ -59,7 +60,17 @@ export default async function GestionTestsPage({
         description={`${total} preguntas. El alumnado solo ve las publicadas.`}
         actions={
           puedeEscribir ? (
-            <QuestionForm topics={soloTemas} puedePublicar={puedePublicar} />
+            <>
+              {ctx.permissions.has("imports.run") ? (
+                <Button asChild variant="secondary">
+                  <Link href="/gestion/tests/importar">
+                    <FileSpreadsheet aria-hidden />
+                    Importar banco
+                  </Link>
+                </Button>
+              ) : null}
+              <QuestionForm topics={soloTemas} puedePublicar={puedePublicar} />
+            </>
           ) : null
         }
       />

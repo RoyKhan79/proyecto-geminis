@@ -1,15 +1,26 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { AlertTriangle, ListChecks, Shuffle, Target, TrendingDown } from "lucide-react";
+import {
+  AlertTriangle,
+  BrainCircuit,
+  ListChecks,
+  Shuffle,
+  Target,
+  Timer,
+  TrendingDown,
+} from "lucide-react";
 import { requireAcademy } from "@/lib/auth/context";
 import { startAttemptAction } from "@/server/assessment/actions";
 import {
+  countDueForReview,
   countWrongQuestions,
   loadAttempts,
   loadStudentTestTopics,
   loadWeakTopics,
 } from "@/server/assessment/queries";
 import { loadGrants } from "@/server/campus/queries";
+import { loadStudentSimulations } from "@/server/simulations/queries";
+import { startSimulationAction } from "@/server/simulations/actions";
 import { Button } from "@/components/ui/button";
 import {
   Badge,
@@ -26,6 +37,7 @@ const MODO_LABEL: Record<string, string> = {
   TOPIC: "Por tema",
   RANDOM: "Aleatorio",
   ERRORS: "Mis errores",
+  REVIEW: "Repaso programado",
   CUSTOM: "Personalizado",
   SIMULATION: "Simulacro",
 };
@@ -42,12 +54,15 @@ export default async function CampusTestsPage({
   const ctx = await requireAcademy();
   const grants = await loadGrants(ctx.academy.id, ctx.membershipId);
 
-  const [temas, intentos, debiles, falladas] = await Promise.all([
-    loadStudentTestTopics(ctx.db, grants),
-    loadAttempts(ctx.db, ctx.membershipId, 10),
-    loadWeakTopics(ctx.db, ctx.membershipId),
-    countWrongQuestions(ctx.db, ctx.membershipId),
-  ]);
+  const [temas, intentos, debiles, falladas, simulacros, pendientesRepaso] =
+    await Promise.all([
+      loadStudentTestTopics(ctx.db, grants),
+      loadAttempts(ctx.db, ctx.membershipId, 10),
+      loadWeakTopics(ctx.db, ctx.membershipId),
+      countWrongQuestions(ctx.db, ctx.membershipId),
+      loadStudentSimulations(ctx.db, ctx.membershipId),
+      countDueForReview(ctx.db, ctx.membershipId),
+    ]);
 
   const totalPreguntas = temas.reduce((suma, t) => suma + t._count.questions, 0);
 
@@ -74,6 +89,36 @@ export default async function CampusTestsPage({
         </Card>
       ) : (
         <>
+          {pendientesRepaso > 0 ? (
+            <Card className="border-accent">
+              <CardContent className="space-y-3 p-4 pt-4">
+                <div className="flex items-center gap-2">
+                  <BrainCircuit className="size-4 text-accent" aria-hidden />
+                  <p className="text-sm font-medium text-ink">
+                    Repaso de hoy · {pendientesRepaso}{" "}
+                    {pendientesRepaso === 1 ? "pregunta" : "preguntas"}
+                  </p>
+                </div>
+                <p className="text-xs text-ink-muted">
+                  Geminis lleva la cuenta de cuándo estás a punto de olvidar cada
+                  pregunta y te las devuelve justo a tiempo. Es la forma de que lo
+                  del tema 1 siga en pie el día del examen.
+                </p>
+                <form action={startAttemptAction}>
+                  <input type="hidden" name="modo" value="REVIEW" />
+                  <input
+                    type="hidden"
+                    name="cantidad"
+                    value={Math.min(30, Math.max(5, pendientesRepaso))}
+                  />
+                  <Button type="submit" size="sm" className="w-full">
+                    Empezar el repaso
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+          ) : null}
+
           <Card>
             <CardContent className="space-y-4 p-4 pt-4">
               <div className="flex items-center gap-2">
@@ -154,6 +199,72 @@ export default async function CampusTestsPage({
           </div>
         </>
       )}
+
+      {simulacros.length > 0 ? (
+        <section className="space-y-2">
+          <h2 className="flex items-center gap-2 text-sm font-semibold text-ink">
+            <Timer className="size-4 text-ink-muted" aria-hidden />
+            Simulacros
+          </h2>
+          {simulacros.map((simulacro) => (
+            <Card key={simulacro.id} className="border-accent">
+              <CardContent className="space-y-3 p-4 pt-4">
+                <div>
+                  <p className="font-medium text-ink">{simulacro.title}</p>
+                  <p className="text-xs text-ink-muted">
+                    {[
+                      `${simulacro.questionCount} preguntas`,
+                      simulacro.timeLimitMinutes
+                        ? `${simulacro.timeLimitMinutes} minutos`
+                        : null,
+                      Number(simulacro.penaltyPerWrong) > 0
+                        ? `cada fallo resta ${Number(simulacro.penaltyPerWrong)
+                            .toString()
+                            .replace(".", ",")}`
+                        : "sin penalización",
+                    ]
+                      .filter(Boolean)
+                      .join(" · ")}
+                  </p>
+                  {simulacro.description ? (
+                    <p className="mt-1 text-sm text-ink-muted">
+                      {simulacro.description}
+                    </p>
+                  ) : null}
+                </div>
+
+                {simulacro.mejorNota !== null ? (
+                  <p className="text-xs text-ink-muted">
+                    Tu mejor resultado: {Math.round(simulacro.mejorNota)}% ·{" "}
+                    {simulacro.intentosHechos}{" "}
+                    {simulacro.intentosHechos === 1 ? "intento" : "intentos"}
+                  </p>
+                ) : null}
+
+                <form action={startSimulationAction}>
+                  <input type="hidden" name="simulationId" value={simulacro.id} />
+                  <Button
+                    type="submit"
+                    className="w-full"
+                    disabled={simulacro.agotado}
+                  >
+                    {simulacro.agotado
+                      ? "Has agotado tus intentos"
+                      : simulacro.intentosHechos > 0
+                        ? "Repetir simulacro"
+                        : "Empezar simulacro"}
+                  </Button>
+                </form>
+
+                <p className="text-xs text-ink-muted">
+                  Una vez empezado corre el tiempo. Hazlo cuando puedas estar sin
+                  interrupciones.
+                </p>
+              </CardContent>
+            </Card>
+          ))}
+        </section>
+      ) : null}
 
       {debiles.length > 0 ? (
         <section className="space-y-2">

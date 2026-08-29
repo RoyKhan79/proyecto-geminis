@@ -196,6 +196,13 @@ model Payment {
   productId    String?
   product      Product?    @relation(fields: [productId], references: [id], onDelete: SetNull)
 
+  /// De qué cuota periódica salió este recibo, si salió de una.
+  recurringChargeId String?
+  recurringCharge   RecurringCharge? @relation(fields: [recurringChargeId], references: [id], onDelete: SetNull)
+  /// En qué remesa se envió al banco.
+  directDebitRunId String?
+  directDebitRun   DirectDebitRun? @relation(fields: [directDebitRunId], references: [id], onDelete: SetNull)
+
   concept     String
   amountCents Int
   currency    String        @default("EUR")
@@ -214,7 +221,317 @@ model Payment {
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
 
+  invoices Invoice[]
+
   @@index([academyId, status, dueDate])
   @@index([academyId, studentId])
+  @@index([academyId, directDebitRunId])
   @@map("payments")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// COBROS RECURRENTES · domiciliación bancaria
+//
+// Una academia de oposiciones cobra casi siempre igual: una cuota mensual, y la
+// mayoría del alumnado la domicilia. Hasta ahora se podía registrar un pago
+// suelto, pero había que crearlos a mano uno a uno cada mes, que es
+// exactamente el trabajo administrativo que este producto existe para quitar.
+//
+// Lo que Geminis hace y lo que NO hace, dicho claro:
+//   · SÍ: guarda la forma de pago de cada alumno, sus datos bancarios y su
+//     mandato; genera las cuotas del mes; y produce el fichero SEPA que la
+//     academia sube a su banco.
+//   · NO: no mueve dinero. El cargo lo hace el banco con ese fichero. Decir
+//     otra cosa sería mentir, y además exigiría ser entidad de pago.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/// Cómo paga cada alumno y con qué datos. Va aparte de `StudentProfile` porque
+/// son datos bancarios: tienen su propia sensibilidad y su propio ciclo de vida.
+model BillingProfile {
+  id        String  @id @default(uuid(7))
+  academyId String  @default("SIN_TENANT")
+  academy   Academy @relation(fields: [academyId], references: [id], onDelete: Cascade)
+
+  studentId String     @unique
+  student   Membership @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  /// Forma de pago habitual de este alumno.
+  method PaymentMethod @default(TRANSFER)
+
+  // ── Datos de la domiciliación ──────────────────────────────────────────────
+  /// IBAN en formato compacto y en mayúsculas. Se valida con el dígito de
+  /// control (mod 97) antes de guardarlo: un IBAN mal escrito no se descubre
+  /// hasta que el banco devuelve la remesa entera.
+  iban       String?
+  /// Titular de la cuenta. No siempre es el alumno: puede ser su madre o padre.
+  holderName String?
+
+  /// Referencia única del mandato SEPA. La exige la norma y tiene que ser
+  /// estable: si cambia, el banco lo trata como un mandato nuevo.
+  mandateRef      String?
+  mandateSignedAt DateTime?
+  /// Primer cobro de un mandato es FRST y los siguientes RCUR. Se lleva aquí
+  /// porque el banco rechaza la remesa si se envía el tipo equivocado.
+  mandateUsed     Boolean @default(false)
+
+  /// Día del mes en que se le pasa el recibo. 1-28 para que exista en febrero.
+  chargeDay Int @default(1)
+
+  notes String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  charges RecurringCharge[]
+
+  @@index([academyId, method])
+  @@map("billing_profiles")
+}
+
+enum RecurringChargeStatus {
+  ACTIVE
+  PAUSED
+  ENDED
+}
+
+/// Una cuota periódica: «60 € al mes por el curso anual, de septiembre a junio».
+model RecurringCharge {
+  id        String  @id @default(uuid(7))
+  academyId String  @default("SIN_TENANT")
+  academy   Academy @relation(fields: [academyId], references: [id], onDelete: Cascade)
+
+  studentId String     @unique(map: "recurring_charges_student_unique")
+  student   Membership @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  billingProfileId String?
+  billingProfile   BillingProfile? @relation(fields: [billingProfileId], references: [id], onDelete: SetNull)
+
+  enrollmentId String?
+  enrollment   Enrollment? @relation(fields: [enrollmentId], references: [id], onDelete: SetNull)
+
+  concept     String
+  amountCents Int
+  currency    String @default("EUR")
+
+  status  RecurringChargeStatus @default(ACTIVE)
+  startsOn DateTime
+  /// Vacío = indefinida. Una academia con curso anual suele poner junio.
+  endsOn   DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  payments Payment[]
+
+  @@index([academyId, status])
+  @@map("recurring_charges")
+}
+
+enum DirectDebitRunStatus {
+  DRAFT
+  EXPORTED
+  SETTLED
+}
+
+/// Una remesa: el conjunto de recibos de un mes concreto.
+model DirectDebitRun {
+  id        String  @id @default(uuid(7))
+  academyId String  @default("SIN_TENANT")
+  academy   Academy @relation(fields: [academyId], references: [id], onDelete: Cascade)
+
+  /// Mes al que corresponde, siempre día 1, para poder agrupar sin ambigüedad.
+  period    DateTime
+  /// Fecha en la que se pide el cargo al banco.
+  chargeOn  DateTime
+
+  status DirectDebitRunStatus @default(DRAFT)
+
+  /// Copia de los datos del acreedor en el momento de generarla. Si la academia
+  /// cambia de banco después, la remesa enviada tiene que seguir contando lo
+  /// que se envió de verdad.
+  creditorName String
+  creditorIban String
+  creditorId   String
+
+  totalCents Int @default(0)
+  itemCount  Int @default(0)
+
+  exportedAt DateTime?
+  notes      String?
+
+  createdById String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  payments Payment[]
+
+  @@unique([academyId, period])
+  @@index([academyId, status])
+  @@map("direct_debit_runs")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// FACTURACIÓN
+//
+// Una factura no es un recibo bonito: es un documento con requisitos legales
+// (art. 6 del Reglamento de facturación, RD 1619/2012). Lo que no puede faltar:
+//
+//   · número correlativo dentro de su serie, sin saltos;
+//   · fecha de expedición;
+//   · datos fiscales completos de quien la emite y de quien la recibe;
+//   · descripción de lo prestado;
+//   · base imponible, tipo de IVA y cuota, desglosados;
+//   · si está exenta, la mención al artículo que la exime.
+//
+// Dos decisiones que condicionan todo el diseño:
+//
+//   · **Una factura emitida no se edita ni se borra.** Si está mal, se emite una
+//     rectificativa. Es lo que exige la norma y es lo que hace que la
+//     numeración tenga sentido.
+//   · **Los datos de las partes se copian en la factura.** Si la academia cambia
+//     de domicilio el año que viene, la factura de este año tiene que seguir
+//     diciendo el domicilio que tenía cuando se emitió.
+//
+// Sobre el IVA: la enseñanza reglada y la preparación de oposiciones suelen
+// estar EXENTAS por el artículo 20.Uno.9º de la Ley del IVA. Por eso el tipo
+// por defecto es 0 con su mención de exención, y no el 21 %. Cada academia debe
+// confirmarlo con su asesoría: hay servicios accesorios que sí llevan IVA.
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum InvoiceStatus {
+  /// Todavía se puede editar y borrar. No tiene número.
+  DRAFT
+  /// Emitida: tiene número, no se toca.
+  ISSUED
+  PAID
+  /// Anulada mediante una rectificativa.
+  RECTIFIED
+}
+
+/// Serie de facturación. Una academia suele tener una sola ("A"), pero puede
+/// necesitar otra para las rectificativas o para otro centro.
+model InvoiceSeries {
+  id        String  @id @default(uuid(7))
+  academyId String  @default("SIN_TENANT")
+  academy   Academy @relation(fields: [academyId], references: [id], onDelete: Cascade)
+
+  /// Prefijo visible: "A", "FRA", "2026"…
+  code String
+  name String
+
+  /// Año al que pertenece la numeración. La mayoría de academias reinicia la
+  /// numeración cada ejercicio, y mezclar años en una serie complica la
+  /// declaración.
+  year Int
+
+  /// Último número usado. Se incrementa dentro de una transacción con bloqueo
+  /// para que dos facturas simultáneas no se lleven el mismo número.
+  lastNumber Int @default(0)
+
+  isDefault Boolean @default(false)
+  /// Serie destinada a facturas rectificativas.
+  isRectifying Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  invoices Invoice[]
+
+  @@unique([academyId, code, year])
+  @@map("invoice_series")
+}
+
+model Invoice {
+  id        String  @id @default(uuid(7))
+  academyId String  @default("SIN_TENANT")
+  academy   Academy @relation(fields: [academyId], references: [id], onDelete: Cascade)
+
+  seriesId String?
+  series   InvoiceSeries? @relation(fields: [seriesId], references: [id], onDelete: SetNull)
+
+  studentId String
+  student   Membership @relation(fields: [studentId], references: [id], onDelete: Cascade)
+
+  /// Número dentro de la serie. Vacío mientras es borrador.
+  number    Int?
+  /// Número completo tal y como se enseña: "A/2026/0042".
+  reference String?
+
+  status InvoiceStatus @default(DRAFT)
+
+  issuedOn DateTime?
+  dueOn    DateTime?
+  paidOn   DateTime?
+
+  // ── Datos copiados en el momento de emitir ─────────────────────────────────
+  issuerName    String
+  issuerTaxId   String?
+  issuerAddress String?
+  issuerEmail   String?
+
+  customerName    String
+  customerTaxId   String?
+  customerAddress String?
+  customerEmail   String?
+
+  // ── Totales, en céntimos ───────────────────────────────────────────────────
+  subtotalCents Int @default(0)
+  /// Descuento aplicado sobre el subtotal, ya en euros y no en porcentaje: es
+  /// lo que evita discusiones por redondeo.
+  discountCents Int @default(0)
+  taxableCents  Int @default(0)
+  taxCents      Int @default(0)
+  totalCents    Int @default(0)
+
+  currency String @default("EUR")
+
+  /// Mención de exención, cuando el tipo es 0.
+  exemptionNote String?
+  notes         String?
+
+  /// Factura a la que rectifica, si es una rectificativa.
+  rectifiesId String?
+  rectifies   Invoice?  @relation("Rectificacion", fields: [rectifiesId], references: [id], onDelete: SetNull)
+  rectifiedBy Invoice[] @relation("Rectificacion")
+
+  paymentId String?
+  payment   Payment? @relation(fields: [paymentId], references: [id], onDelete: SetNull)
+
+  createdById String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  lines InvoiceLine[]
+
+  @@index([academyId, status, issuedOn])
+  @@index([academyId, studentId])
+  @@map("invoices")
+}
+
+model InvoiceLine {
+  id        String  @id @default(uuid(7))
+  academyId String  @default("SIN_TENANT")
+  academy   Academy @relation(fields: [academyId], references: [id], onDelete: Cascade)
+
+  invoiceId String
+  invoice   Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  position    Int    @default(0)
+  description String
+  quantity    Decimal @default(1) @db.Decimal(10, 2)
+  /// Precio unitario SIN impuestos.
+  unitCents   Int
+  /// Tipo de IVA en porcentaje: 0, 4, 10 o 21.
+  taxRate     Decimal @default(0) @db.Decimal(5, 2)
+
+  /// Importes calculados y guardados: una factura emitida tiene que poder
+  /// reimprimirse igual dentro de diez años aunque cambie el código.
+  baseCents Int @default(0)
+  taxCents  Int @default(0)
+  totalCents Int @default(0)
+
+  @@index([invoiceId, position])
+  @@map("invoice_lines")
 }

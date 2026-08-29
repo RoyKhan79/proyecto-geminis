@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { recordAudit } from "@/lib/audit";
 import { requirePermission } from "@/lib/auth/context";
+import { transaccionDeAcademia } from "@/lib/db/tenant";
 import { slugify } from "@/lib/utils";
 import { createContentNode } from "@/server/content/tree";
 
@@ -331,6 +332,322 @@ export async function createTeacherAction(
   });
 
   revalidatePath("/gestion/profesores");
+  return { ok: true };
+}
+
+// ── Editar y archivar oposiciones ────────────────────────────────────────────
+
+const editarOposicionSchema = z.object({
+  oppositionId: z.string().min(1),
+  name: z.string().trim().min(3, "El nombre es obligatorio."),
+  typeId: z.string().trim().optional(),
+  code: z.string().trim().max(40).optional(),
+  authority: z.string().trim().max(160).optional(),
+  scope: z.string().trim().max(80).optional(),
+  description: z.string().trim().max(2000).optional(),
+  status: z.enum(["ACTIVE", "ARCHIVED"]).default("ACTIVE"),
+});
+
+/**
+ * Editar una oposición.
+ *
+ * El `slug` se recalcula al cambiar el nombre, pero solo si el nuevo está
+ * libre. Es la parte delicada: el slug se usa en rutas y referencias, y dos
+ * oposiciones con el mismo nombre en una academia serían indistinguibles para
+ * quien las gestiona.
+ */
+export async function updateOppositionAction(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const ctx = await requirePermission("oppositions.write");
+  const parsed = editarOposicionSchema.safeParse(
+    Object.fromEntries(formData.entries()),
+  );
+
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Revisa los datos." };
+  }
+  const data = parsed.data;
+
+  const actual = await ctx.db.opposition.findUnique({
+    where: { id: data.oppositionId },
+    select: { id: true, name: true, slug: true, deletedAt: true },
+  });
+  if (!actual || actual.deletedAt) return { error: "Esa oposición no existe." };
+
+  const slug = slugify(data.name);
+  if (slug !== actual.slug) {
+    const ocupado = await ctx.db.opposition.findFirst({
+      where: { slug, deletedAt: null, NOT: { id: actual.id } },
+      select: { id: true },
+    });
+    if (ocupado) return { error: "Ya existe otra oposición con ese nombre." };
+  }
+
+  await ctx.db.opposition.update({
+    where: { id: actual.id },
+    data: {
+      name: data.name,
+      slug,
+      typeId: data.typeId || null,
+      code: data.code || null,
+      authority: data.authority || null,
+      scope: data.scope || null,
+      description: data.description || null,
+      status: data.status,
+    },
+  });
+
+  await recordAudit({
+    academyId: ctx.academy.id,
+    actorId: ctx.user.id,
+    action: "opposition.update",
+    entityType: "Opposition",
+    entityId: actual.id,
+    changes: { antes: actual.name, ahora: data.name, estado: data.status },
+  });
+
+  revalidatePath("/gestion/oposiciones");
+  return { ok: true };
+}
+
+/**
+ * Eliminar una oposición.
+ *
+ * Es un borrado lógico, y con una comprobación delante que importa: si hay
+ * alumnos matriculados en alguno de sus cursos, no se borra. Hacerlo dejaría
+ * gente pagando por algo que ha desaparecido de su Campus sin explicación, y
+ * eso se arregla mal después.
+ *
+ * Para una oposición que ya no se prepara pero que tuvo alumnos, lo correcto es
+ * archivarla: deja de aparecer para dar de alta y conserva el histórico.
+ */
+export async function deleteOppositionAction(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const ctx = await requirePermission("oppositions.write");
+  const oppositionId = String(formData.get("oppositionId") ?? "");
+  const confirmacion = String(formData.get("confirmacion") ?? "").trim();
+
+  const oposicion = await ctx.db.opposition.findUnique({
+    where: { id: oppositionId },
+    select: { id: true, name: true, deletedAt: true },
+  });
+  if (!oposicion || oposicion.deletedAt) return { error: "Esa oposición no existe." };
+
+  // Se pide escribir el nombre. Un botón de borrar detrás de un "¿seguro?" se
+  // pulsa sin leer; escribir el nombre obliga a mirar qué se está borrando.
+  if (confirmacion !== oposicion.name) {
+    return {
+      error: `Para eliminarla, escribe exactamente su nombre: ${oposicion.name}`,
+    };
+  }
+
+  const matriculados = await ctx.db.enrollment.count({
+    where: {
+      deletedAt: null,
+      course: { oppositionEdition: { oppositionId: oposicion.id } },
+    },
+  });
+
+  if (matriculados > 0) {
+    return {
+      error: `No se puede eliminar: hay ${matriculados} ${
+        matriculados === 1 ? "alumno matriculado" : "alumnos matriculados"
+      } en sus cursos. Archívala si ya no la preparas: dejará de aparecer al dar de alta y conservarás el histórico.`,
+    };
+  }
+
+  const ahora = new Date();
+
+  // El borrado baja en cascada por las tablas que cuelgan de ella. Se hace en
+  // una transacción: media oposición borrada es peor que no haberla borrado.
+  await transaccionDeAcademia(ctx.academy.id, async (tx) => {
+    const convocatorias = await tx.oppositionEdition.findMany({
+      where: { academyId: ctx.academy.id, oppositionId: oposicion.id, deletedAt: null },
+      select: { id: true },
+    });
+    const ids = convocatorias.map((c) => c.id);
+
+    if (ids.length > 0) {
+      await tx.contentNode.updateMany({
+        where: { academyId: ctx.academy.id, editionId: { in: ids }, deletedAt: null },
+        data: { deletedAt: ahora },
+      });
+      await tx.course.updateMany({
+        where: {
+          academyId: ctx.academy.id,
+          oppositionEditionId: { in: ids },
+          deletedAt: null,
+        },
+        data: { deletedAt: ahora },
+      });
+      await tx.oppositionEdition.updateMany({
+        where: { academyId: ctx.academy.id, id: { in: ids } },
+        data: { deletedAt: ahora },
+      });
+    }
+
+    await tx.opposition.update({
+      where: { id: oposicion.id },
+      data: { deletedAt: ahora, status: "ARCHIVED" },
+    });
+  });
+
+  await recordAudit({
+    academyId: ctx.academy.id,
+    actorId: ctx.user.id,
+    action: "opposition.delete",
+    entityType: "Opposition",
+    entityId: oposicion.id,
+    changes: { nombre: oposicion.name },
+  });
+
+  revalidatePath("/gestion/oposiciones");
+  revalidatePath("/gestion/cursos");
+  return { ok: true };
+}
+
+// ── Editar y eliminar convocatorias ──────────────────────────────────────────
+
+const editarConvocatoriaSchema = z.object({
+  editionId: z.string().min(1),
+  name: z.string().trim().min(1, "El nombre es obligatorio."),
+  year: z.coerce.number().int().min(2000).max(2100).optional(),
+  examDate: z.string().trim().optional(),
+  positions: z.coerce.number().int().min(0).max(100000).optional(),
+  status: z.enum(["PLANNED", "OPEN", "CLOSED", "ARCHIVED"]).default("OPEN"),
+});
+
+export async function updateEditionAction(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const ctx = await requirePermission("oppositions.write");
+  const parsed = editarConvocatoriaSchema.safeParse(
+    Object.fromEntries(formData.entries()),
+  );
+
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Revisa los datos." };
+  }
+  const data = parsed.data;
+
+  const actual = await ctx.db.oppositionEdition.findUnique({
+    where: { id: data.editionId },
+    select: { id: true, name: true, deletedAt: true },
+  });
+  if (!actual || actual.deletedAt) return { error: "Esa convocatoria no existe." };
+
+  await ctx.db.oppositionEdition.update({
+    where: { id: actual.id },
+    data: {
+      name: data.name,
+      year: data.year ?? null,
+      examDate: data.examDate ? new Date(data.examDate) : null,
+      positions: data.positions ?? null,
+      status: data.status,
+    },
+  });
+
+  await recordAudit({
+    academyId: ctx.academy.id,
+    actorId: ctx.user.id,
+    action: "edition.update",
+    entityType: "OppositionEdition",
+    entityId: actual.id,
+    changes: { antes: actual.name, ahora: data.name, estado: data.status },
+  });
+
+  revalidatePath("/gestion/oposiciones");
+  return { ok: true };
+}
+
+/**
+ * Eliminar una convocatoria.
+ *
+ * Misma regla que arriba —no se borra con alumnos dentro— y una más: no se
+ * borra si es la única que le queda a la oposición. Una oposición sin
+ * convocatorias no se puede usar para nada y deja la pantalla en un estado que
+ * no se entiende.
+ */
+export async function deleteEditionAction(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const ctx = await requirePermission("oppositions.write");
+  const editionId = String(formData.get("editionId") ?? "");
+
+  const convocatoria = await ctx.db.oppositionEdition.findUnique({
+    where: { id: editionId },
+    select: { id: true, name: true, oppositionId: true, deletedAt: true },
+  });
+  if (!convocatoria || convocatoria.deletedAt) {
+    return { error: "Esa convocatoria no existe." };
+  }
+
+  const matriculados = await ctx.db.enrollment.count({
+    where: {
+      deletedAt: null,
+      course: { oppositionEditionId: convocatoria.id },
+    },
+  });
+  if (matriculados > 0) {
+    return {
+      error: `No se puede eliminar: hay ${matriculados} ${
+        matriculados === 1 ? "alumno matriculado" : "alumnos matriculados"
+      }. Ciérrala o archívala en lugar de borrarla.`,
+    };
+  }
+
+  const hermanas = await ctx.db.oppositionEdition.count({
+    where: {
+      oppositionId: convocatoria.oppositionId,
+      deletedAt: null,
+      NOT: { id: convocatoria.id },
+    },
+  });
+  if (hermanas === 0) {
+    return {
+      error:
+        "Es la única convocatoria de esta oposición. Elimina la oposición entera o crea otra convocatoria antes.",
+    };
+  }
+
+  const ahora = new Date();
+
+  await transaccionDeAcademia(ctx.academy.id, async (tx) => {
+    await tx.contentNode.updateMany({
+      where: { academyId: ctx.academy.id, editionId: convocatoria.id, deletedAt: null },
+      data: { deletedAt: ahora },
+    });
+    await tx.course.updateMany({
+      where: {
+        academyId: ctx.academy.id,
+        oppositionEditionId: convocatoria.id,
+        deletedAt: null,
+      },
+      data: { deletedAt: ahora },
+    });
+    await tx.oppositionEdition.update({
+      where: { id: convocatoria.id },
+      data: { deletedAt: ahora, status: "ARCHIVED" },
+    });
+  });
+
+  await recordAudit({
+    academyId: ctx.academy.id,
+    actorId: ctx.user.id,
+    action: "edition.delete",
+    entityType: "OppositionEdition",
+    entityId: convocatoria.id,
+    changes: { nombre: convocatoria.name },
+  });
+
+  revalidatePath("/gestion/oposiciones");
+  revalidatePath("/gestion/cursos");
   return { ok: true };
 }
 

@@ -40,7 +40,14 @@ export function trocear(
     trozos.push({ content: limpio.slice(inicio, fin).trim(), position: posicion });
     posicion += 1;
 
-    const siguiente = fin - solape;
+    // El solape arranca en el espacio anterior, no en el carácter exacto: si
+    // no, el fragmento siguiente empieza a media palabra («...mite de
+    // audiencia») y eso es justo lo que después se le cita al alumno.
+    let siguiente = fin - solape;
+    if (siguiente > inicio) {
+      const espacio = limpio.indexOf(" ", siguiente);
+      if (espacio !== -1 && espacio < fin) siguiente = espacio + 1;
+    }
     inicio = siguiente > inicio ? siguiente : fin;
   }
 
@@ -78,7 +85,45 @@ export function extraerTextoPdf(buffer: Buffer): string {
     }
   }
 
-  return partes.join(" ").replace(/\s+/g, " ").trim();
+  return quitarCabeceras(partes).join(" ").replace(/\s+/g, " ").trim();
+}
+
+/**
+ * Quita encabezados y pies repetidos.
+ *
+ * Casi todo temario lleva el título del tema arriba de cada página y el número
+ * de página abajo. Al extraer el texto eso se mete en mitad de las frases, y
+ * después la IA lo cita como si fuera contenido: «...el plazo será de [título
+ * del tema - pág. 4] tres meses». Se detecta por repetición, no por posición,
+ * porque la extracción no conserva dónde acababa cada página.
+ */
+function quitarCabeceras(partes: string[]): string[] {
+  const veces = new Map<string, number>();
+  for (const parte of partes) {
+    if (parte.length > 90) continue;
+    veces.set(parte, (veces.get(parte) ?? 0) + 1);
+  }
+
+  // Una línea corta que se repite tres veces o más en un documento es un
+  // encabezado. Un párrafo largo repetido, en cambio, puede ser contenido real
+  // (una fórmula legal que se repite), así que ese no se toca.
+  const cabeceras = new Set(
+    [...veces.entries()]
+      .filter(([texto, n]) => n >= 3 && texto.length <= 90)
+      .map(([texto]) => texto),
+  );
+
+  // Y hay dos formas que son cabecera aunque no se repitan: el número de página
+  // suelto, y la línea corta que termina en «pág. N».
+  const numeroSuelto = /^\s*(pág\.?|pag\.?|página|pagina)?\s*\d{1,4}\s*$/i;
+  const terminaEnPagina = /[-–·|]?\s*(pág\.?|pag\.?|página|pagina)\s*\d{1,4}\s*$/i;
+
+  return partes.filter(
+    (parte) =>
+      !cabeceras.has(parte) &&
+      !numeroSuelto.test(parte) &&
+      !(parte.length <= 90 && terminaEnPagina.test(parte)),
+  );
 }
 
 export type ResultadoIndexado = {
@@ -152,11 +197,21 @@ export async function indexarNodo(
 
   const existente = await prismaBase.knowledgeSource.findFirst({
     where: { academyId, nodeId: nodo.id },
-    select: { id: true, checksum: true, version: true },
+    select: { id: true, checksum: true, version: true, chunkCount: true },
   });
 
-  // Si el contenido no ha cambiado, no se reindexa: es tiempo y dinero.
-  if (existente?.checksum === checksum) {
+  // Si el contenido no ha cambiado, no se reindexa: es tiempo y dinero. Pero se
+  // comprueba que los fragmentos siguen ahí. Sin esta comprobación, una fuente
+  // a la que le faltan los fragmentos se queda marcada como indexada para
+  // siempre y la IA no encuentra nada, sin que nadie sepa por qué.
+  const fragmentosVivos =
+    existente === null
+      ? 0
+      : await prismaBase.documentChunk.count({
+          where: { academyId, sourceId: existente.id },
+        });
+
+  if (existente?.checksum === checksum && fragmentosVivos > 0) {
     return {
       fuente: nodo.label,
       fragmentos: 0,

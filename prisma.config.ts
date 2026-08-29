@@ -12,7 +12,10 @@ try {
 export default defineConfig({
   schema: path.join("prisma", "schema"),
   datasource: {
-    url: process.env.DATABASE_URL as string,
+    // Las migraciones y las semillas necesitan al DUEÑO de las tablas: la
+    // aplicación se conecta con un rol restringido que no puede alterar la
+    // estructura, y eso es a propósito.
+    url: (process.env.DATABASE_URL_OWNER ?? process.env.DATABASE_URL) as string,
     shadowDatabaseUrl: process.env.SHADOW_DATABASE_URL,
   },
   migrations: {

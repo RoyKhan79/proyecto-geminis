@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Sparkles } from "lucide-react";
 import { requireAcademy } from "@/lib/auth/context";
-import { aiDisponible } from "@/lib/ai/gateway";
 import { loadGrants } from "@/server/campus/queries";
 import { studentNodeWhere } from "@/lib/access/content-access";
 import { Card, CardContent, EmptyState } from "@/components/ui/primitives";
@@ -58,15 +57,6 @@ export default async function IaCampusPage({
           Responde con el material de tu academia y te dice de dónde lo saca.
         </p>
       </div>
-
-      {!aiDisponible() ? (
-        <Card>
-          <CardContent className="p-4 pt-4 text-sm text-ink-muted">
-            El asistente todavía no está activo en esta instalación. Tu academia
-            lo activará cuando lo tenga listo.
-          </CardContent>
-        </Card>
-      ) : null}
 
       <AskBox temas={temas} temaActual={contexto?.id ?? null} />
 

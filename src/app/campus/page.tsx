@@ -11,6 +11,8 @@ import {
 import { daysUntil } from "@/server/dashboard/queries";
 import { Button } from "@/components/ui/button";
 import { QuickLinks } from "@/components/campus/quick-links";
+import { PlanDelDia } from "@/components/campus/plan-del-dia";
+import { proponerPlanDelDia } from "@/server/ai/insights";
 import { Card, CardContent, EmptyState } from "@/components/ui/primitives";
 import { formatDateTime } from "@/lib/utils";
 
@@ -27,6 +29,18 @@ export default async function CampusHomePage() {
   ]);
 
   const progreso = await loadProgressSummary(ctx.db, grants, studentId);
+
+  // Lo que Geminis propone hoy a este alumno concreto. Si no tiene nada que
+  // decir con fundamento, devuelve una lista vacía y no se pinta nada.
+  const propuestas = ctx.permissions.has("ai.student")
+    ? await proponerPlanDelDia({
+        db: ctx.db,
+        academyId: ctx.academy.id,
+        studentId,
+        grants,
+        ahora: new Date(),
+      })
+    : [];
   const proxima = clases[0];
   const oposicion = matriculas[0]?.course.oppositionEdition;
 
@@ -47,6 +61,8 @@ export default async function CampusHomePage() {
       </header>
 
       <QuickLinks />
+
+      <PlanDelDia propuestas={propuestas} />
 
       {matriculas.length === 0 ? (
         <Card>

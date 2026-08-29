@@ -10,11 +10,19 @@ import { cn } from "@/lib/utils";
 
 // ── Card ─────────────────────────────────────────────────────────────────────
 
+/**
+ * La tarjeta.
+ *
+ * Lleva un filo de luz en el borde superior (`edge-light`). Es un detalle de un
+ * píxel que hace que la tarjeta parezca apoyada sobre el fondo en lugar de
+ * recortada contra él, y es la diferencia entre una interfaz que parece hecha y
+ * una que parece maquetada.
+ */
 export function Card({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       className={cn(
-        "rounded-[var(--radius-card)] border border-line bg-surface shadow-[var(--shadow-soft)]",
+        "edge-light rounded-[var(--radius-card)] border border-line bg-surface",
         className,
       )}
       {...props}
@@ -34,7 +42,10 @@ export function CardHeader({ className, ...props }: React.ComponentProps<"div">)
 export function CardTitle({ className, ...props }: React.ComponentProps<"h3">) {
   return (
     <h3
-      className={cn("text-[0.9375rem] font-semibold text-ink", className)}
+      className={cn(
+        "font-display text-base font-semibold tracking-[-0.01em] text-ink",
+        className,
+      )}
       {...props}
     />
   );
@@ -157,16 +168,18 @@ export function Field({
 // ── Badge ────────────────────────────────────────────────────────────────────
 
 const badgeVariants = cva(
-  "inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium",
+  "inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold tracking-[0.005em] ring-1 ring-inset",
   {
     variants: {
       tone: {
-        neutral: "bg-surface-muted text-ink-soft border border-line",
-        accent: "bg-accent-soft text-accent",
-        positive: "bg-positive-soft text-positive",
-        caution: "bg-caution-soft text-caution",
-        critical: "bg-critical-soft text-critical",
-        info: "bg-info-soft text-info",
+        neutral: "bg-surface-muted text-ink-soft ring-[var(--border-subtle)]",
+        accent: "bg-accent-soft text-accent ring-accent/15",
+        positive: "bg-positive-soft text-positive ring-positive/15",
+        caution: "bg-caution-soft text-caution ring-caution/20",
+        critical: "bg-critical-soft text-critical ring-critical/15",
+        info: "bg-info-soft text-info ring-info/15",
+        /// Reservado a lo conseguido: una racha, un aprobado, una plaza.
+        gold: "bg-gold-soft text-gold ring-gold/25",
       },
     },
     defaultVariants: { tone: "neutral" },
@@ -195,7 +208,7 @@ export function Th({ className, ...props }: React.ComponentProps<"th">) {
   return (
     <th
       className={cn(
-        "border-b border-line px-4 py-2.5 text-left text-xs font-semibold uppercase tracking-wide text-ink-muted",
+        "border-b border-line px-4 py-2.5 text-left text-[0.6875rem] font-bold uppercase tracking-[0.06em] text-ink-muted",
         className,
       )}
       {...props}
@@ -228,9 +241,7 @@ export function EmptyState({
   return (
     <div className="flex flex-col items-center justify-center gap-3 px-6 py-14 text-center">
       {icon ? (
-        <div className="flex size-11 items-center justify-center rounded-full bg-surface-muted text-ink-muted">
-          {icon}
-        </div>
+        <div className="icon-chip size-12 [&_svg]:size-5">{icon}</div>
       ) : null}
       <div className="space-y-1">
         <p className="font-medium text-ink">{title}</p>
@@ -265,14 +276,20 @@ export function PageHeader({
 }) {
   return (
     <header className="flex flex-col gap-3 border-b border-line pb-5 sm:flex-row sm:items-end sm:justify-between">
-      <div className="space-y-1">
+      <div className="space-y-1.5">
         {breadcrumb}
-        <h1 className="text-xl font-semibold tracking-tight text-ink">{title}</h1>
+        <h1 className="text-[1.6rem] font-semibold leading-tight text-ink">
+          {title}
+        </h1>
         {description ? (
-          <p className="max-w-2xl text-sm text-ink-muted">{description}</p>
+          <p className="max-w-2xl text-sm leading-relaxed text-ink-soft">
+            {description}
+          </p>
         ) : null}
       </div>
-      {actions ? <div className="flex items-center gap-2">{actions}</div> : null}
+      {actions ? (
+        <div className="flex shrink-0 items-center gap-2">{actions}</div>
+      ) : null}
     </header>
   );
 }

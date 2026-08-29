@@ -30,6 +30,7 @@ export type AuthContext = {
     firstName: string;
     lastName: string | null;
     avatarUrl: string | null;
+    emailVerifiedAt: Date | null;
     isPlatformAdmin: boolean;
   };
   sessionId: string;
@@ -104,6 +105,7 @@ export const getAuthContext = cache(async (): Promise<AuthContext | null> => {
       firstName: session.user.firstName,
       lastName: session.user.lastName,
       avatarUrl: session.user.avatarUrl,
+      emailVerifiedAt: session.user.emailVerifiedAt,
       isPlatformAdmin: session.user.isPlatformAdmin,
     },
     sessionId: session.id,

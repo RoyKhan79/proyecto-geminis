@@ -37,14 +37,22 @@ Y además, sobre el plan inicial:
 | **Salas online** | Aulas virtuales permanentes con entrada controlada |
 | **App móvil** | PWA instalable en el teléfono |
 | **Plataforma** | Alta de academias, soporte auditado, white-label, exportación y RGPD |
+| **Simulacros** | Plantilla de examen, temporizador, penalización por fallo y percentil |
+| **IA con motor propio** | Responde con el material de la academia **sin contratar ninguna API** |
+| **«¿Por qué he fallado?»** | La explicación del preparador, reforzada con el temario y citada |
+| **Repetición espaciada** | Cada pregunta vuelve justo antes de que se olvide |
+| **Propuestas diarias** | Qué toca hoy, siempre con el dato que lo justifica |
+| **Importar preguntas** | Bancos enteros desde Excel, con detección de repetidas |
+| **Recuperar contraseña** | Y verificación de correo, con testigos de un solo uso |
+| **Textos legales** | Política de privacidad y condiciones de uso |
 
-En cifras: **64 tablas · 47 pantallas · 23.500 líneas · 72 pruebas automáticas ·
-24 comprobaciones de penetración**.
+En cifras: **63 tablas · 55 pantallas · 36.000 líneas · 109 pruebas automáticas ·
+66 comprobaciones de auditoría** (33 sobre el código y 33 contra el servidor).
 
 El detalle está en [docs/MVP_ROADMAP.md](docs/MVP_ROADMAP.md), la revisión punto
 por punto del encargo en
-[docs/REQUISITOS_CUMPLIDOS.md](docs/REQUISITOS_CUMPLIDOS.md) y la auditoría en
-[docs/AUDITORIA.md](docs/AUDITORIA.md).
+[docs/REQUISITOS_CUMPLIDOS.md](docs/REQUISITOS_CUMPLIDOS.md) y la auditoría final
+en [docs/AUDITORIA_FINAL.md](docs/AUDITORIA_FINAL.md).
 
 ---
 
@@ -112,7 +120,11 @@ vistazo cómo el contenido depende de lo contratado.
 | `npm run db:reset` | Borra los datos locales y empieza de cero |
 | `npm run demo:todo` | Recrea la demo con PDFs, preguntas y normativa |
 | `npm run radar` | Revisa el BOE (pensado para cron cada mañana) |
-| `node scripts/auditoria.mjs` | Auditoría de seguridad por HTTP |
+| `npm run mantenimiento` | Limpia sesiones y enlaces caducados (cron diario) |
+| `npm run verificar` | Tipos, estilo, pruebas y compilación, todo seguido |
+| `npm run auditoria` | Las dos auditorías: la del código y la del servidor |
+| `npm run ia:probar` | Comprueba desde la terminal que Geminis IA responde |
+| `npm run iconos` | Regenera los iconos de la app con los colores de marca |
 
 ---
 
@@ -160,6 +172,26 @@ Nunca crea una oposición por su cuenta: avisa y decide una persona.
 
 ---
 
+## Geminis IA funciona sin contratar nada
+
+El asistente tiene un **motor propio** dentro del servidor: lee el material de la
+academia, entiende qué se le pregunta, localiza lo que responde y lo cita. No
+hace falta configurar ningún proveedor, y con esa configuración por defecto el
+temario **no sale del servidor**.
+
+Si la academia configura `AI_PROVIDER`, las respuestas pasan a redactarse además
+con un modelo, con el mismo material y la misma barrera de permisos. La interfaz
+distingue los dos modos: vender uno como el otro sería mentir a la academia.
+
+Lo que el motor propio hace y lo que no está escrito sin adornos en
+[`src/lib/ai/local-engine.ts`](src/lib/ai/local-engine.ts) y en el ADR-0028.
+
+```bash
+npm run ia:probar    # le hace preguntas reales al material de la demo
+```
+
+---
+
 ## Las tres ideas que sostienen el producto
 
 **1. Ninguna academia toca los datos de otra.**
@@ -193,6 +225,13 @@ la IA nunca podrá ser una puerta trasera para leer material no contratado.
 - [docs/AI_ARCHITECTURE.md](docs/AI_ARCHITECTURE.md) — Geminis IA y su gateway
 - [docs/MVP_ROADMAP.md](docs/MVP_ROADMAP.md) — plan por fases
 - [docs/DECISIONS.md](docs/DECISIONS.md) — decisiones tomadas y por qué
-- [docs/AUDITORIA.md](docs/AUDITORIA.md) — auditoría de seguridad, hallazgos y riesgos aceptados
+- [docs/DESIGN_SYSTEM.md](docs/DESIGN_SYSTEM.md) — color, tipografía, componentes e iconos
+- [docs/AUDITORIA_FINAL.md](docs/AUDITORIA_FINAL.md) — auditoría completa, hallazgos y riesgos aceptados
+- [docs/AUDITORIA.md](docs/AUDITORIA.md) — la auditoría anterior, con los tres hallazgos que se cerraron
 - [docs/REQUISITOS_CUMPLIDOS.md](docs/REQUISITOS_CUMPLIDOS.md) — los 136 puntos del encargo, uno a uno
+- [docs/GUIA_APP_MOVIL.md](docs/GUIA_APP_MOVIL.md) — instalar la app en el móvil y probar academia ↔ alumno
 - [docs/PRESENTACION.md](docs/PRESENTACION.md) — guión para enseñárselo a una academia
+
+Y para el alumnado: [política de privacidad](src/app/privacidad/page.tsx) y
+[condiciones de uso](src/app/condiciones/page.tsx), accesibles sin entrar en
+`/privacidad` y `/condiciones`.

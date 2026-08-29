@@ -24,7 +24,7 @@ export function CampusTabBar() {
   return (
     <nav
       aria-label="Navegación del campus"
-      className="safe-bottom fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface/95 backdrop-blur"
+      className="safe-bottom fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface/85 backdrop-blur-xl"
     >
       <ul className="mx-auto flex max-w-3xl items-stretch">
         {TABS.map((tab) => {
@@ -55,12 +55,32 @@ export function CampusTabBar() {
                 href={tab.href}
                 aria-current={active ? "page" : undefined}
                 className={cn(
-                  "touch-target flex flex-col items-center justify-center gap-0.5 py-2 transition-colors",
+                  // El icono activo se sienta sobre una pastilla suave. En una
+                  // barra de cinco destinos, un cambio de color solo no basta
+                  // para saber dónde estás de un vistazo y con prisa.
+                  "touch-target flex flex-col items-center justify-center gap-1 py-2 transition-colors",
                   active ? "text-accent" : "text-ink-muted hover:text-ink",
                 )}
               >
-                <Icon className={cn("size-5", active && "stroke-[2.5]")} aria-hidden />
-                <span className="text-[0.6875rem] font-medium">{tab.label}</span>
+                <span
+                  className={cn(
+                    "flex h-7 w-11 items-center justify-center rounded-full transition-colors",
+                    active && "bg-accent-soft",
+                  )}
+                >
+                  <Icon
+                    className={cn("size-[1.15rem]", active && "stroke-[2.4]")}
+                    aria-hidden
+                  />
+                </span>
+                <span
+                  className={cn(
+                    "text-[0.6875rem]",
+                    active ? "font-bold" : "font-medium",
+                  )}
+                >
+                  {tab.label}
+                </span>
               </Link>
             </li>
           );

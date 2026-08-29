@@ -105,6 +105,63 @@ export type Permission = keyof typeof PERMISSIONS;
 export const ALL_PERMISSIONS = Object.keys(PERMISSIONS) as Permission[];
 
 // ─────────────────────────────────────────────────────────────────────────────
+// LOS TRES NIVELES
+//
+// Hay tres alturas y no se mezclan nunca:
+//
+//   1 · SUPERADMINISTRADOR DE LA PLATAFORMA
+//       `User.isPlatformAdmin`. Da de alta academias, ve el estado del servicio
+//       y da soporte. NO pertenece a ninguna academia y por tanto NO ve el
+//       contenido, los alumnos ni los datos de ninguna. Para entrar en una
+//       tiene que impersonar, y la impersonación queda registrada (§3). No es
+//       una limitación técnica que se pueda saltar: sin `Membership` no hay
+//       `tenantDb`, y sin `tenantDb` no hay datos.
+//
+//   2 · ADMINISTRADOR DE ACADEMIA
+//       Rol `ACADEMY_ADMIN` dentro de SU academia. Manda sobre todo lo suyo:
+//       alumnos, profesorado, contenido, cobros, facturas, IA y configuración.
+//       No puede ver nada de otra academia, y eso lo garantizan dos barreras
+//       independientes (ver docs/SECURITY_MODEL.md).
+//
+//   3 · USUARIOS DE LA ACADEMIA
+//       Profesorado, personal administrativo y alumnado. Cada uno con lo suyo:
+//       · TEACHER — su gente y su contenido,
+//       · STAFF   — matrículas, cobros y comunicaciones, sin datos académicos
+//                   sensibles,
+//       · STUDENT — solo el Campus, y dentro de él solo lo que tenga contratado.
+//
+// La frontera que importa es la de arriba: el nivel 1 no ve datos, y el nivel 2
+// no ve más allá de su academia.
+// ─────────────────────────────────────────────────────────────────────────────
+
+export const NIVELES = [
+  {
+    nivel: 1,
+    clave: "PLATAFORMA",
+    nombre: "Superadministrador de la plataforma",
+    resumen:
+      "Da de alta academias y presta soporte. No pertenece a ninguna academia, así que no ve el contenido de ninguna.",
+    donde: "/plataforma",
+  },
+  {
+    nivel: 2,
+    clave: "ACADEMY_ADMIN",
+    nombre: "Administrador de la academia",
+    resumen:
+      "Manda sobre todo lo de SU academia y sobre nada de las demás.",
+    donde: "/gestion",
+  },
+  {
+    nivel: 3,
+    clave: "USUARIOS",
+    nombre: "Usuarios de la academia",
+    resumen:
+      "Profesorado, personal administrativo y alumnado, cada uno con sus permisos.",
+    donde: "/gestion y /campus",
+  },
+] as const;
+
+// ─────────────────────────────────────────────────────────────────────────────
 // ROLES DEL SISTEMA
 // Cada academia recibe una copia editable de estos roles al crearse.
 // ─────────────────────────────────────────────────────────────────────────────

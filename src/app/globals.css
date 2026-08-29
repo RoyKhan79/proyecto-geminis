@@ -10,105 +10,185 @@
  * El tema se define con tokens semánticos (superficie, borde, texto…) en lugar
  * de con nombres de color, para que el modo oscuro y el white-label por
  * academia sean un cambio de variables, no una reescritura de componentes.
+ *
+ * ── SOBRE EL ASPECTO ────────────────────────────────────────────────────────
+ * Esto se le enseña a una academia que va a pagar por ello y lo abre gente que
+ * lleva meses estudiando ocho horas al día. Las decisiones visuales salen de
+ * ahí, no de una moda:
+ *
+ *   · Fondo cálido, no blanco clínico ni gris frío. Se mira muchas horas.
+ *   · Titulares con serif y texto con sans. El serif da autoridad —esto va de
+ *     temario y de normativa— y el sans se lee mejor en tablas y formularios.
+ *   · Azul profundo de marca con un dorado para lo que se ha conseguido. El
+ *     dorado se reserva: si se usa en todo, deja de significar nada.
+ *   · Sombras en dos capas y bordes finos. La profundidad se nota; no se ve.
  */
 
 @theme {
-  /* Marca */
-  --color-brand-50: oklch(0.97 0.014 285);
-  --color-brand-100: oklch(0.94 0.03 285);
-  --color-brand-200: oklch(0.89 0.06 285);
-  --color-brand-300: oklch(0.81 0.1 285);
-  --color-brand-400: oklch(0.7 0.15 285);
-  --color-brand-500: oklch(0.6 0.19 285);
-  --color-brand-600: oklch(0.53 0.21 285);
-  --color-brand-700: oklch(0.46 0.19 285);
-  --color-brand-800: oklch(0.39 0.16 285);
-  --color-brand-900: oklch(0.33 0.13 285);
+  /* ── Marca · azul profundo ──────────────────────────────────────────────
+   * Serio sin ser corporativo gris. Es el color de la institución, del sello
+   * y del expediente, que es exactamente el terreno de una oposición.
+   */
+  --color-brand-50: oklch(0.97 0.014 260);
+  --color-brand-100: oklch(0.94 0.03 260);
+  --color-brand-200: oklch(0.88 0.06 260);
+  --color-brand-300: oklch(0.79 0.1 261);
+  --color-brand-400: oklch(0.68 0.14 262);
+  --color-brand-500: oklch(0.58 0.17 263);
+  --color-brand-600: oklch(0.49 0.18 264);
+  --color-brand-700: oklch(0.41 0.16 265);
+  --color-brand-800: oklch(0.34 0.13 266);
+  --color-brand-900: oklch(0.27 0.1 267);
+
+  /* ── Dorado · el logro ───────────────────────────────────────────────────
+   * Reservado a lo conseguido: una racha, un simulacro aprobado, una plaza.
+   * No es un color de aviso ni de adorno.
+   */
+  --color-gold-100: oklch(0.95 0.05 85);
+  --color-gold-300: oklch(0.86 0.11 82);
+  --color-gold-500: oklch(0.76 0.14 78);
+  --color-gold-700: oklch(0.6 0.12 75);
 
   /* Estados */
-  --color-positive: oklch(0.62 0.15 155);
-  --color-positive-soft: oklch(0.95 0.04 155);
-  --color-caution: oklch(0.75 0.15 75);
-  --color-caution-soft: oklch(0.96 0.05 85);
-  --color-critical: oklch(0.58 0.21 25);
-  --color-critical-soft: oklch(0.95 0.04 25);
-  --color-info: oklch(0.62 0.14 240);
-  --color-info-soft: oklch(0.95 0.03 240);
+  --color-positive: oklch(0.58 0.13 158);
+  --color-positive-soft: oklch(0.95 0.035 158);
+  --color-caution: oklch(0.66 0.13 62);
+  --color-caution-soft: oklch(0.96 0.045 72);
+  --color-critical: oklch(0.55 0.2 22);
+  --color-critical-soft: oklch(0.95 0.035 22);
+  --color-info: oklch(0.6 0.12 232);
+  --color-info-soft: oklch(0.95 0.03 232);
 
-  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, -apple-system,
+  /* ── Tipografía ─────────────────────────────────────────────────────────
+   * Fraunces para titulares: serif variable con eje óptico, cálida y con
+   * carácter, sin llegar a decorativa. Manrope para todo lo demás: números
+   * tabulares limpios y buena lectura en móvil, que es donde estudia el
+   * alumnado.
+   */
+  --font-display: var(--font-fraunces), ui-serif, Georgia, "Times New Roman",
+    serif;
+  --font-sans: var(--font-manrope), ui-sans-serif, system-ui, -apple-system,
     "Segoe UI", sans-serif;
-  --font-mono: var(--font-geist-mono), ui-monospace, "SF Mono", monospace;
+  --font-mono: var(--font-jetbrains), ui-monospace, "SF Mono", monospace;
 
-  --radius-card: 0.875rem;
-  --radius-control: 0.625rem;
+  --radius-card: 1rem;
+  --radius-control: 0.7rem;
 
-  --shadow-soft: 0 1px 2px 0 rgb(15 23 42 / 0.04), 0 1px 3px 0 rgb(15 23 42 / 0.06);
-  --shadow-raised: 0 4px 12px -2px rgb(15 23 42 / 0.08),
-    0 2px 6px -2px rgb(15 23 42 / 0.06);
-  --shadow-overlay: 0 24px 48px -12px rgb(15 23 42 / 0.24);
+  /* Sombras en dos capas: una de contacto, muy corta, y otra de difusión. Es
+   * lo que separa una tarjeta que parece apoyada de una que parece pegada. */
+  --shadow-soft: 0 1px 1px 0 oklch(0.27 0.05 265 / 0.04),
+    0 2px 6px -1px oklch(0.27 0.05 265 / 0.06);
+  --shadow-raised: 0 1px 2px 0 oklch(0.27 0.05 265 / 0.05),
+    0 8px 20px -6px oklch(0.27 0.05 265 / 0.1);
+  --shadow-overlay: 0 2px 4px 0 oklch(0.27 0.05 265 / 0.06),
+    0 28px 56px -16px oklch(0.27 0.05 265 / 0.28);
 }
 
 /* Tokens semánticos: claro por defecto. */
 :root {
-  --surface: oklch(1 0 0);
-  --surface-muted: oklch(0.985 0.002 285);
-  --surface-sunken: oklch(0.97 0.003 285);
-  --surface-inverse: oklch(0.21 0.01 285);
+  /* Blanco cálido, no blanco puro: a las cuatro de la tarde y a las once de la
+   * noche se agradece. La diferencia es pequeña y se nota en las horas. */
+  --surface: oklch(0.995 0.003 85);
+  --surface-muted: oklch(0.975 0.005 85);
+  --surface-sunken: oklch(0.965 0.006 85);
+  --surface-inverse: oklch(0.24 0.03 265);
 
-  --border-subtle: oklch(0.92 0.004 285);
-  --border-strong: oklch(0.85 0.006 285);
+  --border-subtle: oklch(0.91 0.006 80);
+  --border-strong: oklch(0.84 0.008 80);
 
-  --text-primary: oklch(0.24 0.012 285);
-  --text-secondary: oklch(0.5 0.012 285);
-  --text-muted: oklch(0.62 0.012 285);
-  --text-inverse: oklch(0.98 0 0);
+  --text-primary: oklch(0.24 0.025 265);
+  --text-secondary: oklch(0.48 0.02 265);
+  --text-muted: oklch(0.6 0.016 265);
+  --text-inverse: oklch(0.98 0.004 85);
 
   /* Acento: lo puede sobrescribir cada academia (white-label, §60). */
   --accent: var(--color-brand-600);
   --accent-hover: var(--color-brand-700);
   --accent-soft: var(--color-brand-50);
-  --accent-contrast: oklch(0.99 0 0);
+  --accent-contrast: oklch(0.99 0.003 85);
+
+  --gold: var(--color-gold-700);
+  --gold-soft: var(--color-gold-100);
 
   --ring: var(--color-brand-500);
+
+  /* Fondo de las carcasas: un degradado larguísimo y de muy poca saturación.
+   * No debe leerse como "un degradado"; debe leerse como papel. */
+  --shell-wash: radial-gradient(
+      120% 90% at 12% -10%,
+      oklch(0.94 0.028 265 / 0.55) 0%,
+      transparent 55%
+    ),
+    radial-gradient(
+      100% 80% at 100% 0%,
+      oklch(0.93 0.035 78 / 0.4) 0%,
+      transparent 50%
+    );
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --surface: oklch(0.19 0.008 285);
-    --surface-muted: oklch(0.22 0.009 285);
-    --surface-sunken: oklch(0.16 0.008 285);
-    --surface-inverse: oklch(0.97 0 0);
+    --surface: oklch(0.22 0.018 265);
+    --surface-muted: oklch(0.25 0.02 265);
+    --surface-sunken: oklch(0.18 0.016 265);
+    --surface-inverse: oklch(0.97 0.004 85);
 
-    --border-subtle: oklch(0.29 0.01 285);
-    --border-strong: oklch(0.37 0.012 285);
+    --border-subtle: oklch(0.31 0.02 265);
+    --border-strong: oklch(0.4 0.025 265);
 
-    --text-primary: oklch(0.96 0.003 285);
-    --text-secondary: oklch(0.75 0.008 285);
-    --text-muted: oklch(0.62 0.01 285);
-    --text-inverse: oklch(0.19 0.008 285);
+    --text-primary: oklch(0.96 0.006 85);
+    --text-secondary: oklch(0.76 0.012 265);
+    --text-muted: oklch(0.63 0.015 265);
+    --text-inverse: oklch(0.2 0.018 265);
 
-    --accent: var(--color-brand-400);
-    --accent-hover: var(--color-brand-300);
-    --accent-soft: oklch(0.28 0.05 285);
-    --accent-contrast: oklch(0.16 0.01 285);
+    --accent: var(--color-brand-300);
+    --accent-hover: var(--color-brand-200);
+    --accent-soft: oklch(0.3 0.06 264);
+    --accent-contrast: oklch(0.18 0.02 265);
+
+    --gold: var(--color-gold-300);
+    --gold-soft: oklch(0.32 0.05 80);
+
+    --shell-wash: radial-gradient(
+        120% 90% at 12% -10%,
+        oklch(0.33 0.06 265 / 0.5) 0%,
+        transparent 55%
+      ),
+      radial-gradient(
+        100% 80% at 100% 0%,
+        oklch(0.3 0.05 78 / 0.35) 0%,
+        transparent 50%
+      );
   }
 }
 
 :root[data-theme="dark"] {
-  --surface: oklch(0.19 0.008 285);
-  --surface-muted: oklch(0.22 0.009 285);
-  --surface-sunken: oklch(0.16 0.008 285);
-  --surface-inverse: oklch(0.97 0 0);
-  --border-subtle: oklch(0.29 0.01 285);
-  --border-strong: oklch(0.37 0.012 285);
-  --text-primary: oklch(0.96 0.003 285);
-  --text-secondary: oklch(0.75 0.008 285);
-  --text-muted: oklch(0.62 0.01 285);
-  --text-inverse: oklch(0.19 0.008 285);
-  --accent: var(--color-brand-400);
-  --accent-hover: var(--color-brand-300);
-  --accent-soft: oklch(0.28 0.05 285);
-  --accent-contrast: oklch(0.16 0.01 285);
+  --surface: oklch(0.22 0.018 265);
+  --surface-muted: oklch(0.25 0.02 265);
+  --surface-sunken: oklch(0.18 0.016 265);
+  --surface-inverse: oklch(0.97 0.004 85);
+  --border-subtle: oklch(0.31 0.02 265);
+  --border-strong: oklch(0.4 0.025 265);
+  --text-primary: oklch(0.96 0.006 85);
+  --text-secondary: oklch(0.76 0.012 265);
+  --text-muted: oklch(0.63 0.015 265);
+  --text-inverse: oklch(0.2 0.018 265);
+  --accent: var(--color-brand-300);
+  --accent-hover: var(--color-brand-200);
+  --accent-soft: oklch(0.3 0.06 264);
+  --accent-contrast: oklch(0.18 0.02 265);
+  --gold: var(--color-gold-300);
+  --gold-soft: oklch(0.32 0.05 80);
+  --shell-wash: radial-gradient(
+      120% 90% at 12% -10%,
+      oklch(0.33 0.06 265 / 0.5) 0%,
+      transparent 55%
+    ),
+    radial-gradient(
+      100% 80% at 100% 0%,
+      oklch(0.3 0.05 78 / 0.35) 0%,
+      transparent 50%
+    );
 }
 
 /* Exponemos los tokens semánticos como utilidades de Tailwind. */
@@ -127,6 +207,8 @@
   --color-accent-hover: var(--accent-hover);
   --color-accent-soft: var(--accent-soft);
   --color-accent-contrast: var(--accent-contrast);
+  --color-gold: var(--gold);
+  --color-gold-soft: var(--gold-soft);
   --color-ring: var(--ring);
 }
 
@@ -143,8 +225,26 @@
     background-color: var(--surface-sunken);
     color: var(--text-primary);
     font-family: var(--font-sans);
-    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
     -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Los titulares llevan el serif. Se hace aquí y no repitiendo una clase en
+   * cada pantalla: así una academia que cambie la tipografía la cambia en un
+   * sitio. */
+  h1,
+  h2,
+  .font-display {
+    font-family: var(--font-display);
+    font-optical-sizing: auto;
+    letter-spacing: -0.015em;
+  }
+
+  /* Las cifras, siempre tabulares. Una tabla de notas donde los números bailan
+   * al cambiar de página se lee fatal. */
+  table,
+  .tabular-nums {
+    font-variant-numeric: tabular-nums;
   }
 
   /* Accesibilidad: foco siempre visible y con contraste suficiente (§70). */
@@ -177,5 +277,45 @@
 
   .safe-bottom {
     padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  /* Fondo de carcasa: el lavado de color detrás de todo. */
+  .shell-wash {
+    background-image: var(--shell-wash);
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+  }
+
+  /* Chip de icono: el icono dentro de una pastilla suave. Da jerarquía sin
+   * necesidad de más color ni más peso tipográfico. */
+  .icon-chip {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 0.7rem;
+    background: var(--accent-soft);
+    color: var(--accent);
+    box-shadow: inset 0 0 0 1px oklch(0.5 0.15 264 / 0.1);
+  }
+
+  /* Texto con el degradado de marca. Solo para cifras grandes y titulares de
+   * portada; en texto corrido es ilegible. */
+  .text-gradient {
+    background-image: linear-gradient(
+      100deg,
+      var(--accent) 0%,
+      var(--color-brand-400) 55%,
+      var(--gold) 130%
+    );
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* Borde con brillo: un filo de luz arriba, como el de una tarjeta física. */
+  .edge-light {
+    box-shadow:
+      inset 0 1px 0 0 oklch(1 0 0 / 0.5),
+      var(--shadow-soft);
   }
 }

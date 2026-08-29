@@ -309,6 +309,8 @@ const brandingSchema = z.object({
     .optional()
     .or(z.literal("")),
   logoUrl: z.string().trim().url("La dirección del logotipo no es válida.").optional().or(z.literal("")),
+  /// Sesiones simultáneas por alumno. 0 = sin límite.
+  maxSessionsPerStudent: z.coerce.number().int().min(0).max(10).default(2),
 });
 
 /** Personalización de la academia: nombre, color y logotipo (§60). */
@@ -332,6 +334,7 @@ export async function updateBrandingAction(
       phone: parsed.data.phone || null,
       primaryColor: parsed.data.primaryColor || null,
       logoUrl: parsed.data.logoUrl || null,
+      maxSessionsPerStudent: parsed.data.maxSessionsPerStudent,
     },
   });
 
@@ -339,7 +342,11 @@ export async function updateBrandingAction(
     academyId: ctx.academy.id,
     actorId: ctx.user.id,
     action: "academy.branding",
-    changes: { nombre: parsed.data.name, color: parsed.data.primaryColor },
+    changes: {
+      nombre: parsed.data.name,
+      color: parsed.data.primaryColor,
+      sesionesPorAlumno: parsed.data.maxSessionsPerStudent,
+    },
   });
 
   revalidatePath("/gestion/configuracion");
@@ -365,6 +372,8 @@ export async function anonymizeStudentAction(formData: FormData) {
   });
   if (!membership) throw new Error("Esa persona no existe.");
 
+  // tenant-ok · se pregunta a propósito por TODAS las academias: si la persona
+  // está en otra, su identidad global no se toca.
   const otrasAcademias = await prismaBase.membership.count({
     where: { userId: membership.userId, NOT: { id: membership.id } },
   });

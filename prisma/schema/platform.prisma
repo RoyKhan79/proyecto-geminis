@@ -73,11 +73,29 @@ model Academy {
   locale   String @default("es-ES")
   timezone String @default("Europe/Madrid")
 
+  /// Cuántas sesiones simultáneas se permiten por alumno.
+  ///
+  /// Compartir la cuenta es la primera fuga de ingresos de una academia: uno
+  /// paga y estudian cuatro. Con un límite, la cuarta sesión echa a la primera,
+  /// y el titular nota que le echan. Cero significa sin límite.
+  maxSessionsPerStudent Int @default(2)
+
   // White-label (§60). Personalización ligera desde el día uno; dominio propio
   // queda modelado pero sin resolución activa hasta la fase correspondiente.
   logoUrl      String?
-  primaryColor String? @default("#4F46E5")
+  primaryColor String? @default("#2956c4")
   customDomain String? @unique
+
+  // ── Datos para domiciliar recibos ──────────────────────────────────────────
+  // Solo hacen falta si la academia cobra por domiciliación. Los tres van
+  // juntos: sin cualquiera de ellos, el banco rechaza el fichero.
+  /// Cuenta de la academia donde se ingresan los recibos.
+  billingIban String?
+  /// Identificador de acreedor SEPA. Lo da el banco al firmar el contrato de
+  /// adeudos. En España empieza por ES.
+  creditorId  String?
+  /// Prefijo para las referencias de mandato. Debe ser estable en el tiempo.
+  mandatePrefix String?
 
   /// Ajustes de producto por academia (marcas de agua, descargas por defecto,
   /// política de IA…). JSON porque son banderas heterogéneas y cambiantes.
@@ -113,6 +131,12 @@ model Academy {
   productGrants     ProductGrant[]
   entitlements      Entitlement[]
   payments          Payment[]
+  billingProfiles   BillingProfile[]
+  recurringCharges  RecurringCharge[]
+  directDebitRuns   DirectDebitRun[]
+  invoiceSeries     InvoiceSeries[]
+  invoices          Invoice[]
+  invoiceLines      InvoiceLine[]
   auditLogs         AuditLog[]
   notifications     Notification[]
   importJobs        ImportJob[]

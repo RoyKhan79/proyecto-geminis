@@ -26,6 +26,7 @@ import {
 import { formatCents, formatDate, formatDateTime } from "@/lib/utils";
 import { StudentForm } from "../student-form";
 import { EnrollForm } from "./enroll-form";
+import { BillingForm } from "./billing-form";
 
 export const metadata: Metadata = { title: "Ficha de alumno" };
 
@@ -276,6 +277,14 @@ export default async function FichaAlumnoPage({
               )}
             </CardContent>
           </Card>
+
+          {ctx.permissions.has("payments.write") ? (
+            <BillingForm
+              studentId={alumno.id}
+              perfil={alumno.billingProfile}
+              cuota={alumno.recurringCharge}
+            />
+          ) : null}
 
           {ctx.permissions.has("payments.read") ? (
             <Card>

@@ -16,6 +16,7 @@ programa?
 - 52 tablas con migraciones versionadas
 - Guardia multi-tenant con pruebas de aislamiento reales
 - Autenticación con sesiones revocables
+- Recuperación de contraseña y verificación de correo ✅
 - RBAC centralizado con catálogo de permisos
 - Auditoría
 - Design system con modo claro y oscuro
@@ -54,6 +55,7 @@ alumnos en otro sitio. Esta fase es comercial, no técnica.
 - **Simulación antes de importar** e informe de errores
 - Importación con registro fila a fila
 - **Reversión completa de una importación**
+- **Importación de bancos de preguntas** con detección de repetidas ✅
 - Exportación de los datos de la academia (§89)
 
 Modelo ya listo: `ImportJob`, `ImportRow`.
@@ -76,8 +78,8 @@ Modelo ya listo: `ImportJob`, `ImportRow`.
 - Corrección con explicación del preparador ✅
 - Histórico de errores y **test de mis errores** ✅
 - Estadísticas por alumno, tema y pregunta ✅
-- Simulacros con plantilla de examen (`ExamBlueprint`) — modelado, sin interfaz
-- Repetición espaciada — campos listos (`nextReviewAt`, `easeFactor`), sin motor
+- Simulacros con plantilla de examen, temporizador y percentil ✅
+- Repetición espaciada SM-2 con repaso diario en el Campus ✅
 
 ## ✅ Fase 5 — Geminis IA *(A · B · E)* · **terminada**
 
@@ -87,6 +89,9 @@ Modelo ya listo: `ImportJob`, `ImportRow`.
 - Chat del alumno con citas ✅
 - Copiloto: generar preguntas desde el material ✅
 - Flujo generar → revisar → publicar ✅
+- **Motor propio: funciona sin contratar ninguna API** ✅ (ADR-0028)
+- Explicación de por qué has fallado cada pregunta ✅
+- Propuestas diarias con su motivo, sin que nadie pregunte ✅ (ADR-0030)
 - Búsqueda vectorial con `pgvector` — pendiente (ADR-0011); hoy es léxica
 - Detección de duplicados y ambigüedades — pendiente
 - Asistente guiado de importación de temario — pendiente
@@ -119,16 +124,25 @@ de clase y red interna · mensajes internos · tareas con entrega y evaluación 
 salas online · PWA instalable · consola de plataforma con alta de academias,
 impersonación auditada, white-label y exportación RGPD.
 
+## Construido después de la auditoría
+
+- **Segunda barrera de aislamiento**: Row Level Security en las 50 tablas de
+  academia, con un rol de aplicación sin privilegios de superusuario (ADR-0040)
+- **Cobros recurrentes**: forma de pago por alumno, cuotas mensuales y fichero
+  SEPA de adeudos para el banco (ADR-0042)
+- **Facturación**: series, numeración correlativa, desglose de IVA, exenciones
+  y rectificativas (ADR-0043)
+- **Agenda**: calendario de clases por mes y semana, con series de repetición
+  (ADR-0044)
+- **Editar y eliminar** oposiciones y convocatorias, con protección si hay
+  alumnos matriculados
+- **Los tres niveles** documentados y verificados (ADR-0045)
+
 ## Lo siguiente, por orden de urgencia
 
-1. Simulacros con plantilla de examen y percentiles
-2. Importación específica de bancos de preguntas
-3. Asistente guiado de importación de temario
-4. Planificador de estudio y repetición espaciada
-5. Recuperación de contraseña y verificación de correo
+1. Asistente guiado de importación de temario
 6. Pasarela de pago
 7. Boletines autonómicos en el radar
-8. Row Level Security como segunda barrera
 9. Notificaciones push
 10. Dominio propio por academia
 

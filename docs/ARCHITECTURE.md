@@ -5,7 +5,7 @@
 | Capa | Elección | Por qué |
 |------|----------|---------|
 | Interfaz y servidor | Next.js 16 (App Router) + React 19 + TypeScript | Un solo proyecto para las dos aplicaciones (Manager y Campus), renderizado en servidor y Server Actions. Menos piezas que mantener con un equipo pequeño. |
-| Estilos | Tailwind CSS 4 con tokens propios | El design system son variables CSS; el white-label por academia será cambiar variables, no reescribir componentes. |
+| Estilos | Tailwind CSS 4 con tokens propios | El design system son variables CSS; el white-label por academia será cambiar variables, no reescribir componentes. Ver [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md). |
 | Base de datos | PostgreSQL 18 | Relacional de verdad, con JSONB donde hace falta y `pgvector` disponible cuando llegue la fase de IA. |
 | Acceso a datos | Prisma 7 | Tipado extremo a extremo y migraciones versionadas. Sus *client extensions* son justo lo que necesitábamos para la guardia multi-tenant. |
 | Validación | Zod | El mismo esquema valida el formulario y la acción de servidor. |

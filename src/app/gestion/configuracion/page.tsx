@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { requirePagePermission } from "@/lib/auth/context";
-import { PERMISSIONS, PERMISSION_GROUPS, type Permission } from "@/lib/auth/permissions";
+import { NIVELES, PERMISSIONS, PERMISSION_GROUPS, type Permission } from "@/lib/auth/permissions";
 import {
   Badge,
   Card,
@@ -33,6 +33,7 @@ export default async function ConfiguracionPage() {
           email: true,
           phone: true,
           primaryColor: true,
+          maxSessionsPerStudent: true,
           logoUrl: true,
           status: true,
           createdAt: true,
@@ -81,6 +82,7 @@ export default async function ConfiguracionPage() {
             email: detalle.email,
             phone: detalle.phone,
             primaryColor: detalle.primaryColor,
+            maxSessionsPerStudent: detalle.maxSessionsPerStudent,
             logoUrl: detalle.logoUrl,
           }}
           puedeExportar={ctx.permissions.has("data.export")}
@@ -140,6 +142,28 @@ export default async function ConfiguracionPage() {
           <CardTitle>Roles y permisos</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
+          <div className="space-y-3 rounded-[var(--radius-control)] border border-line p-4">
+            <p className="text-sm font-medium text-ink">Los tres niveles</p>
+            <ol className="space-y-2.5">
+              {NIVELES.map((nivel) => (
+                <li key={nivel.clave} className="flex gap-3">
+                  <span className="flex size-6 shrink-0 items-center justify-center rounded-full bg-accent-soft text-xs font-bold text-accent">
+                    {nivel.nivel}
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium text-ink">{nivel.nombre}</p>
+                    <p className="text-xs text-ink-muted">{nivel.resumen}</p>
+                  </div>
+                </li>
+              ))}
+            </ol>
+            <p className="text-xs text-ink-muted">
+              Ninguna academia ve los datos de otra. Lo impiden dos barreras
+              independientes: la guardia de la aplicación y las políticas de la
+              propia base de datos.
+            </p>
+          </div>
+
           <p className="text-sm text-ink-muted">
             Los permisos se comprueban siempre en el servidor. La edición de roles
             personalizados llegará en una fase posterior; el modelo de datos ya lo

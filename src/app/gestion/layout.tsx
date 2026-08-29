@@ -28,21 +28,21 @@ export default async function ManagerLayout({
     .map((item) => item.href);
 
   return (
-    <div className="flex min-h-dvh bg-surface-sunken">
+    <div className="shell-wash flex min-h-dvh bg-surface-sunken">
       <div className="sticky top-0 hidden h-dvh lg:block">
         <ManagerSidebar allowed={allowed} academyName={ctx.academy.name} />
       </div>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-20 flex h-14 items-center gap-3 border-b border-line bg-surface px-4">
+        <header className="sticky top-0 z-20 flex h-15 items-center gap-3 border-b border-line bg-surface/75 px-4 backdrop-blur-xl">
           <Link href="/gestion" className="lg:hidden">
-            <span className="flex size-8 items-center justify-center rounded-lg bg-accent text-sm font-semibold text-accent-contrast">
+            <span className="flex size-9 items-center justify-center rounded-xl bg-linear-to-br from-accent to-accent-hover text-sm font-bold text-accent-contrast shadow-[inset_0_1px_0_0_oklch(1_0_0/0.25),var(--shadow-soft)]">
               {BRAND.initial}
             </span>
           </Link>
 
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-medium text-ink lg:hidden">
+            <p className="truncate font-display text-[0.9375rem] font-semibold text-ink lg:hidden">
               {ctx.academy.name}
             </p>
           </div>
@@ -68,7 +68,7 @@ export default async function ManagerLayout({
 
           <div className="flex items-center gap-2">
             <span
-              className="flex size-8 items-center justify-center rounded-full bg-surface-muted text-xs font-semibold text-ink-soft"
+              className="flex size-9 items-center justify-center rounded-full bg-surface-muted text-xs font-bold text-ink-soft ring-1 ring-inset ring-[var(--border-subtle)]"
               title={ctx.user.email}
             >
               {initials(ctx.user.firstName, ctx.user.lastName)}
@@ -86,7 +86,7 @@ export default async function ManagerLayout({
           </div>
         </header>
 
-        <main className="mx-auto w-full max-w-6xl flex-1 space-y-6 p-4 sm:p-6">
+        <main className="mx-auto w-full max-w-6xl flex-1 space-y-6 p-4 sm:p-7">
           {children}
         </main>
       </div>

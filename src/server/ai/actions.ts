@@ -5,7 +5,13 @@ import { z } from "zod";
 import { recordAudit } from "@/lib/audit";
 import { requireAcademy, requirePermission } from "@/lib/auth/context";
 import { aiDisponible, askAi } from "@/lib/ai/gateway";
+import {
+  explicarFallo,
+  generarPreguntasLocales,
+  responderConMaterial,
+} from "@/lib/ai/local-engine";
 import { indexarAcademia } from "@/lib/ai/indexer";
+import { comoLlevaElTema } from "./insights";
 import {
   SYSTEM_ALUMNO,
   SYSTEM_COPILOTO,
@@ -29,6 +35,12 @@ export type AiState =
       respuesta?: string;
       fuentes?: { numero: number; titulo: string; localizador: string | null }[];
       sinFuentes?: boolean;
+      /// Quién ha respondido: el modelo contratado o el motor propio.
+      motor?: "modelo" | "local";
+      /// Confianza declarada por el motor local. Es más honesto decirla.
+      confianza?: string;
+      /// Comentario personal sobre cómo lleva ese tema quien pregunta.
+      apunte?: string;
     }
   | undefined;
 
@@ -52,13 +64,6 @@ export async function askStudentAction(
     return { error: parsed.error.issues[0]?.message ?? "Revisa la pregunta." };
   }
 
-  if (!aiDisponible()) {
-    return {
-      error:
-        "Geminis IA todavía no está activada en esta instalación. Configura el proveedor en los ajustes del servidor.",
-    };
-  }
-
   // Recuperación CON permisos: solo el material que este alumno tiene abierto.
   const fragmentos = await recuperarFragmentos({
     academyId: ctx.academy.id,
@@ -69,30 +74,61 @@ export async function askStudentAction(
   });
 
   if (fragmentos.length === 0) {
-    // No se llama al modelo: sin material no hay nada que responder, y
-    // preguntarle igualmente sería invitarle a inventar.
+    // Sin material no hay nada que responder, y preguntarle igualmente a un
+    // modelo sería invitarle a inventar.
     return {
       sinFuentes: true,
       respuesta:
         "No encuentro esa información en el material de tu academia. Puede que ese tema todavía no esté abierto o que no lo tengas incluido en tu plan. Consúltalo con tu preparador.",
       fuentes: [],
+      motor: "local",
     };
   }
 
-  const respuesta = await askAi({
-    academyId: ctx.academy.id,
-    memberId: ctx.membershipId,
-    feature: "student.chat",
-    messages: [
-      { role: "system", content: SYSTEM_ALUMNO },
-      {
-        role: "user",
-        content: `FRAGMENTOS DEL MATERIAL DE LA ACADEMIA:\n\n${construirContexto(fragmentos)}\n\nPREGUNTA DEL ALUMNO:\n${parsed.data.pregunta}`,
-      },
-    ],
-  });
+  // Con proveedor configurado responde el modelo; sin él, el motor local. En
+  // los dos casos se usa el mismo material y se citan las mismas fuentes: la
+  // academia no se queda sin asistente por no contratar una API.
+  let contenido: string;
+  let motor: "modelo" | "local" = "local";
+  let confianza: string | undefined;
 
-  if (!respuesta.ok) return { error: respuesta.reason };
+  if (aiDisponible()) {
+    const respuesta = await askAi({
+      academyId: ctx.academy.id,
+      memberId: ctx.membershipId,
+      feature: "student.chat",
+      messages: [
+        { role: "system", content: SYSTEM_ALUMNO },
+        {
+          role: "user",
+          content: `FRAGMENTOS DEL MATERIAL DE LA ACADEMIA:\n\n${construirContexto(fragmentos)}\n\nPREGUNTA DEL ALUMNO:\n${parsed.data.pregunta}`,
+        },
+      ],
+    });
+
+    if (respuesta.ok) {
+      contenido = respuesta.content;
+      motor = "modelo";
+    } else {
+      // Si el proveedor falla, no se deja al alumno sin respuesta.
+      const local = responderConMaterial(parsed.data.pregunta, fragmentos);
+      contenido = local.texto;
+      confianza = local.confianza;
+    }
+  } else {
+    const local = responderConMaterial(parsed.data.pregunta, fragmentos);
+    contenido = local.texto;
+    confianza = local.confianza;
+  }
+
+  const respuesta = {
+    ok: true,
+    content: contenido,
+    provider: motor === "modelo" ? "proveedor" : "motor-local",
+    model: motor === "modelo" ? "configurado" : "geminis-local",
+    promptTokens: 0,
+    completionTokens: 0,
+  };
 
   // La conversación se guarda con sus citas, para poder comprobarlas después.
   const conversacion = parsed.data.conversationId
@@ -144,8 +180,29 @@ export async function askStudentAction(
 
   revalidatePath("/campus/ia");
 
+  // Coletilla personal: si el alumno pregunta por un tema que lleva flojo, se
+  // le dice con el dato delante y se le ofrece lo que le conviene. Un asistente
+  // que responde igual a quien domina el tema y a quien lleva la mitad fallada
+  // es un buscador, no un asistente.
+  let apunte: string | undefined;
+  if (parsed.data.nodeId) {
+    const como = await comoLlevaElTema({
+      db: ctx.db,
+      studentId: ctx.membershipId,
+      nodeId: parsed.data.nodeId,
+    });
+    if (como && como.ratio >= 0.35) {
+      apunte = `En este tema llevas ${como.fallos} fallos de ${como.vistas} respuestas. Merece la pena que hagas un test de repaso en cuanto termines de leer esto.`;
+    } else if (como && como.ratio <= 0.1) {
+      apunte = `Este tema lo llevas bien: ${como.vistas - como.fallos} aciertos de ${como.vistas}.`;
+    }
+  }
+
   return {
     respuesta: respuesta.content,
+    apunte,
+    motor,
+    confianza,
     fuentes: citas.map((c) => ({
       numero: c.numero,
       titulo: c.titulo,
@@ -176,10 +233,6 @@ export async function generateQuestionsAction(
   if (!parsed.success) {
     return { error: parsed.error.issues[0]?.message ?? "Revisa los datos." };
   }
-  if (!aiDisponible()) {
-    return { error: "Geminis IA no está activada en esta instalación." };
-  }
-
   const nodo = await ctx.db.contentNode.findUnique({
     where: { id: parsed.data.nodeId },
     select: { id: true, label: true, editionId: true, usableForTests: true },
@@ -205,39 +258,71 @@ export async function generateQuestionsAction(
     };
   }
 
-  const dificultades = { EASY: "fáciles", MEDIUM: "de dificultad media", HARD: "difíciles" };
+  const dificultades = {
+    EASY: "fáciles",
+    MEDIUM: "de dificultad media",
+    HARD: "difíciles",
+  };
 
-  const respuesta = await askAi({
-    academyId: ctx.academy.id,
-    memberId: ctx.membershipId,
-    feature: "copilot.generate_questions",
-    maxTokens: 3000,
-    messages: [
-      { role: "system", content: SYSTEM_COPILOTO },
-      {
-        role: "user",
-        content: `MATERIAL DEL TEMA «${nodo.label}»:\n\n${construirContexto(fragmentos)}\n\nGenera ${parsed.data.cantidad} preguntas tipo test ${dificultades[parsed.data.dificultad]} basadas EXCLUSIVAMENTE en este material.\n\nDevuelve SOLO un JSON válido con esta forma, sin texto alrededor:\n{"preguntas":[{"enunciado":"...","opciones":["A","B","C","D"],"correcta":0,"explicacion":"... [1]"}]}`,
-      },
-    ],
-  });
-
-  if (!respuesta.ok) return { error: respuesta.reason };
-
-  let generadas: {
+  type Generada = {
     enunciado: string;
     opciones: string[];
     correcta: number;
     explicacion?: string;
-  }[];
+  };
 
-  try {
-    const json = respuesta.content.replace(/^```json\s*|\s*```$/g, "").trim();
-    const parseado = JSON.parse(json) as { preguntas?: unknown };
-    generadas = (parseado.preguntas ?? []) as typeof generadas;
-  } catch {
+  let generadas: Generada[] = [];
+  let motorUsado: "modelo" | "local" = "local";
+  let modelo = "geminis-local";
+  let proveedor = "motor-local";
+
+  if (aiDisponible()) {
+    const respuesta = await askAi({
+      academyId: ctx.academy.id,
+      memberId: ctx.membershipId,
+      feature: "copilot.generate_questions",
+      maxTokens: 3000,
+      messages: [
+        { role: "system", content: SYSTEM_COPILOTO },
+        {
+          role: "user",
+          content: `MATERIAL DEL TEMA «${nodo.label}»:\n\n${construirContexto(fragmentos)}\n\nGenera ${parsed.data.cantidad} preguntas tipo test ${dificultades[parsed.data.dificultad]} basadas EXCLUSIVAMENTE en este material.\n\nDevuelve SOLO un JSON válido con esta forma, sin texto alrededor:\n{"preguntas":[{"enunciado":"...","opciones":["A","B","C","D"],"correcta":0,"explicacion":"... [1]"}]}`,
+        },
+      ],
+    });
+
+    if (respuesta.ok) {
+      try {
+        const json = respuesta.content.replace(/^```json\s*|\s*```$/g, "").trim();
+        const parseado = JSON.parse(json) as { preguntas?: unknown };
+        generadas = (parseado.preguntas ?? []) as Generada[];
+        motorUsado = "modelo";
+        modelo = respuesta.model;
+        proveedor = respuesta.provider;
+      } catch {
+        // Formato inesperado: se cae al motor local en lugar de dejar al
+        // profesor con las manos vacías.
+        generadas = [];
+      }
+    }
+  }
+
+  if (generadas.length === 0) {
+    // Motor propio: construye preguntas de completar a partir de los datos
+    // concretos del material (plazos, cifras, artículos), que es exactamente lo
+    // que más se pregunta en una oposición.
+    generadas = generarPreguntasLocales(fragmentos, parsed.data.cantidad).map((p) => ({
+      enunciado: p.enunciado,
+      opciones: p.opciones,
+      correcta: p.correcta,
+      explicacion: p.explicacion,
+    }));
+  }
+
+  if (generadas.length === 0) {
     return {
       error:
-        "La respuesta de la IA no ha llegado en el formato esperado. Vuelve a intentarlo.",
+        "No he encontrado datos concretos en este tema con los que construir preguntas. Funciona mejor con material que tenga plazos, cifras o artículos.",
     };
   }
 
@@ -266,8 +351,9 @@ export async function generateQuestionsAction(
         explanation: generada.explicacion ?? null,
         authorId: ctx.membershipId,
         aiProvenance: {
-          proveedor: respuesta.provider,
-          modelo: respuesta.model,
+          proveedor,
+          modelo,
+          motor: motorUsado,
           fecha: new Date().toISOString(),
           solicitadaPor: ctx.membershipId,
           fragmentos: fragmentos.map((f) => ({
@@ -297,17 +383,20 @@ export async function generateQuestionsAction(
     action: "ai.generate_questions",
     entityType: "ContentNode",
     entityId: nodo.id,
-    changes: { tema: nodo.label, generadas: creadas, modelo: respuesta.model },
+    changes: { tema: nodo.label, generadas: creadas, modelo },
   });
 
   revalidatePath("/gestion/tests");
   revalidatePath("/gestion/ia");
 
   return {
+    motor: motorUsado,
     respuesta:
       creadas === 0
         ? "No se ha podido aprovechar ninguna de las preguntas generadas."
-        : `${creadas} preguntas creadas EN BORRADOR sobre «${nodo.label}». Revísalas en el banco de preguntas antes de publicarlas.`,
+        : `${creadas} preguntas creadas EN BORRADOR sobre «${nodo.label}»${
+            motorUsado === "local" ? " con el motor propio" : ""
+          }. Revísalas en el banco de preguntas antes de publicarlas.`,
   };
 }
 
@@ -335,5 +424,94 @@ export async function indexContentAction(): Promise<AiState> {
         ? ` ${fallidos.length} no se han podido procesar: ${fallidos[0].motivo ?? ""}`
         : ""
     }`,
+  };
+}
+
+/**
+ * «¿Por qué he fallado esta?»
+ *
+ * El momento en que un alumno más aprende es justo después de equivocarse, y es
+ * justo cuando no tiene a nadie delante. Esto le da la explicación del
+ * preparador si existe y la refuerza con lo que dice su temario, citándolo.
+ *
+ * Requisitos: la pregunta tiene que ser de un intento suyo, y el material que se
+ * consulte pasa por la misma barrera de permisos que todo lo demás.
+ */
+export async function explainMistakeAction(
+  _prev: AiState,
+  formData: FormData,
+): Promise<AiState> {
+  const ctx = await requireAcademy();
+  if (!ctx.permissions.has("ai.student")) {
+    return { error: "Tu academia no tiene activado el asistente." };
+  }
+
+  const attemptId = String(formData.get("attemptId") ?? "");
+  const questionId = String(formData.get("questionId") ?? "");
+  if (!attemptId || !questionId) return { error: "Falta la pregunta." };
+
+  // El intento tiene que ser de quien lo pide. Sin esto, cualquiera podría
+  // pedir la corrección de un examen ajeno.
+  const intento = await ctx.db.testAttempt.findUnique({
+    where: { id: attemptId },
+    select: { id: true, studentId: true },
+  });
+  if (!intento || intento.studentId !== ctx.membershipId) {
+    return { error: "Ese intento no es tuyo." };
+  }
+
+  const respuesta = await ctx.db.testAttemptAnswer.findFirst({
+    where: { attemptId, questionId },
+    select: { selectedOptionId: true },
+  });
+  if (!respuesta) return { error: "Esa pregunta no estaba en tu intento." };
+
+  const pregunta = await ctx.db.question.findUnique({
+    where: { id: questionId },
+    select: {
+      statement: true,
+      explanation: true,
+      nodeId: true,
+      options: { select: { id: true, text: true, isCorrect: true } },
+    },
+  });
+  if (!pregunta) return { error: "Esa pregunta ya no existe." };
+
+  const correcta = pregunta.options.find((o) => o.isCorrect);
+  if (!correcta) return { error: "Esta pregunta no tiene marcada la correcta." };
+
+  const dada = respuesta.selectedOptionId
+    ? (pregunta.options.find((o) => o.id === respuesta.selectedOptionId)?.text ?? null)
+    : null;
+
+  const fragmentos = await recuperarFragmentos({
+    academyId: ctx.academy.id,
+    membershipId: ctx.membershipId,
+    esPersonal: false,
+    pregunta: `${pregunta.statement} ${correcta.text}`,
+    nodeId: pregunta.nodeId,
+    limite: 4,
+  });
+
+  const explicacion = explicarFallo({
+    enunciado: pregunta.statement,
+    respuestaDada: dada,
+    respuestaCorrecta: correcta.text,
+    explicacionProfesor: pregunta.explanation,
+    fragmentos,
+  });
+
+  return {
+    respuesta: explicacion.texto,
+    motor: "local",
+    confianza: explicacion.confianza,
+    fuentes: explicacion.citas.map((numero) => {
+      const f = fragmentos[numero - 1];
+      return {
+        numero,
+        titulo: f?.nodeLabel ?? f?.sourceTitle ?? "Material de la academia",
+        localizador: f?.locator ?? null,
+      };
+    }),
   };
 }

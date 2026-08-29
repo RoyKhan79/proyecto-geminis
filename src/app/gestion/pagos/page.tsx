@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { CreditCard } from "lucide-react";
+import { CreditCard, Landmark } from "lucide-react";
 import { requirePagePermission } from "@/lib/auth/context";
 import { setPaymentStatusAction } from "@/server/payments/actions";
 import { Button } from "@/components/ui/button";
@@ -106,15 +106,23 @@ export default async function PagosPage({
     <>
       <PageHeader
         title="Pagos"
-        description="Recibos y control de cobros. La pasarela de pago llegará después."
+        description="Recibos y control de cobros. Las cuotas mensuales se emiten desde Remesas."
         actions={
           puedeEscribir ? (
-            <PaymentForm
+            <>
+              <Button asChild variant="secondary">
+                <Link href="/gestion/pagos/remesas">
+                  <Landmark aria-hidden />
+                  Remesas
+                </Link>
+              </Button>
+              <PaymentForm
               alumnos={alumnos.map((a) => ({
                 id: a.id,
                 nombre: `${a.user.firstName} ${a.user.lastName ?? ""}`.trim(),
               }))}
-            />
+              />
+            </>
           ) : null
         }
       />

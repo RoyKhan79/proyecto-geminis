@@ -177,6 +177,59 @@ export async function pickQuestions(
   return mezcladas.slice(0, cantidad);
 }
 
+/**
+ * Preguntas que hoy tocan por repetición espaciada.
+ *
+ * Se ordenan por fecha de repaso: primero las más atrasadas, que son las que
+ * están más cerca de olvidarse del todo. Se respeta el filtro de temas, porque
+ * un alumno puede haber perdido el acceso a un tema desde la última vez.
+ */
+export async function pickDueForReview(
+  db: TenantClient,
+  studentId: string,
+  nodeIds: string[],
+  cantidad: number,
+) {
+  const ahora = new Date();
+  ahora.setHours(23, 59, 59, 999);
+
+  const pendientes = await db.studentQuestionStat.findMany({
+    where: {
+      studentId,
+      nextReviewAt: { not: null, lte: ahora },
+      question: { deletedAt: null, status: "PUBLISHED", nodeId: { in: nodeIds } },
+    },
+    orderBy: { nextReviewAt: "asc" },
+    take: cantidad,
+    select: {
+      question: {
+        select: {
+          id: true,
+          statement: true,
+          explanation: true,
+          difficulty: true,
+          node: { select: { id: true, label: true } },
+          options: {
+            select: { id: true, text: true, isCorrect: true, position: true },
+            orderBy: { position: "asc" },
+          },
+        },
+      },
+    },
+  });
+
+  return pendientes.map((p) => p.question);
+}
+
+/** Cuántas preguntas tiene hoy pendientes de repaso. */
+export async function countDueForReview(db: TenantClient, studentId: string) {
+  const hoy = new Date();
+  hoy.setHours(23, 59, 59, 999);
+  return db.studentQuestionStat.count({
+    where: { studentId, nextReviewAt: { not: null, lte: hoy } },
+  });
+}
+
 /** Historial de intentos del alumno. */
 export async function loadAttempts(db: TenantClient, studentId: string, take = 20) {
   return db.testAttempt.findMany({

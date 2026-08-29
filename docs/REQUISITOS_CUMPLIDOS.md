@@ -28,10 +28,10 @@ Recorrido de los 136 puntos del encargo. Tres estados:
 | # | Requisito | Estado | Dónde |
 |---|-----------|--------|-------|
 | 11 | Banco de preguntas con estados | Hecho | borrador → revisión → publicada → posiblemente desactualizada |
-| 12 | Tipos de test | Parcial | por tema, aleatorio y de errores. Simulacro y examen oficial: modelados |
+| 12 | Tipos de test | Hecho | por tema, aleatorio, de errores, repaso programado y simulacro con plantilla de examen |
 | 13 | Sistema de errores | Hecho | `StudentQuestionStat` y «test de mis errores» |
-| 14 | Simulacros | Preparado | `ExamBlueprint` modelado |
-| 15 | Planificador de estudio | Preparado | `StudyPlan` en el modelo |
+| 14 | Simulacros | Hecho | plantilla de examen, temporizador, penalización por fallo y percentil (ADR-0027) |
+| 15 | Planificador de estudio | Hecho | repetición espaciada SM-2 y propuestas diarias con su motivo (ADR-0029, ADR-0030) |
 
 ## Inteligencia artificial (16-22)
 
@@ -40,8 +40,8 @@ Recorrido de los 136 puntos del encargo. Tres estados:
 | 16 | IA vertical, no un ChatGPT pegado | Hecho | responde solo con material de la academia |
 | 17 | Respuestas con citas | Hecho | `[1]`, `[2]` con documento y localizador |
 | 18 | IA del alumno | Hecho | `/campus/ia` |
-| 19 | Perfil de aprendizaje | Parcial | se calculan fortalezas y debilidades; aún no se envían a la IA |
-| 20 | Recomendaciones | Parcial | «dónde flojeas» en tests; recomendaciones activas pendientes |
+| 19 | Perfil de aprendizaje | Hecho | fortalezas y debilidades calculadas y usadas por el asistente al responder |
+| 20 | Recomendaciones | Hecho: «Geminis te propone» calcula qué toca hoy con el motivo delante (ADR-0030) |
 | 21 | Copiloto del profesor | Hecho | generación de preguntas desde el material |
 | 22 | Validación humana obligatoria | Hecho | todo nace en borrador; no existe ruta que publique solo |
 
@@ -53,8 +53,11 @@ Recorrido de los 136 puntos del encargo. Tres estados:
 | 24 | Alerta de cambio con impacto | Hecho | calcula temas y preguntas afectadas |
 | 25 | Versionado de contenidos | Preparado | `ContentNodeVersion` modelado |
 | 57 | Modelo antes que rastreador | Hecho | flujo completo; el BOE ya conectado para convocatorias |
+| 124 | Impacto de un cambio legal DENTRO de una academia | Hecho | «el artículo 14 afecta a estos temas y a estas preguntas», solo en su academia |
+| 125 | Alerta con propuesta y decisión | Hecho | norma, artículo, contenido afectado y aceptar / editar / ignorar |
 | 126 | Nunca modificar el temario solo | Hecho | genera alerta y espera decisión |
 | 127 | Preguntas marcadas como obsoletas | Hecho | verificado con el art. 24 |
+| 128 | Grafo de conocimiento | Parcial | norma ↔ artículo ↔ tema ↔ pregunta en PostgreSQL; falta enganchar simulacro y clase |
 
 ## Gestión (26-36)
 
@@ -87,6 +90,27 @@ Recorrido de los 136 puntos del encargo. Tres estados:
 | 41 | Almacenamiento con permisos | Hecho | ruta protegida, sin URLs públicas |
 | 42 | Vídeo sin infraestructura propia | Hecho | enlaces externos con proveedor modelado |
 
+## Plataforma y negocio (58-60)
+
+| # | Requisito | Estado |
+|---|-----------|--------|
+| 58 | Diseñado pensando en una API futura | Preparado: la lógica vive en `src/server/**` como funciones de TypeScript sin dependencia de Next; exponerla sería mover esa carpeta (ADR-0001). No hay API REST todavía |
+| 59 | Arquitectura de planes SaaS | Hecho: `Plan` con STARTER / PRO / BUSINESS / ENTERPRISE y límites de alumnos, profesores, administradores, oposiciones, almacenamiento e IA. La facturación no se ha construido, como pedía el punto |
+| 60 | White-label | Hecho en su versión ligera: logotipo, color de marca y dominio por academia. El acento es un token, así que cambiarlo repinta todo, incluidos los iconos (ADR-0032). La resolución de dominio propio queda modelada sin activar |
+
+## Método de trabajo (71-78)
+
+| # | Requisito | Estado |
+|---|-----------|--------|
+| 71 | Primer MVP por bloques, sin construirlo todo a la vez | Hecho: los seis bloques —core, campus, tests, importación, IA y normativa— terminados y verificados uno a uno |
+| 72 | Lo que NO había que construir todavía | Respetado: streaming propio, apps nativas, aprendizaje automático avanzado, contabilidad, WhatsApp, SMS, videoconferencia propia, rastreador masivo, marketplace y gamificación siguen fuera, y está escrito por qué |
+| 73 | Criterio para priorizar (A–F) | Hecho: encabeza `MVP_ROADMAP.md` y cada fase indica a qué preguntas responde |
+| 74 | Los seis diferenciadores | Hecho los seis: migración (importación con simulación y reversión), IA integrada, legislación, aprendizaje personalizado, retención y experiencia móvil |
+| 75 | Visión futura | En buena parte alcanzada: Geminis ya sabe qué prepara el alumno, cuándo examina, qué domina, qué falla y qué le conviene hoy; el profesor ve quién se está desenganchando y qué preguntas fallan; la dirección ve altas, bajas, pagos y riesgo |
+| 76 | No sustituir al preparador, hacerlo más potente | Hecho por diseño: la IA nunca publica sola, el profesor marca el ritmo y el material es de la academia |
+| 77 | Documentos antes de construir | Hecho: los seis pedidos, más siete escritos después |
+| 78 | Orden de desarrollo por fases | Hecho: fases 0 a 7 en el orden pedido, ninguna empezada dejando la anterior rota |
+
 ## Diseño y experiencia (43-46, 68-70, 79-85)
 
 | # | Requisito | Estado |
@@ -113,17 +137,17 @@ Recorrido de los 136 puntos del encargo. Tres estados:
 | 49 | Auditoría | Hecho, con enmascarado de datos sensibles |
 | 50 | RBAC centralizado | Hecho, catálogo único |
 | 51 | Seguridad | Hecho + auditado |
-| 52 | RGPD | Parcial: anonimización y exportación hechas; falta circuito formal |
+| 52 | RGPD | Hecho: anonimización, exportación, política de privacidad y condiciones de uso (ADR-0033) |
 | 53 | Gateway de IA | Hecho |
 | 54 | Coste de IA | Hecho, por academia, persona y funcionalidad |
 | 55 | Búsqueda con metadatos y aislamiento | Hecho |
 | 56 | Control de alucinaciones | Hecho: sin fuentes, no se llama al modelo |
-| 61 | Testing de lo crítico | Hecho: 72 pruebas |
+| 61 | Testing de lo crítico | Hecho: 109 pruebas |
 | 62 | Academia demo | Hecho: 24 personas, 2 oposiciones, PDFs, 21 preguntas, normativa |
 | 63 | Modo desarrollo fácil | Hecho: `npm run setup`, sin Docker |
-| 64 | Documentación | Hecho: 9 documentos |
+| 64 | Documentación | Hecho: 13 documentos |
 | 65 | Sin código gigante ni duplicado | Hecho: lógica en `src/server`, componentes sin negocio |
-| 66-67 | Decidir y avanzar, documentando | Hecho: 25 decisiones registradas |
+| 66-67 | Decidir y avanzar, documentando | Hecho: 39 decisiones registradas |
 | 86 | Nada de datos falsos en producción | Hecho: todo sale de la base de datos |
 | 87 | Observabilidad preparada | Parcial: auditoría sí, métricas pendientes |
 | 88 | Backups | Pendiente: decisión de despliegue |
@@ -138,7 +162,7 @@ Recorrido de los 136 puntos del encargo. Tres estados:
 | 94 | Jerarquía flexible | Hecho: árbol libre |
 | 95-97 | Tipos de oposición y configurador | Hecho: tipos editables, secciones que nombra la academia |
 | 98-100 | Subida masiva y asistente de temario | Parcial: subida hecha; troceado automático hecho; asistente guiado pendiente |
-| 101-103 | Importación de preguntas | Parcial: el motor de importación está; el mapeo específico de preguntas falta |
+| 101-103 | Importación de preguntas | Hecho: asistente propio, detección de repetidas, simulación y reversión (ADR-0034 a 0036) |
 | 104-105 | Fuentes activables | Hecho: banderas por rama, heredables |
 | 106 | Matriz de permisos de contenido | Hecho |
 | 107-111 | Derechos de acceso y packs | Hecho, incluida la IA |
@@ -153,7 +177,7 @@ Recorrido de los 136 puntos del encargo. Tres estados:
 |---|-----------|--------|
 | 117-118 | Generación con procedencia | Hecho |
 | 119 | Nunca publicar directamente | Hecho |
-| 120-121 | Simulacros y blueprint | Preparado |
+| 120-121 | Simulacros y blueprint | Hecho: plantilla, temporizador, penalización del examen y percentil (ADR-0027) |
 | 122-123 | Convocatorias y versionado | Hecho / Preparado |
 | 129-131 | IA para preparador y alumno, con contexto | Hecho |
 | 132-133 | Productos y catálogo | Hecho |
@@ -176,17 +200,35 @@ Peticiones posteriores, todas construidas:
 - **Salas online permanentes** con entrada controlada.
 - **App móvil** instalable.
 
+## Añadido después, ya construido
+
+- **Simulacros** con plantilla de examen, temporizador, penalización por fallo
+  como en la convocatoria y percentil frente al resto de la academia.
+- **Geminis IA con motor propio**: responde con el material de la academia sin
+  contratar ninguna API. Ya no existe la pantalla de «no disponible».
+- **«¿Por qué he fallado?»** en cada pregunta errada, con la explicación del
+  preparador reforzada por el temario y citada.
+- **Repetición espaciada** que devuelve cada pregunta justo antes de que se
+  olvide, con la calidad deducida del acierto y del tiempo.
+- **Propuestas diarias** en el Campus, cada una con el dato que la justifica.
+- **Importación de bancos de preguntas** con detección de repetidas.
+- **Recuperación de contraseña y verificación de correo.**
+- **Rediseño completo**: tipografía, color, fondo, iconos y componentes.
+- **Política de privacidad y condiciones de uso.**
+- **Guía de instalación en el móvil** y de pruebas academia ↔ alumno.
+- **Auditoría interna automática** que revisa el código en cada cambio.
+
 ## Lo que queda
 
 Por orden de urgencia real:
 
-1. Simulacros con plantilla de examen y percentiles.
-2. Importación específica de bancos de preguntas.
-3. Asistente guiado de importación de temario.
-4. Planificador de estudio y repetición espaciada.
-5. Perfil de aprendizaje enviado a la IA.
-6. Selección de texto dentro del PDF para preguntar.
-7. Recuperación de contraseña y verificación de correo.
-8. Pasarela de pago.
-9. Boletines autonómicos en el radar.
-10. Row Level Security como segunda barrera.
+1. Asistente guiado de importación de temario.
+2. Perfil de aprendizaje enviado a la IA.
+3. Selección de texto dentro del PDF para preguntar.
+4. Pasarela de pago.
+5. Búsqueda vectorial con `pgvector` (hoy es léxica, ADR-0011).
+6. Boletines autonómicos en el radar.
+7. Row Level Security como segunda barrera.
+8. Notificaciones push.
+9. Límite de dispositivos por cuenta.
+10. Métricas de observabilidad y política de copias de seguridad.

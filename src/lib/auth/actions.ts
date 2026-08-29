@@ -1,5 +1,6 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { z } from "zod";
@@ -11,6 +12,7 @@ import { hashPassword, needsRehash, verifyPassword } from "./password";
 import {
   clearSessionCookie,
   createSession,
+  revokeAllSessions,
   readSessionCookie,
   revokeSession,
   setActiveAcademy,
@@ -59,8 +61,8 @@ export async function signInAction(
   const { email, password } = parsed.data;
   const { ip, userAgent } = await requestInfo();
 
-  const byIp = rateLimit(`login:ip:${ip}`, { limit: 20, windowSeconds: 600 });
-  const byAccount = rateLimit(`login:acct:${email}`, {
+  const byIp = await rateLimit(`login:ip:${ip}`, { limit: 20, windowSeconds: 600 });
+  const byAccount = await rateLimit(`login:acct:${email}`, {
     limit: 8,
     windowSeconds: 600,
   });
@@ -122,7 +124,7 @@ export async function signInAction(
     data: { lastLoginAt: new Date() },
   });
 
-  resetRateLimit(`login:acct:${email}`);
+  await resetRateLimit(`login:acct:${email}`);
 
   await recordAudit({
     academyId: memberships.length === 1 ? memberships[0].academyId : null,
@@ -188,4 +190,31 @@ export async function switchAcademyAction(formData: FormData) {
   });
 
   redirect("/inicio");
+}
+
+
+/**
+ * Cerrar todas las sesiones menos esta.
+ *
+ * Es lo que alguien pulsa cuando se ha dejado la sesión abierta en un ordenador
+ * que no era suyo, o cuando sospecha que le han prestado su cuenta.
+ */
+export async function revokeOtherSessionsAction() {
+  const ctx = await getAuthContext();
+  if (!ctx) redirect("/entrar");
+
+  await revokeAllSessions(ctx.user.id, ctx.sessionId);
+
+  if (ctx.academy) {
+    await recordAudit({
+      academyId: ctx.academy.id,
+      actorId: ctx.user.id,
+      action: "auth.revoke_other_sessions",
+      entityType: "User",
+      entityId: ctx.user.id,
+      changes: {},
+    });
+  }
+
+  revalidatePath("/campus/perfil");
 }
