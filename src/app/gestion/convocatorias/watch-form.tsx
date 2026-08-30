@@ -13,6 +13,9 @@ import {
   Textarea,
 } from "@/components/ui/primitives";
 
+/**
+ * Poner una oposición bajo vigilancia del radar del BOE.
+ */
 export function WatchForm({
   oposiciones,
   correoAcademia,

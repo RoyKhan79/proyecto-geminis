@@ -31,6 +31,11 @@ const cobroSchema = z.object({
   notes: z.string().trim().max(500).optional(),
 });
 
+/**
+ * Registra un cobro: en efectivo, con tarjeta o por transferencia.
+ *
+ * @returns Confirmación, o el motivo.
+ */
 export async function createPaymentAction(
   _prev: PaymentState,
   formData: FormData,
@@ -88,6 +93,13 @@ const estadoSchema = z.object({
   suspenderAcceso: z.string().optional(),
 });
 
+/**
+ * Cambia el estado de un recibo.
+ *
+ * @remarks Marcarlo como **devuelto suspende el acceso del alumno**. Es lo que
+ *   hace que la lista de pagos sirva para algo y no sea solo un registro, y por
+ *   eso conviene saberlo antes de pulsar.
+ */
 export async function setPaymentStatusAction(formData: FormData) {
   const ctx = await requirePermission("payments.write");
   const parsed = estadoSchema.safeParse(Object.fromEntries(formData.entries()));

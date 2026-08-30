@@ -17,6 +17,9 @@ import {
 } from "@/components/ui/primitives";
 import { cn } from "@/lib/utils";
 
+/**
+ * Un tema al que se puede asociar la pregunta.
+ */
 export type TopicOption = {
   id: string;
   label: string;
@@ -25,6 +28,9 @@ export type TopicOption = {
   edition: { name: string; opposition: { name: string } };
 };
 
+/**
+ * Formulario para crear o editar una pregunta del banco.
+ */
 export function QuestionForm({
   topics,
   puedePublicar,

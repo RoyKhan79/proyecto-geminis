@@ -19,6 +19,9 @@ import {
 } from "@/components/ui/primitives";
 import { cn, initials } from "@/lib/utils";
 
+/**
+ * Una publicación del muro, con sus comentarios.
+ */
 export type PublicacionMuro = {
   id: string;
   title: string | null;
@@ -48,6 +51,9 @@ const relativo = (iso: string) => {
   return dias === 1 ? "ayer" : `hace ${dias} días`;
 };
 
+/**
+ * El muro de una clase: avisos de la academia y comentarios.
+ */
 export function Wall({
   publicaciones,
   grupos,

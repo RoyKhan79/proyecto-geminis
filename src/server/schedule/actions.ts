@@ -85,6 +85,14 @@ function calcularFechas(
   return fechas.length > 0 ? fechas : [primera];
 }
 
+/**
+ * Crea clases en la agenda, de una en una o repetidas cada semana.
+ *
+ * @returns Cuántas se han creado, o el motivo.
+ * @remarks Las fechas se manejan en hora **local**. Con `toISOString()`, una
+ *   clase a las 00:00 en España se guardaría el día anterior, y el error se
+ *   acumula sin que nadie lo note hasta que el calendario va corrido.
+ */
 export async function crearClasesAction(
   _prev: AgendaState,
   formData: FormData,

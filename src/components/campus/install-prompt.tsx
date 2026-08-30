@@ -19,6 +19,12 @@ type PromptEvent = Event & {
 
 const CLAVE_DESCARTADO = "geminis:instalacion-descartada";
 
+/**
+ * El aviso para instalar la aplicación en el móvil.
+ *
+ * Solo aparece si el navegador dice que se puede, y se calla si ya se ha
+ * descartado: insistir con esto es la forma de que se deje de leer.
+ */
 export function InstallPrompt() {
   const [evento, setEvento] = useState<PromptEvent | null>(null);
   const [visible, setVisible] = useState(false);

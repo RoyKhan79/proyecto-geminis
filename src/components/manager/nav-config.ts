@@ -40,8 +40,19 @@ export type NavItem = {
   phase?: string;
 };
 
+/**
+ * Un bloque del menú de Manager, con sus destinos.
+ */
 export type NavSection = { title?: string; items: NavItem[] };
 
+/**
+ * El menú de Manager, agrupado por áreas.
+ *
+ * Cada destino lleva el permiso que hace falta para verlo, así que el menú se
+ * construye con los permisos de quien ha entrado. **Ocultar no es autorizar**:
+ * cada pantalla vuelve a comprobarlo por su cuenta, porque una dirección se
+ * puede escribir a mano.
+ */
 export const MANAGER_NAV: NavSection[] = [
   {
     items: [

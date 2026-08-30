@@ -86,6 +86,12 @@ export async function createAcademyAction(
   };
 }
 
+/**
+ * Activa o suspende una academia entera.
+ *
+ * Suspender corta el acceso a todo el mundo de esa academia, alumnado incluido.
+ * Es para impagos, no para el día a día.
+ */
 export async function setAcademyStatusAction(formData: FormData) {
   const ctx = await requirePlatformAdmin();
   const academyId = String(formData.get("academyId") ?? "");

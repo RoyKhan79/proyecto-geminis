@@ -39,6 +39,13 @@ function enlace(valor: Enlace): string | null {
   return valor.texto ?? null;
 }
 
+/**
+ * La fecha en el formato que pide la dirección del BOE.
+ *
+ * @returns `AAAAMMDD` en hora **local**. Con `toISOString()`, a partir de las
+ *   diez de la noche en España se pediría el sumario del día siguiente, que aún
+ *   no existe.
+ */
 export function formatoFechaBoe(fecha: Date): string {
   const y = fecha.getUTCFullYear();
   const m = String(fecha.getUTCMonth() + 1).padStart(2, "0");
@@ -46,6 +53,13 @@ export function formatoFechaBoe(fecha: Date): string {
   return `${y}${m}${d}`;
 }
 
+/**
+ * El BOE de ese día todavía no está publicado.
+ *
+ * Es un caso normal, no un fallo: el sumario sale por la mañana, y si el radar
+ * corre antes hay que reintentar, no avisar a nadie. Por eso es un error propio
+ * y no uno genérico.
+ */
 export class BoeNoPublicadoError extends Error {
   constructor(fecha: string) {
     super(`El BOE del ${fecha} no está disponible (festivo o aún sin publicar).`);

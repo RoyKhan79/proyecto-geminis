@@ -9,6 +9,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, Field, Input } from "@/components/ui/primitives";
 
+/**
+ * Poner una contraseña nueva desde el enlace de recuperación.
+ */
 export function ResetForm({ token }: { token: string }) {
   const [state, formAction, pending] = useActionState<RecoveryState, FormData>(
     resetPasswordAction,

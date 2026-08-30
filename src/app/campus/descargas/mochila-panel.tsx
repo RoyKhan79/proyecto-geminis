@@ -44,6 +44,9 @@ function talla(bytes: number): string {
 
 type Estado = "listo" | "sin-conexion" | "error";
 
+/**
+ * La pantalla de descargas: qué se puede guardar y qué hay guardado.
+ */
 export function MochilaPanel({
   membershipId,
   temasIniciales,

@@ -15,6 +15,7 @@ import {
   type FieldKey,
 } from "./students";
 
+/** Lo que el asistente de importación devuelve en cada paso. */
 export type ImportState = { error?: string; ok?: boolean } | undefined;
 
 const MAX_BYTES = 10 * 1024 * 1024;

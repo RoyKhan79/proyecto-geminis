@@ -7,6 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, Textarea } from "@/components/ui/primitives";
 import { cn } from "@/lib/utils";
 
+/**
+ * Un mensaje de una conversación, listo para pintar.
+ */
 export type MensajeVista = {
   id: string;
   body: string;

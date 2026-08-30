@@ -37,6 +37,19 @@ Las etiquetas son las habituales:
 
 ---
 
+## Cobertura
+
+Todo lo exportado —funciones, componentes, tipos y constantes— lleva su
+comentario. `npm run docs:faltan` lo comprueba y hoy dice cero.
+
+Lo que queda fuera a propósito: las propiedades de los tipos que infiere el
+compilador (la forma de un `where`, por ejemplo) y las exportaciones de
+convención de Next.js como `metadata`. Ni unas ni otras las escribió nadie, y
+documentarlas llenaría la referencia de ruido. El informe las cuenta aparte para
+que quede dicho que no se están escondiendo.
+
+---
+
 ## Dos avisos
 
 **Lo que devuelve `null` casi nunca es un error.** En este sistema, «no

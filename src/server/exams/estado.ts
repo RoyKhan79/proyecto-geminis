@@ -26,6 +26,13 @@ export type EntregaParaEstado = {
   submittedAt: Date | null;
 };
 
+/**
+ * En qué momento está un examen para un alumno concreto.
+ *
+ * Cada fase lleva lo que hace falta para pintarla: cuándo abre, cuándo termina,
+ * cuántos segundos quedan. Es una unión discriminada a propósito, para que no se
+ * pueda leer «cuándo termina» de un examen que todavía no ha empezado.
+ */
 export type EstadoExamen =
   /** Publicado pero todavía no ha llegado su hora. */
   | { fase: "no_abierto"; abreEn: Date }

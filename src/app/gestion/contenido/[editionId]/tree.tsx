@@ -38,6 +38,9 @@ import {
 } from "@/components/ui/primitives";
 import { cn } from "@/lib/utils";
 
+/**
+ * Un nodo del árbol tal como lo necesita la pantalla.
+ */
 export type TreeNode = {
   id: string;
   parentId: string | null;
@@ -79,6 +82,9 @@ const SECTION_KINDS: { value: string; label: string; hint: string }[] = [
   { value: "CUSTOM", label: "Carpeta libre", hint: "Lo que necesites" },
 ];
 
+/**
+ * El árbol de contenido, con arrastrar y soltar para reordenar.
+ */
 export function ContentTree({
   editionId,
   nodes,

@@ -13,6 +13,9 @@ const SUGERENCIAS = [
   "Hazme cinco preguntas de este tema",
 ];
 
+/**
+ * La caja para preguntarle a Geminis, con las citas de la respuesta.
+ */
 export function AskBox({
   temas,
   temaActual,

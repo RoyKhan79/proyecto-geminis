@@ -26,6 +26,12 @@ export function inicioDeMes(fecha: Date): Date {
   return new Date(fecha.getFullYear(), fecha.getMonth(), 1, 0, 0, 0, 0);
 }
 
+/**
+ * El nombre del mes en español, para el concepto del recibo.
+ *
+ * @returns «septiembre de 2026». Lo lee una persona en su extracto bancario, y
+ *   por eso va escrito y no como `2026-09`.
+ */
 export function nombreDelMes(fecha: Date): string {
   return fecha.toLocaleDateString("es-ES", { month: "long", year: "numeric" });
 }
@@ -65,6 +71,13 @@ export function fechaDeCargo(mes: Date, dia: number): Date {
   return new Date(mes.getFullYear(), mes.getMonth(), Math.min(dia, ultimoDia));
 }
 
+/**
+ * Un cargo que entraría en la remesa del mes.
+ *
+ * Se calcula antes de emitir nada para poder enseñar el detalle: cuántos
+ * alumnos, cuánto suma y **quién se queda fuera y por qué**. Emitir una remesa
+ * a ciegas es cómo se descubre en el banco que faltaban diez recibos.
+ */
 export type LineaPrevista = {
   studentId: string;
   nombre: string;

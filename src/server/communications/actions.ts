@@ -28,6 +28,15 @@ const envioSchema = z.object({
   porCorreo: z.string().optional(),
 });
 
+/**
+ * Envía una comunicación a muchos destinatarios.
+ *
+ * @returns A cuántos ha salido, o el motivo.
+ * @remarks Los destinatarios se resuelven **en el servidor** a partir del
+ *   criterio —un grupo, un curso, quien deba dinero—, no de una lista que
+ *   mande el navegador. Así no se puede escribir a quien no toca cambiando la
+ *   petición.
+ */
 export async function sendCommunicationAction(
   _prev: ComState,
   formData: FormData,

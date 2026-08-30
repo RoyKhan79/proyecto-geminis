@@ -56,6 +56,7 @@ export function claveDia(fecha: Date): string {
   return `${anio}-${mes}-${dia}`;
 }
 
+/** Una clase colocada en el calendario, ya con su hora local resuelta. */
 export type ClaseEnAgenda = {
   id: string;
   title: string;

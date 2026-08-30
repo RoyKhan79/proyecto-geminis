@@ -13,15 +13,27 @@ import {
   Textarea,
 } from "@/components/ui/primitives";
 
+/**
+ * Un curso, tal como se ofrece en el desplegable.
+ */
 export type CursoOpcion = {
   id: string;
   name: string;
   grupos: { id: string; name: string }[];
 };
 
+/**
+ * Un profesor, tal como se ofrece en el desplegable.
+ */
 export type ProfesorOpcion = { id: string; nombre: string };
+/**
+ * Un tema del temario, para poder decir de qué va la clase.
+ */
 export type TemaOpcion = { id: string; label: string };
 
+/**
+ * Formulario para programar una clase en la agenda.
+ */
 export function ClassForm({
   cursos,
   profesores,

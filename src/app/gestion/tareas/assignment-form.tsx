@@ -13,6 +13,9 @@ import {
   Textarea,
 } from "@/components/ui/primitives";
 
+/**
+ * Formulario para mandar una tarea.
+ */
 export function AssignmentForm({
   cursos,
   temas,

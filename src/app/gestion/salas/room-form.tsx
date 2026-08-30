@@ -6,6 +6,9 @@ import { createRoomAction, type TaskState } from "@/server/tasks/actions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, Field, Input, Select } from "@/components/ui/primitives";
 
+/**
+ * Crear una sala online permanente.
+ */
 export function RoomForm({
   cursos,
 }: {

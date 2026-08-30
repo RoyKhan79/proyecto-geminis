@@ -68,6 +68,7 @@ export async function loadClassBoard(db: TenantClient) {
   };
 }
 
+/** Una clase en el listado, con su profesor, su grupo y su asistencia. */
 export type ClaseLista = Awaited<
   ReturnType<typeof loadClassBoard>
 >["proximas"][number];

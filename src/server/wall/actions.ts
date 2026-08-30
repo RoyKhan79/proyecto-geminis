@@ -86,6 +86,11 @@ export async function ambitosDelUsuario(
   };
 }
 
+/**
+ * Publica un aviso en el muro de una clase.
+ *
+ * @returns Confirmación, o el motivo. El texto se sanea antes de guardarse.
+ */
 export async function publishWallPostAction(
   _prev: WallState,
   formData: FormData,
@@ -147,6 +152,12 @@ const comentarSchema = z.object({
   body: z.string().trim().min(1, "Escribe tu comentario.").max(2000),
 });
 
+/**
+ * Comenta una publicación del muro.
+ *
+ * @returns Confirmación, o el motivo. Se comprueba que quien comenta pertenezca
+ *   a esa clase: el muro de un grupo es de ese grupo.
+ */
 export async function commentWallPostAction(
   _prev: WallState,
   formData: FormData,

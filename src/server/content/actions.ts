@@ -48,6 +48,13 @@ const createSchema = z.object({
   estimatedMinutes: z.coerce.number().int().min(0).max(10000).optional(),
 });
 
+/**
+ * Crea un apartado o un tema en el árbol de contenido.
+ *
+ * @returns Confirmación, o el motivo. La ruta, la profundidad y la posición las
+ *   calcula el servicio del árbol: escribirlas a mano desincroniza los permisos
+ *   por rama, que se resuelven con esa misma ruta.
+ */
 export async function createNodeAction(
   _prev: ContentState,
   formData: FormData,
@@ -110,6 +117,13 @@ function tristate(value?: string): boolean | null {
   return null;
 }
 
+/**
+ * Edita un nodo: su nombre, su descripción y sus banderas de uso.
+ *
+ * @returns Confirmación, o el motivo. Las banderas se heredan hacia abajo, así
+ *   que cambiarlas en un apartado afecta a todo lo que cuelga salvo que un hijo
+ *   diga otra cosa.
+ */
 export async function updateNodeAction(
   _prev: ContentState,
   formData: FormData,

@@ -33,6 +33,13 @@ export type Propuesta = {
 
 const PESO: Record<Propuesta["urgencia"], number> = { alta: 0, media: 1, baja: 2 };
 
+/**
+ * Qué le conviene estudiar hoy a este alumno, y **por qué**.
+ *
+ * @returns Las propuestas, cada una con su motivo: repasos que tocan, temas
+ *   recién abiertos, lo que lleva fallando. El motivo no es adorno: una
+ *   recomendación sin explicación no se sigue, se ignora.
+ */
 export async function proponerPlanDelDia(params: {
   db: TenantClient;
   academyId: string;

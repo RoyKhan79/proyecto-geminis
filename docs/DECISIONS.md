@@ -603,3 +603,38 @@ Campus se captura con tamaño de teléfono, porque enseñarlo estirado a 1440 px
 sería enseñar otra cosa.
 **Si falta una captura** no se rompe la página: se pinta un aviso con el comando
 que hay que lanzar.
+
+### ADR-0058 · La referencia del código se genera, y se documenta lo que no se ve en la firma
+**Decisión.** Documentación estilo Doxygen con **TypeDoc**, no con Doxygen. Las
+etiquetas son las mismas —`@param`, `@returns`, `@throws`, `@example`— pero el
+lector es otro: Doxygen entiende C y C++, y de TypeScript solo lee lo que se le
+parece a JavaScript, así que pierde los tipos, los genéricos y los tipos de
+retorno, que es justo lo que hay que documentar. TypeDoc lee el proyecto con el
+compilador, y los tipos de la referencia son los de verdad.
+
+```
+npm run docs         genera docs/api
+npm run docs:faltan  dice qué queda por documentar
+```
+
+**Qué se documenta.** Lo que **no se ve en la firma**. Que una función se llame
+`getStudent` ya dice que trae un alumno; lo que hay que escribir es que devuelve
+`null` tanto si no existe como si es de otra academia, y por qué las dos cosas
+se responden igual. Repetir el nombre de la función en prosa es ruido.
+
+**Qué NO se documenta, y por qué se dice.** `npm run docs:faltan` separa tres
+cosas en lugar de dar un número:
+- lo que falta de verdad (hoy, cero),
+- **1430 propiedades de tipos que infiere el compilador**: la forma de un `where`
+  que devuelve una función, por ejemplo. Nadie las escribió y no se documentan,
+  se leen,
+- **67 exportaciones de convención de Next.js** (`metadata`, `viewport`…), que
+  lee el framework y no forman parte de la API de nadie.
+
+Un informe que mezclara las tres daría 1497 pendientes, no se miraría nunca, y
+entonces el día que falte algo de verdad nadie lo vería. Es el mismo problema
+que ADR-0056 con las pruebas que pasan sin probar nada.
+
+**Dónde vive cada cosa.** La referencia dice el **qué**; `DECISIONS.md` dice el
+**porqué**. Cuando algo del código parece raro, la respuesta suele estar aquí
+antes que en la firma de la función.

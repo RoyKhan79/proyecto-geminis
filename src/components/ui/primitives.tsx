@@ -30,6 +30,7 @@ export function Card({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
+/** Cabecera de una tarjeta: título y descripción, con su separación ya puesta. */
 export function CardHeader({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
@@ -39,6 +40,7 @@ export function CardHeader({ className, ...props }: React.ComponentProps<"div">)
   );
 }
 
+/** Título de una tarjeta. Va en `<h3>`: el nivel lo pone la jerarquía de la página. */
 export function CardTitle({ className, ...props }: React.ComponentProps<"h3">) {
   return (
     <h3
@@ -51,6 +53,7 @@ export function CardTitle({ className, ...props }: React.ComponentProps<"h3">) {
   );
 }
 
+/** La frase que acompaña al título de una tarjeta. */
 export function CardDescription({
   className,
   ...props
@@ -58,10 +61,12 @@ export function CardDescription({
   return <p className={cn("text-sm text-ink-muted", className)} {...props} />;
 }
 
+/** El cuerpo de una tarjeta. */
 export function CardContent({ className, ...props }: React.ComponentProps<"div">) {
   return <div className={cn("p-5 pt-0", className)} {...props} />;
 }
 
+/** El pie de una tarjeta, normalmente con los botones. */
 export function CardFooter({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
@@ -76,6 +81,12 @@ export function CardFooter({ className, ...props }: React.ComponentProps<"div">)
 
 // ── Formulario ───────────────────────────────────────────────────────────────
 
+/**
+ * Etiqueta de un campo.
+ *
+ * Casi siempre es mejor {@link Field}, que además coloca la ayuda y el error y
+ * los enlaza con `aria` para que un lector de pantalla los lea al entrar.
+ */
 export function Label({
   className,
   required,
@@ -99,10 +110,12 @@ export function Label({
 const fieldStyles =
   "w-full rounded-[var(--radius-control)] border border-line bg-surface px-3 py-2 text-sm text-ink placeholder:text-ink-muted transition-colors focus:border-accent disabled:cursor-not-allowed disabled:opacity-60 aria-[invalid=true]:border-critical";
 
+/** Campo de texto, con los estados de foco y error del sistema de diseño. */
 export function Input({ className, ...props }: React.ComponentProps<"input">) {
   return <input className={cn(fieldStyles, "h-10", className)} {...props} />;
 }
 
+/** Campo de texto largo. Se puede estirar en vertical, no en horizontal. */
 export function Textarea({
   className,
   ...props
@@ -112,6 +125,7 @@ export function Textarea({
   );
 }
 
+/** Desplegable nativo. Nativo a propósito: en el móvil es mucho mejor que uno hecho a mano. */
 export function Select({ className, ...props }: React.ComponentProps<"select">) {
   return (
     <select className={cn(fieldStyles, "h-10 pr-8", className)} {...props} />
@@ -186,6 +200,13 @@ const badgeVariants = cva(
   },
 );
 
+/**
+ * Etiqueta de estado.
+ *
+ * El tono es semántico, no decorativo: el mismo estado se ve igual en toda la
+ * aplicación. El dorado está reservado a lo conseguido —una racha, un aprobado,
+ * una plaza—; si se usa para todo, deja de significar nada.
+ */
 export function Badge({
   className,
   tone,
@@ -196,6 +217,7 @@ export function Badge({
 
 // ── Tabla ────────────────────────────────────────────────────────────────────
 
+/** Tabla, dentro de un contenedor que desborda en horizontal sin arrastrar la página. */
 export function Table({ className, ...props }: React.ComponentProps<"table">) {
   return (
     <div className="w-full overflow-x-auto">
@@ -204,6 +226,7 @@ export function Table({ className, ...props }: React.ComponentProps<"table">) {
   );
 }
 
+/** Celda de cabecera. */
 export function Th({ className, ...props }: React.ComponentProps<"th">) {
   return (
     <th
@@ -216,6 +239,7 @@ export function Th({ className, ...props }: React.ComponentProps<"th">) {
   );
 }
 
+/** Celda de datos. */
 export function Td({ className, ...props }: React.ComponentProps<"td">) {
   return (
     <td
@@ -227,6 +251,12 @@ export function Td({ className, ...props }: React.ComponentProps<"td">) {
 
 // ── Estados ──────────────────────────────────────────────────────────────────
 
+/**
+ * Qué se enseña cuando no hay nada.
+ *
+ * Con su explicación y, si procede, el botón para crear lo primero. Una lista
+ * vacía sin texto parece un fallo de carga, y quien la ve no sabe si esperar.
+ */
 export function EmptyState({
   icon,
   title,
@@ -254,6 +284,7 @@ export function EmptyState({
   );
 }
 
+/** Hueco gris mientras carga. Con la forma de lo que va a venir, no un girador. */
 export function Skeleton({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
@@ -263,6 +294,7 @@ export function Skeleton({ className, ...props }: React.ComponentProps<"div">) {
   );
 }
 
+/** Cabecera de una pantalla: migas, título, descripción y acciones. */
 export function PageHeader({
   title,
   description,

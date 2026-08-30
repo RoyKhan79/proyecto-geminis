@@ -15,6 +15,7 @@ import { cn } from "@/lib/utils";
  *   · La transición incluye la sombra, no solo el color, para que el relieve
  *     acompañe al hover en lugar de saltar.
  */
+/** Las variantes visuales del botón, para poder reutilizarlas en un enlace. */
 const buttonVariants = cva(
   "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-[var(--radius-control)] text-sm font-semibold tracking-[-0.005em] transition-[background,box-shadow,transform,color] duration-150 active:translate-y-px disabled:pointer-events-none disabled:opacity-50 [&_svg]:size-4 [&_svg]:shrink-0",
   {
@@ -42,12 +43,26 @@ const buttonVariants = cva(
   },
 );
 
+/**
+ * Las propiedades de un botón.
+ *
+ * `asChild` deja que el botón preste su aspecto a otro elemento —un enlace, por
+ * ejemplo— sin anidar un `<a>` dentro de un `<button>`, que no es HTML válido y
+ * confunde a los lectores de pantalla.
+ */
 export type ButtonProps = React.ComponentProps<"button"> &
   VariantProps<typeof buttonVariants> & {
     asChild?: boolean;
     loading?: boolean;
   };
 
+/**
+ * El botón de la aplicación.
+ *
+ * Con `loading` se deshabilita solo y enseña el girador, que es lo que evita el
+ * doble envío: sin eso, dos toques seguidos en un móvil lento emiten dos
+ * facturas.
+ */
 export function Button({
   className,
   variant,

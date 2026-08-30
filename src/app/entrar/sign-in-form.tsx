@@ -7,6 +7,12 @@ import { signInAction, type ActionState } from "@/lib/auth/actions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, Field, Input } from "@/components/ui/primitives";
 
+/**
+ * El formulario de acceso.
+ *
+ * El mensaje de error es el mismo exista el correo o no: distinguirlos
+ * convertiría esta pantalla en un comprobador de quién está apuntado.
+ */
 export function SignInForm({ cambiada = false }: { cambiada?: boolean }) {
   const [state, formAction, pending] = useActionState<ActionState, FormData>(
     signInAction,

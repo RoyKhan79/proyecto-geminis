@@ -39,6 +39,13 @@ function readForm(formData: FormData) {
   });
 }
 
+/**
+ * Da de alta a un alumno.
+ *
+ * @returns Confirmación, o el motivo. Si ese correo ya existe en el sistema se
+ *   le añade a esta academia en lugar de crear otra cuenta: la misma persona
+ *   puede estudiar en dos academias con una sola contraseña.
+ */
 export async function createStudentAction(
   _prev: FormState,
   formData: FormData,
@@ -110,6 +117,13 @@ export async function createStudentAction(
   redirect(`/gestion/alumnos/${membership.id}`);
 }
 
+/**
+ * Edita la ficha de un alumno.
+ *
+ * @remarks Queda registrado **qué campos** han cambiado, con su antes y su
+ *   después. Guardar la fila entera haría el registro ilegible y arrastraría
+ *   datos personales que no hacían falta.
+ */
 export async function updateStudentAction(
   membershipId: string,
   _prev: FormState,

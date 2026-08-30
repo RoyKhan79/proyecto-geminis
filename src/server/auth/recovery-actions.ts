@@ -15,6 +15,12 @@ import {
   solicitarRecuperacion,
 } from "@/lib/auth/recovery";
 
+/**
+ * Lo que la pantalla de recuperación devuelve al formulario.
+ *
+ * El mensaje de éxito es el mismo exista el correo o no: si se distinguieran,
+ * este formulario sería un comprobador de quién está apuntado en la academia.
+ */
 export type RecoveryState = { error?: string; enviado?: boolean } | undefined;
 
 const correoSchema = z.object({

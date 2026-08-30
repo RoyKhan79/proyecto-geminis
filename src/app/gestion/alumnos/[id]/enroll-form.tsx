@@ -7,6 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Field, Input, Select } from "@/components/ui/primitives";
 import type { CourseOption } from "../student-form";
 
+/**
+ * Matricular a un alumno en un curso, lo que además le abre el contenido.
+ */
 export function EnrollForm({
   membershipId,
   courses,

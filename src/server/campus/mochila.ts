@@ -49,6 +49,14 @@ export type TemaDeMochila = {
   version: string;
 };
 
+/**
+ * El manifiesto de lo que un alumno puede llevarse al móvil.
+ *
+ * Es una **lista, no un permiso**: la descarga sigue pasando por la ruta
+ * protegida de archivos, que lo vuelve a comprobar todo. Si un día alguien se
+ * equivoca aquí y mete un tema de más, la descarga falla igualmente. Ninguna de
+ * las dos se fía de la otra.
+ */
 export type Mochila = {
   temas: TemaDeMochila[];
   /** Suma de todo lo descargable, para avisar antes de llenar el móvil. */

@@ -61,6 +61,16 @@ function leerFilas(formData: FormData): FilaDeTemario[] {
     .filter((fila) => fila.archivo.size > 0);
 }
 
+/**
+ * Crea el temario a partir de los archivos que la academia ha revisado.
+ *
+ * @returns Cuántos temas se han creado y el identificador de la tanda, que es
+ *   lo que permite deshacerla entera.
+ * @remarks Lo que se crea son **las etiquetas aprobadas en pantalla**, no las
+ *   que dedujo el lector de nombres. Y entra todo en borrador salvo que se pida
+ *   lo contrario: sesenta temas publicándose de golpe no puede pasar por
+ *   descuido.
+ */
 export async function aplicarAsistenteAction(
   _prev: AsistenteState,
   formData: FormData,

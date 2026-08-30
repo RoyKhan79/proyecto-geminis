@@ -19,6 +19,12 @@ import type { TenantClient } from "@/lib/db/tenant";
 
 export type NivelRiesgo = "ALTO" | "MEDIO" | "BAJO" | "OK";
 
+/**
+ * Un alumno que necesita atención, con **el motivo**.
+ *
+ * Los motivos van en la propia fila a propósito: un número de riesgo sin
+ * explicación no sirve para llamar a nadie, y acaba ignorándose.
+ */
 export type AlumnoEnRiesgo = {
   membershipId: string;
   nombre: string;
@@ -41,6 +47,16 @@ function dias(desde: Date | null | undefined, ahora: number): number | null {
   return Math.floor((ahora - desde.getTime()) / DIA);
 }
 
+/**
+ * Quién está en riesgo de dejarlo, y por qué.
+ *
+ * Con reglas explicables y no con un modelo: días sin entrar, tests sin hacer,
+ * material sin abrir, faltas a clase y resultados que bajan. Una academia tiene
+ * que poder discutir el criterio, y para eso tiene que poder leerlo.
+ *
+ * @returns La lista con su nivel y sus motivos. **No juzga a quien acaba de
+ *   matricularse**: sin historial, cualquier señal sería ruido.
+ */
 export async function loadRiesgoAbandono(
   db: TenantClient,
   ahora = Date.now(),

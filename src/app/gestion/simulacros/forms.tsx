@@ -40,6 +40,9 @@ function Aviso({ state }: { state: SimState }) {
   return null;
 }
 
+/**
+ * Formularios de plantillas de examen y de convocatoria de simulacros.
+ */
 export function SimulationForms({
   plantillas,
   ediciones,

@@ -101,6 +101,11 @@ export function Pasos({ children }: { children: ReactNode }) {
   );
 }
 
+/**
+ * Un paso dentro de {@link Pasos}.
+ *
+ * @param numero Lo pone `Pasos`; no hay que escribirlo a mano.
+ */
 export function Paso({
   numero,
   children,
@@ -131,6 +136,7 @@ export function Lista({ children }: { children: ReactNode }) {
   );
 }
 
+/** Un punto de una lista sin orden. */
 export function Punto({ children }: { children: ReactNode }) {
   return (
     <li className="relative pl-5 before:absolute before:left-1 before:top-[0.6em] before:size-1.5 before:rounded-full before:bg-line-strong before:content-['']">
@@ -144,6 +150,7 @@ export function Fichas({ children }: { children: ReactNode }) {
   return <div className="grid gap-3 sm:grid-cols-2">{children}</div>;
 }
 
+/** Una tarjeta corta: un título y dos líneas. */
 export function Ficha({ titulo, children }: { titulo: string; children: ReactNode }) {
   return (
     <div className="rounded-[var(--radius-control)] border border-line bg-surface px-4 py-3 shadow-[var(--shadow-soft)]">
@@ -244,10 +251,12 @@ export function Apartado({
   );
 }
 
+/** Subtítulo dentro de un apartado. */
 export function Sub({ children }: { children: ReactNode }) {
   return <h4 className="pt-3 text-[0.95rem] font-bold text-ink">{children}</h4>;
 }
 
+/** Un párrafo del manual, con su medida de lectura ya puesta. */
 export function P({ children }: { children: ReactNode }) {
   return <p className="leading-relaxed text-ink-soft">{children}</p>;
 }

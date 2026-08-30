@@ -9,6 +9,12 @@ import type { TenantClient } from "@/lib/db/tenant";
  */
 export const MUESTRA_MINIMA_PERCENTIL = 8;
 
+/**
+ * Lo que ve la academia en la pantalla de simulacros.
+ *
+ * @param db Cliente acotado a la academia.
+ * @returns Sus plantillas de examen, sus simulacros y sus convocatorias.
+ */
 export async function loadSimulationPanel(db: TenantClient) {
   const [plantillas, simulacros, ediciones] = await Promise.all([
     db.examBlueprint.findMany({

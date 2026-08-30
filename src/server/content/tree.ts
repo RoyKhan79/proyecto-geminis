@@ -38,6 +38,17 @@ export type CreateNodeInput = {
   position?: number;
 };
 
+/**
+ * Crea un nodo del árbol calculando su ruta, su profundidad y su posición.
+ *
+ * @param db Cliente acotado a la academia.
+ * @param input Qué se crea y de quién cuelga.
+ * @returns El nodo creado.
+ * @throws {Error} Si el padre no existe o es de otra convocatoria.
+ * @remarks **Ninguna otra parte del código debe escribir `path`, `depth` o
+ *   `position` a mano.** Los permisos por rama se resuelven con esa ruta, así
+ *   que si se desincronizan dejan de funcionar, y en silencio.
+ */
 export async function createContentNode(db: TenantClient, input: CreateNodeInput) {
   let path = "/";
   let depth = 0;

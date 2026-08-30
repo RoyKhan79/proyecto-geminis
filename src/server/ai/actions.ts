@@ -50,6 +50,15 @@ const preguntaSchema = z.object({
   conversationId: z.string().trim().optional(),
 });
 
+/**
+ * La pregunta de un alumno a Geminis IA.
+ *
+ * @returns La respuesta con sus citas, o el motivo si no se puede responder.
+ * @remarks El orden no se negocia: sesión, academia, permisos, matrículas,
+ *   derechos, ritmo del temario, **y después** buscar. El filtro va antes de la
+ *   búsqueda, nunca después: filtrar los resultados significaría que el sistema
+ *   ya ha leído material que esa persona no puede ver.
+ */
 export async function askStudentAction(
   _prev: AiState,
   formData: FormData,

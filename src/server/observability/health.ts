@@ -31,6 +31,13 @@ export type Comprobacion = {
   detalle: string;
 };
 
+/**
+ * El estado del servicio, comprobado en caliente.
+ *
+ * No son métricas de uso: es la comprobación de que las protecciones siguen
+ * puestas. El hallazgo H-04 fue una protección activada que no protegía nada, y
+ * un panel que solo enseñara números no habría dicho una palabra.
+ */
 export type Salud = {
   comprobaciones: Comprobacion[];
   latenciaDbMs: number;
@@ -47,6 +54,20 @@ export type Salud = {
   tareas: { nombre: string; ultimaVez: Date | null; alDia: boolean }[];
 };
 
+/**
+ * Comprueba, ahora mismo, que el sistema está como debe.
+ *
+ * Verifica que el rol de conexión no se salta el aislamiento, que las políticas
+ * de la base están activas, que la clave de cifrado existe y que no queda
+ * ningún dato bancario en claro. Además mide latencia y frescura de las tareas
+ * programadas.
+ *
+ * @returns El estado completo, con el detalle de cada comprobación.
+ * @remarks La latencia se mide **después de una consulta de calentamiento**. Sin
+ *   ella, la primera incluye abrir la conexión y el panel sale en rojo cada vez
+ *   que alguien lo abre tras un rato. Un panel que da falsas alarmas se deja de
+ *   mirar, y entonces no sirve para nada.
+ */
 export async function medirSalud(): Promise<Salud> {
   const comprobaciones: Comprobacion[] = [];
 

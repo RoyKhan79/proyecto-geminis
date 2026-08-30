@@ -14,6 +14,9 @@ import {
 } from "@/components/ui/primitives";
 import { STUDENT_STATUS_LABEL } from "@/server/students/queries";
 
+/**
+ * Un curso en el que se puede matricular al alumno.
+ */
 export type CourseOption = {
   id: string;
   name: string;
@@ -21,6 +24,9 @@ export type CourseOption = {
   groups: { id: string; name: string }[];
 };
 
+/**
+ * Los datos del formulario de alta, antes de validarlos.
+ */
 export type StudentFormValues = {
   firstName?: string;
   lastName?: string | null;

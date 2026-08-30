@@ -30,6 +30,7 @@ const normaSchema = z.object({
   officialUrl: z.string().trim().url("La dirección no es válida.").optional().or(z.literal("")),
 });
 
+/** Da de alta una norma que la academia quiere seguir. */
 export async function createLegislationAction(
   _prev: LegState,
   formData: FormData,
@@ -79,6 +80,13 @@ const articuloSchema = z.object({
   text: z.string().trim().max(20000).optional(),
 });
 
+/**
+ * Añade un artículo a una norma.
+ *
+ * El artículo es la unidad que se enlaza con un tema o con una pregunta: así,
+ * cuando cambia, se sabe exactamente qué material hay que revisar y no la ley
+ * entera.
+ */
 export async function createArticleAction(
   _prev: LegState,
   formData: FormData,

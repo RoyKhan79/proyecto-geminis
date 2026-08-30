@@ -35,6 +35,14 @@ const tareaSchema = z.object({
   publicar: z.string().optional(),
 });
 
+/**
+ * Manda una tarea a un curso o a un grupo.
+ *
+ * @returns Confirmación, o el motivo.
+ * @remarks Al publicarla se crea la entrega vacía de cada alumno. Así el
+ *   profesor ve desde el primer momento quién falta, sin esperar a que alguien
+ *   entregue.
+ */
 export async function createAssignmentAction(
   _prev: TaskState,
   formData: FormData,
@@ -378,6 +386,7 @@ export async function createRoomAction(
   return { ok: "Sala creada." };
 }
 
+/** Abre o cierra una sala online. Cerrada, el enlace deja de servir. */
 export async function toggleRoomAction(formData: FormData) {
   const ctx = await requirePermission("classes.write");
   const roomId = String(formData.get("roomId") ?? "");

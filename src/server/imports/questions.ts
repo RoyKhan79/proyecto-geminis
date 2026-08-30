@@ -37,6 +37,7 @@ export type QuestionFieldKey =
   | "tags"
   | "officialExamRef";
 
+/** Los campos de una pregunta que se pueden mapear desde un archivo. */
 export const QUESTION_FIELDS: {
   key: QuestionFieldKey;
   label: string;
@@ -141,8 +142,10 @@ const LETRAS: QuestionFieldKey[] = [
   "optionE",
 ];
 
+/** Un aviso sobre una fila concreta, con su gravedad. */
 export type RowMessage = { level: "error" | "warning"; text: string };
 
+/** Una fila ya interpretada: lo que se creará y lo que la impide. */
 export type EvaluatedQuestionRow = {
   rowNumber: number;
   statement: string;
@@ -392,6 +395,12 @@ export async function evaluateQuestionRows(
   return resultado;
 }
 
+/**
+ * Resume una simulación de importación de preguntas.
+ *
+ * @returns Cuántas entran, cuántas se descartan y por qué. Es lo que se enseña
+ *   antes de escribir nada.
+ */
 export function summarizeQuestions(filas: EvaluatedQuestionRow[]) {
   return {
     total: filas.length,

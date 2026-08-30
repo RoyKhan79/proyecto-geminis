@@ -13,6 +13,9 @@ import {
   Textarea,
 } from "@/components/ui/primitives";
 
+/**
+ * Registrar un cobro.
+ */
 export function PaymentForm({
   alumnos,
 }: {

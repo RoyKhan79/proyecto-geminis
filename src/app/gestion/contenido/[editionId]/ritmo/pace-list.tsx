@@ -19,6 +19,9 @@ import { Button } from "@/components/ui/button";
 import { Badge, Card, CardContent, Input, Select } from "@/components/ui/primitives";
 import { cn, formatDate } from "@/lib/utils";
 
+/**
+ * Un tema con su estado de apertura para cada grupo.
+ */
 export type TemaRitmo = {
   id: string;
   label: string;
@@ -30,6 +33,9 @@ export type TemaRitmo = {
   preguntas: number;
 };
 
+/**
+ * Un grupo, con hasta dónde tiene abierto el temario.
+ */
 export type GrupoRitmo = { id: string; name: string; curso: string };
 
 /**

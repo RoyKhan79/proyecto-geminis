@@ -21,6 +21,16 @@ export type EmailMessage = {
   replyTo?: string;
 };
 
+/**
+ * Envía un correo.
+ *
+ * @returns Nada. **No lanza si el envío falla**: se registra y se sigue. Que el
+ *   servidor de correo esté caído no puede impedir dar de alta a un alumno, y
+ *   el reintento es una decisión de quien llama, no de aquí.
+ * @remarks Sin SMTP configurado, escribe el correo en la salida estándar en
+ *   lugar de fallar en silencio. Es lo que permite trabajar en local, y lo que
+ *   evita que en producción nadie note que no se envía nada.
+ */
 export async function sendEmail(message: EmailMessage): Promise<boolean> {
   const configurado = Boolean(env.SMTP_HOST && env.SMTP_USER);
 

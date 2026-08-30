@@ -27,6 +27,7 @@ export type FieldKey =
   | "courseName"
   | "groupName";
 
+/** Los campos de un alumno que se pueden mapear desde un archivo. */
 export const STUDENT_FIELDS: {
   key: FieldKey;
   label: string;
@@ -117,8 +118,10 @@ const ESTADOS: Record<string, "PENDING" | "ACTIVE" | "ON_HOLD" | "INACTIVE" | "A
   egresado: "ALUMNI",
 };
 
+/** Un aviso sobre una fila concreta, con su gravedad. */
 export type RowMessage = { level: "error" | "warning"; text: string };
 
+/** Una fila ya interpretada: si crea, actualiza o se descarta, y por qué. */
 export type EvaluatedRow = {
   rowNumber: number;
   parsed: Record<string, string | null>;
@@ -284,6 +287,13 @@ export async function evaluateRows(
   return evaluadas;
 }
 
+/**
+ * Resume una simulación de importación de alumnado.
+ *
+ * @returns Cuántos se crean, cuántos se actualizan y cuántos se descartan.
+ *   Distinguir crear de actualizar importa: una academia que importa dos veces
+ *   el mismo archivo espera lo segundo, no doscientos alumnos duplicados.
+ */
 export function summarize(rows: EvaluatedRow[]) {
   return {
     total: rows.length,

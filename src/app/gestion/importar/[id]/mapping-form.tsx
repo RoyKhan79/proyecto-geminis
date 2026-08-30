@@ -6,6 +6,9 @@ import { saveMappingAction, type ImportState } from "@/server/imports/actions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, Field, Select } from "@/components/ui/primitives";
 
+/**
+ * Un campo del sistema al que se puede asignar una columna.
+ */
 export type CampoImportable = {
   key: string;
   label: string;

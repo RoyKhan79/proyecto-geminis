@@ -126,6 +126,7 @@ function quitarCabeceras(partes: string[]): string[] {
   );
 }
 
+/** Qué ha pasado al indexar una fuente: cuántos fragmentos y en qué estado quedó. */
 export type ResultadoIndexado = {
   fuente: string;
   fragmentos: number;

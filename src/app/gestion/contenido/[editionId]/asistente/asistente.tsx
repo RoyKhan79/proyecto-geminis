@@ -47,6 +47,9 @@ import {
 
 type Bandera = "heredar" | "si" | "no";
 
+/**
+ * El asistente para subir un temario entero de una vez.
+ */
 export function AsistenteDeTemario({
   secciones,
 }: {

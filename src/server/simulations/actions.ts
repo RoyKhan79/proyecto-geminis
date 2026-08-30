@@ -45,6 +45,12 @@ function parsePenalizacion(texto: string): number {
   return Number.isFinite(valor) && valor >= 0 ? valor : 0;
 }
 
+/**
+ * Crea una plantilla de examen: cuántas preguntas, cuánto dura, cuánto penaliza.
+ *
+ * Se define una vez y se reutiliza en cada convocatoria, que es como funciona un
+ * examen oficial: las reglas no cambian cada año.
+ */
 export async function createBlueprintAction(
   _prev: SimState,
   formData: FormData,
@@ -93,6 +99,13 @@ const simulacroSchema = z.object({
   publicar: z.string().optional(),
 });
 
+/**
+ * Convoca un simulacro a partir de una plantilla.
+ *
+ * @remarks Va atado a una convocatoria, y eso es lo que hace que solo lo vea
+ *   quien prepara esa oposición. Sin convocatoria es general y lo ve todo el
+ *   mundo, que es la forma de convocar algo común.
+ */
 export async function createSimulationAction(
   _prev: SimState,
   formData: FormData,
@@ -176,6 +189,11 @@ export async function createSimulationAction(
   };
 }
 
+/**
+ * Abre o cierra un simulacro.
+ *
+ * Cerrarlo no borra los intentos ya hechos ni sus notas.
+ */
 export async function toggleSimulationAction(formData: FormData) {
   const ctx = await requirePermission("tests.publish");
   const id = String(formData.get("simulationId") ?? "");

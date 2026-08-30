@@ -31,6 +31,7 @@ export type Intencion =
   | "EXPLICACION"
   | "GENERAL";
 
+/** Lo que devuelve el motor propio: el texto y las fuentes que ha usado. */
 export type RespuestaLocal = {
   texto: string;
   intencion: Intencion;
@@ -413,6 +414,15 @@ export type PreguntaGenerada = {
   fragmento: number;
 };
 
+/**
+ * Genera preguntas tipo test a partir del material, **sin ningún proveedor de IA**.
+ *
+ * Es lo que hace que Geminis IA funcione sin contratar nada: saca los enunciados
+ * del propio texto indexado. No escribe como un modelo grande, y por eso todo lo
+ * que produce entra como borrador para que una persona lo revise.
+ *
+ * @returns Las preguntas propuestas, cada una con la cita de dónde sale.
+ */
 export function generarPreguntasLocales(
   fragmentos: Fragmento[],
   cantidad: number,

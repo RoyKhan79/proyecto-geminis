@@ -9,6 +9,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, Field, Input } from "@/components/ui/primitives";
 
+/**
+ * Pedir el enlace para cambiar la contraseña.
+ */
 export function RecoveryForm() {
   const [state, formAction, pending] = useActionState<RecoveryState, FormData>(
     requestRecoveryAction,

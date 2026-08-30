@@ -29,6 +29,9 @@ const ENLACES = [
   { href: "/campus/ia", label: "Geminis IA", icon: Sparkles },
 ];
 
+/**
+ * Los accesos rápidos de la pantalla de inicio del Campus.
+ */
 export function QuickLinks() {
   return (
     <nav aria-label="Accesos rápidos">

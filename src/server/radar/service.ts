@@ -32,6 +32,13 @@ export type ResultadoRadar = {
   error?: string;
 };
 
+/**
+ * Mira el BOE de hoy y avisa de las convocatorias que interesan.
+ *
+ * @returns Qué ha encontrado y para quién.
+ * @remarks Lo lanza el cron cada mañana. Si el sumario aún no está publicado no
+ *   es un fallo: se reintenta, no se avisa a nadie.
+ */
 export async function ejecutarRadarBoe(fecha: Date): Promise<ResultadoRadar> {
   const dia = new Date(
     Date.UTC(fecha.getUTCFullYear(), fecha.getUTCMonth(), fecha.getUTCDate()),

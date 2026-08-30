@@ -52,6 +52,13 @@ const releaseSchema = z.object({
   fecha: z.string().optional(),
 });
 
+/**
+ * Abre o cierra un tema para un grupo: el ritmo del temario.
+ *
+ * Es lo que permite tener el temario entero subido el primer día y que cada
+ * clase vea solo por dónde va. Lo que no está abierto **no existe** para ese
+ * alumno: ni lo ve, ni lo descarga, ni se lo cita la IA.
+ */
 export async function setNodeReleaseAction(
   _prev: ReleaseState,
   formData: FormData,

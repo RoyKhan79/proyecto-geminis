@@ -27,6 +27,12 @@ export type QuestionImportState = { error?: string; ok?: boolean } | undefined;
 
 const MAX_BYTES = 10 * 1024 * 1024;
 
+/**
+ * Paso 1: subir el archivo de preguntas y leer sus columnas.
+ *
+ * @returns El identificador del trabajo de importación, o el motivo del fallo.
+ *   Todavía no se escribe ninguna pregunta.
+ */
 export async function uploadQuestionsAction(
   _prev: QuestionImportState,
   formData: FormData,
@@ -96,6 +102,14 @@ const mapeoSchema = z.object({
   editionId: z.string().optional(),
 });
 
+/**
+ * Paso 2: decir qué columna es cada cosa.
+ *
+ * @returns Confirmación con el recuento de filas válidas y con problemas.
+ * @remarks Al guardar el mapeo se **simula** la importación entera: se detectan
+ *   las repetidas y las mal formadas antes de escribir nada. Enterarse después
+ *   significa deshacerlo a mano.
+ */
 export async function saveQuestionMappingAction(
   _prev: QuestionImportState,
   formData: FormData,
@@ -147,6 +161,13 @@ export async function saveQuestionMappingAction(
   return { ok: true };
 }
 
+/**
+ * Paso 3: escribir de verdad las preguntas.
+ *
+ * @returns Cuántas han entrado, o el motivo.
+ * @remarks Entran como **borrador**. Publicar es una decisión humana, igual que
+ *   con lo que genera la IA.
+ */
 export async function runQuestionImportAction(formData: FormData) {
   const ctx = await requirePermission("imports.run");
   const jobId = String(formData.get("jobId") ?? "");
@@ -223,6 +244,12 @@ export async function runQuestionImportAction(formData: FormData) {
   revalidatePath("/gestion/tests");
 }
 
+/**
+ * Deshacer una importación entera.
+ *
+ * @remarks Retira solo las preguntas de esa tanda. Lo que se haya editado a
+ *   mano después se va con ellas: se avisa en pantalla antes de pulsar.
+ */
 export async function rollbackQuestionImportAction(formData: FormData) {
   const ctx = await requirePermission("imports.rollback");
   const jobId = String(formData.get("jobId") ?? "");

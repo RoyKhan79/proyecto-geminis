@@ -227,6 +227,12 @@ REGLAS QUE NO PUEDES SALTARTE:
 5. Escribe en español de España, claro y directo, como explicaría un buen
    preparador. Nada de rodeos ni de lenguaje comercial.`;
 
+/**
+ * Las instrucciones del copiloto del profesorado.
+ *
+ * La regla que las gobierna todas: lo que genera es un **borrador** y hay que
+ * decirlo. Nada llega al alumnado sin que una persona lo revise.
+ */
 export const SYSTEM_COPILOTO = `Eres el copiloto de un preparador de oposiciones español.
 
 REGLAS:

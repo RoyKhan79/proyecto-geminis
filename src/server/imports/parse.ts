@@ -17,6 +17,12 @@ export type ParsedSheet = {
   emptyRows: number;
 };
 
+/**
+ * El archivo no se ha podido leer.
+ *
+ * Lleva un mensaje que se le puede enseñar tal cual a la academia: «esto no
+ * parece un CSV» sirve; «Unexpected token at position 0» no.
+ */
 export class ImportParseError extends Error {
   constructor(message: string) {
     super(message);
@@ -26,6 +32,14 @@ export class ImportParseError extends Error {
 
 const MAX_ROWS = 20000;
 
+/**
+ * Lee un archivo de importación y devuelve sus filas.
+ *
+ * @returns Las columnas encontradas y las filas en crudo, sin interpretar
+ *   todavía: el mapeo lo decide la academia en el paso siguiente.
+ * @throws {ImportParseError} Si el formato no se reconoce o el archivo está
+ *   vacío, con un mensaje que se puede enseñar.
+ */
 export async function parseImportFile(
   fileName: string,
   buffer: ArrayBuffer,

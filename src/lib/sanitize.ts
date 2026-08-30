@@ -39,6 +39,17 @@ const ATRIBUTOS: Record<string, Set<string>> = {
  */
 const ESQUEMAS = /^(https?:\/\/|mailto:|\/|#)/i;
 
+/**
+ * Limpia HTML escrito por una persona antes de pintarlo.
+ *
+ * @param html Lo que ha escrito la academia en el editor.
+ * @returns El mismo texto sin nada ejecutable: fuera `<script>`, fuera los
+ *   atributos `on*` y fuera los enlaces `javascript:`. Los enlaces que quedan
+ *   salen con `rel="noopener noreferrer nofollow"`.
+ * @remarks Se aplica **al guardar y también al pintar**. Dos veces a propósito:
+ *   puede haber contenido guardado antes de que existiera el saneador, y un
+ *   script inyectado se ejecutaría con la sesión de quien lo lee.
+ */
 export function sanitizeHtml(sucio: string | null | undefined): string {
   if (!sucio) return "";
 

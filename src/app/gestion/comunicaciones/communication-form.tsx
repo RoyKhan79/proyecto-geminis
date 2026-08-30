@@ -18,6 +18,9 @@ import {
 
 type Opcion = { id: string; name: string };
 
+/**
+ * Formulario de envío a muchos, con el recuento de destinatarios.
+ */
 export function CommunicationForm({
   cursos,
   grupos,

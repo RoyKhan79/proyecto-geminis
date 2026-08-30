@@ -18,6 +18,9 @@ const TABS = [
   { label: "Perfil", href: "/campus/perfil", icon: UserRound, ready: true },
 ];
 
+/**
+ * La barra inferior del Campus, con los cinco destinos principales.
+ */
 export function CampusTabBar() {
   const pathname = usePathname();
 

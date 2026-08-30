@@ -41,6 +41,11 @@ type Guardado =
   | { tipo: "guardado"; cuando: Date }
   | { tipo: "fallo"; mensaje: string };
 
+/**
+ * Donde el alumno escribe su examen de desarrollo.
+ *
+ * Lo único que de verdad tiene que hacer bien es no perder lo escrito.
+ */
 export function EditorDeExamen({
   submissionId,
   borradorInicial,
