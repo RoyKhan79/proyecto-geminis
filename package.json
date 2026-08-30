@@ -50,7 +50,8 @@
     "manual:local": "node --import tsx scripts/manual-local.ts",
     "docs": "typedoc",
     "docs:faltan": "node scripts/docs-faltan.mjs",
-    "zip": "node scripts/empaquetar.mjs"
+    "zip": "node scripts/empaquetar.mjs",
+    "manual:publicar": "node scripts/publicar-manual.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.7.1",

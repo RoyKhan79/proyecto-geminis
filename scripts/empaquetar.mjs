@@ -42,6 +42,43 @@ const DESTINO =
 const RAIZ = process.cwd();
 const NOMBRE = "proyecto-geminis";
 
+/**
+ * Busca la carpeta de Google Drive sincronizada en este ordenador.
+ *
+ * Si Drive para escritorio está instalado, dejar el ZIP dentro **es** subirlo:
+ * lo sincroniza él. Es la única forma de que la subida sea automática sin
+ * credenciales ni tokens de por medio.
+ *
+ * @returns La ruta de la carpeta, o `null` si Drive no está instalado.
+ */
+function carpetaDeDrive() {
+  const candidatas = [
+    path.join(homedir(), "Library", "CloudStorage"),
+    path.join(homedir(), "Google Drive"),
+    path.join(homedir(), "GoogleDrive"),
+  ];
+
+  for (const base of candidatas) {
+    if (!existsSync(base)) continue;
+
+    // En macOS moderno cuelga de CloudStorage con el correo en el nombre:
+    // «GoogleDrive-alguien@gmail.com».
+    if (base.endsWith("CloudStorage")) {
+      const drive = readdirSync(base).find((d) => d.startsWith("GoogleDrive-"));
+      if (!drive) continue;
+      const miUnidad = path.join(base, drive, "Mi unidad");
+      const myDrive = path.join(base, drive, "My Drive");
+      if (existsSync(miUnidad)) return miUnidad;
+      if (existsSync(myDrive)) return myDrive;
+      return path.join(base, drive);
+    }
+
+    return base;
+  }
+
+  return null;
+}
+
 /** Lo que no viaja: se regenera con `npm run setup` y ocupa cuatro gigas. */
 const FUERA = [
   "node_modules",
@@ -208,6 +245,22 @@ function main() {
     console.log("=".repeat(58));
     console.log(`✓ ${zip}`);
     console.log(`  ${megas.toFixed(1)} MB`);
+
+    // ── A Drive, si está instalado ─────────────────────────────────────────
+    const drive = carpetaDeDrive();
+    if (drive && !args.includes("--destino")) {
+      const carpeta = path.join(drive, "Proyecto Geminis");
+      mkdirSync(carpeta, { recursive: true });
+      const copia = path.join(carpeta, path.basename(zip));
+      copyFileSync(zip, copia);
+      console.log(`✓ copiado a Drive · ${copia}`);
+      console.log("  Drive lo sube solo; puede tardar un rato según el tamaño.");
+    } else if (!drive) {
+      console.log("");
+      console.log("  · Sin subida a Drive: no hay Google Drive para escritorio");
+      console.log("    instalado. Instálalo desde google.com/drive/download y este");
+      console.log("    comando dejará el ZIP dentro, que es subirlo.");
+    }
 
     if (!sinSecretos) {
       console.log("");

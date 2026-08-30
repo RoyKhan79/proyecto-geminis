@@ -37,6 +37,26 @@ capturas, el manual suelto y la conversación. Deja fuera lo que se regenera.
 Para una copia que se pueda enseñar a alguien: `npm run zip -- --sin-secretos`,
 que quita el `.env` y la conversación.
 
+### Que llegue solo a Google Drive
+
+Instala **Google Drive para escritorio** (google.com/drive/download). A partir
+de ahí, `npm run zip` deja el archivo en `Mi unidad/Proyecto Geminis` y Drive lo
+sube por su cuenta. No hay que hacer nada más ni dar ninguna credencial.
+
+Si prefieres no instalarlo, la otra vía es `rclone config` una vez —autorización
+en el navegador— y añadir un `rclone copy` al final del script.
+
+### El manual, en un enlace
+
+```bash
+npm run manual:local      # el manual en un solo archivo
+npm run manual:publicar   # y un enlace público para enseñarlo
+```
+
+El enlace es de Cloudflare, sin cuenta, y **vive mientras la ventana esté
+abierta**. Para uno permanente hace falta un sitio donde dejarlo: GitHub Pages,
+Netlify o el dominio de la propia academia, donde además ya está en `/manual`.
+
 ---
 
 ## 1 · Poner en marcha el proyecto
