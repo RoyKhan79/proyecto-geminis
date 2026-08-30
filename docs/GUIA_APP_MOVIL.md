@@ -1,5 +1,11 @@
 # Guía · instalar la app en el móvil y probar academia ↔ alumno
 
+> **Manual completo de uso** (el ERP y la app, para la academia y para el
+> alumnado): https://claude.ai/code/artifact/9f28347e-6104-4ef8-8c54-8d3925c5a99d
+>
+> Esta guía es lo otro: cómo instalar la app en un móvil y hacer las pruebas de
+> extremo a extremo entre academia y alumno.
+
 Esta guía tiene dos partes:
 
 1. **Instalar la aplicación** en un móvil real, desde el ordenador donde está
