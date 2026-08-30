@@ -17,17 +17,24 @@ import { Button } from "@/components/ui/button";
  * cierra la sesión igual y la comprobación de dueño lo recogerá en la siguiente
  * entrada. Perder la sesión importa más que perder la limpieza.
  */
-export function BotonSalir() {
+export function BotonSalir({ ancho = false }: { ancho?: boolean }) {
   return (
     <form
       action={signOutAction}
       onSubmit={() => {
         void vaciarMochila();
       }}
+      className={ancho ? "w-full" : undefined}
     >
-      <Button type="submit" variant="ghost" size="icon" aria-label="Cerrar sesión">
-        <LogOut aria-hidden />
-      </Button>
+      {ancho ? (
+        <Button type="submit" variant="secondary" className="w-full">
+          Cerrar sesión
+        </Button>
+      ) : (
+        <Button type="submit" variant="ghost" size="icon" aria-label="Cerrar sesión">
+          <LogOut aria-hidden />
+        </Button>
+      )}
     </form>
   );
 }

@@ -1,9 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { signOutAction } from "@/lib/auth/actions";
 import { requireAcademy } from "@/lib/auth/context";
 import { loadGrants, loadStudentEditions } from "@/server/campus/queries";
-import { Button } from "@/components/ui/button";
 import {
   Badge,
   Card,
@@ -12,6 +10,7 @@ import {
   CardTitle,
 } from "@/components/ui/primitives";
 import { VerifyBanner } from "@/components/campus/verify-banner";
+import { BotonSalir } from "@/components/campus/salir";
 import { SesionesAbiertas } from "@/components/campus/sesiones";
 import { sesionesActivas } from "@/lib/auth/session";
 import { formatDate, initials } from "@/lib/utils";
@@ -127,13 +126,16 @@ export default async function PerfilPage() {
         limite={academia?.maxSessionsPerStudent ?? 0}
       />
 
-      <form action={signOutAction}>
-        <Button type="submit" variant="secondary" className="w-full">
-          Cerrar sesión
-        </Button>
-      </form>
+      {/* El mismo botón que la cabecera: vacía los temas guardados en el
+          dispositivo antes de salir. Si aquí se usara un `signOutAction` a
+          secas, cerrar sesión desde el perfil dejaría el temario en el móvil. */}
+      <BotonSalir ancho />
 
       <p className="pb-2 text-center text-xs text-ink-muted">
+        <Link href="/manual" className="underline-offset-2 hover:underline">
+          Cómo se usa
+        </Link>
+        <span aria-hidden> · </span>
         <Link href="/privacidad" className="underline-offset-2 hover:underline">
           Privacidad
         </Link>

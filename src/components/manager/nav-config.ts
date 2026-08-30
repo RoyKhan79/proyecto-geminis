@@ -229,6 +229,13 @@ export const MANAGER_NAV: NavSection[] = [
         status: "ready",
       },
       {
+        label: "Manual",
+        href: "/manual",
+        icon: BookOpen,
+        permission: "manager.access",
+        status: "ready",
+      },
+      {
         label: "Configuración",
         href: "/gestion/configuracion",
         icon: Settings,
