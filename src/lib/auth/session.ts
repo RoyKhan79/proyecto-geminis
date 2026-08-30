@@ -16,16 +16,35 @@ import { env, isProduction } from "@/lib/env";
  * tabla `sessions` no podría suplantar a nadie.
  */
 
+/** Nombre de la cookie de sesión. Se exporta porque lo usa el arnés de pruebas. */
 export const SESSION_COOKIE = "geminis_session";
 
 const SESSION_MS = env.SESSION_DAYS * 24 * 60 * 60 * 1000;
 /// A partir de la mitad de vida, la sesión se renueva sola al usarla.
 const RENEW_THRESHOLD_MS = SESSION_MS / 2;
 
+/**
+ * Genera el testigo de sesión que viaja en la cookie.
+ *
+ * @returns 32 bytes aleatorios en base64url, 43 caracteres. No se guarda en
+ *   claro en ningún sitio: en la base solo vive su SHA-256.
+ * @see hashSessionToken
+ */
 export function generateSessionToken(): string {
   return randomBytes(32).toString("base64url");
 }
 
+/**
+ * Resumen del testigo, que es lo único que se guarda.
+ *
+ * SHA-256 a secas y no scrypt, a diferencia de las contraseñas: el testigo ya
+ * son 256 bits aleatorios, así que no hay nada que adivinar por fuerza bruta y
+ * un resumen lento solo encarecería cada petición. En una contraseña —corta y
+ * elegida por una persona— el coste es justo lo que protege.
+ *
+ * @param token El testigo en claro.
+ * @returns Su SHA-256 en hexadecimal.
+ */
 export function hashSessionToken(token: string): string {
   return createHash("sha256").update(token).digest("hex");
 }
@@ -36,6 +55,10 @@ export function hashSessionToken(token: string): string {
  * No es identificación ni seguimiento: es lo justo para que en «mis sesiones»
  * la persona reconozca cuál es la suya y para poder contar dispositivos
  * distintos. No se guarda nada que no estuviera ya guardado.
+ *
+ * @param userAgent La cabecera tal cual, o nada si no llegó.
+ * @returns Algo como «Chrome en Windows», o «Dispositivo desconocido» si no se
+ *   puede deducir. Nunca `null`: esto se pinta en pantalla.
  */
 export function etiquetaDeDispositivo(userAgent: string | null | undefined): string {
   if (!userAgent) return "Dispositivo desconocido";
@@ -141,6 +164,25 @@ async function aplicarLimiteDeDispositivos(
   return sobran.length;
 }
 
+/**
+ * Abre una sesión y devuelve el testigo en claro **una sola vez**.
+ *
+ * Es la única ocasión en que ese valor existe fuera de la cookie: en la base se
+ * guarda solo su resumen, así que si se pierde aquí no se puede recuperar.
+ *
+ * @param params.userId Persona que entra.
+ * @param params.activeAcademyId Academia con la que empieza, si ya se sabe.
+ *   Quien pertenece a varias la elige después.
+ * @param params.ipAddress Para que la persona reconozca sus sesiones.
+ * @param params.userAgent Se recorta a 500 caracteres y se guarda también su
+ *   versión legible.
+ * @param params.impersonatedById Quién está dando soporte, si es una sesión de
+ *   soporte. **Marca la diferencia**: esas sesiones no cuentan para el límite
+ *   de dispositivos, porque entrar a ayudar no puede echar al alumno de su
+ *   propia cuenta.
+ * @returns El testigo en claro, la sesión creada y cuántas sesiones antiguas se
+ *   han cerrado por el límite de dispositivos.
+ */
 export async function createSession(params: {
   userId: string;
   activeAcademyId?: string | null;
@@ -170,7 +212,13 @@ export async function createSession(params: {
   return { token, session, sesionesCerradas: cerradas };
 }
 
-/** Las sesiones abiertas de una persona, para que las vea en su perfil. */
+/**
+ * Las sesiones abiertas de una persona, para que las vea en su perfil.
+ *
+ * @param userId De quién.
+ * @returns Las vivas —ni revocadas ni caducadas—, de la más reciente a la más
+ *   antigua. No incluye el testigo ni su resumen: esta lista se pinta.
+ */
 export async function sesionesActivas(userId: string) {
   return prismaBase.session.findMany({
     where: { userId, revokedAt: null, expiresAt: { gt: new Date() } },
@@ -186,10 +234,29 @@ export async function sesionesActivas(userId: string) {
   });
 }
 
+/**
+ * Una sesión ya comprobada, con su usuario y sus academias cargados.
+ *
+ * Se deriva del tipo de retorno en lugar de escribirse a mano para que no pueda
+ * desincronizarse del `select` de la consulta.
+ */
 export type ValidatedSession = NonNullable<
   Awaited<ReturnType<typeof validateSessionToken>>
 >;
 
+/**
+ * Comprueba un testigo y, de paso, renueva la sesión si toca.
+ *
+ * @param token El testigo de la cookie, en claro.
+ * @returns La sesión con su usuario y sus academias, o `null` si el testigo no
+ *   existe, está revocado o ha caducado. Los tres casos devuelven lo mismo a
+ *   propósito: quien prueba testigos no debe poder distinguirlos.
+ *
+ * @remarks
+ * Pasada la mitad de la vida de la sesión, la renueva sola al usarla. Así quien
+ * entra a diario no tiene que volver a identificarse cada quince días, y quien
+ * deja de entrar caduca igualmente.
+ */
 export async function validateSessionToken(token: string) {
   const tokenHash = hashSessionToken(token);
   const session = await prismaBase.session.findUnique({
@@ -236,6 +303,16 @@ export async function validateSessionToken(token: string) {
   return session;
 }
 
+/**
+ * Cierra una sesión concreta.
+ *
+ * No borra la fila: la marca. Las revocadas se conservan treinta días a
+ * propósito, porque si alguien denuncia un acceso indebido la academia
+ * necesita poder ver desde dónde se entró. El mantenimiento nocturno las
+ * limpia después.
+ *
+ * @param sessionId Cuál. Si ya estaba cerrada no pasa nada: es idempotente.
+ */
 export async function revokeSession(sessionId: string) {
   await prismaBase.session.updateMany({
     where: { id: sessionId, revokedAt: null },
@@ -243,7 +320,15 @@ export async function revokeSession(sessionId: string) {
   });
 }
 
-/** Cierra todas las sesiones de un usuario (cambio de contraseña, baja, soporte). */
+/**
+ * Cierra todas las sesiones de una persona.
+ *
+ * Se llama al cambiar la contraseña, al dar de baja y al terminar el soporte.
+ *
+ * @param userId De quién.
+ * @param exceptSessionId La que se salva, normalmente la actual: quien cambia
+ *   su contraseña espera echar a los demás, no a sí mismo.
+ */
 export async function revokeAllSessions(userId: string, exceptSessionId?: string) {
   await prismaBase.session.updateMany({
     where: {
@@ -255,6 +340,15 @@ export async function revokeAllSessions(userId: string, exceptSessionId?: string
   });
 }
 
+/**
+ * Cambia la academia activa de una sesión.
+ *
+ * Para quien pertenece a varias: el mismo inicio de sesión, otro contexto.
+ *
+ * @param sessionId La sesión en curso.
+ * @param academyId La academia, o `null` para dejarla sin elegir. Quien llama
+ *   es responsable de haber comprobado que esa persona pertenece a ella.
+ */
 export async function setActiveAcademy(sessionId: string, academyId: string | null) {
   await prismaBase.session.update({
     where: { id: sessionId },
@@ -264,6 +358,15 @@ export async function setActiveAcademy(sessionId: string, academyId: string | nu
 
 // ── Cookie ───────────────────────────────────────────────────────────────────
 
+/**
+ * Deja la cookie de sesión en la respuesta.
+ *
+ * `httpOnly` para que ningún script pueda leerla, `sameSite: lax` contra CSRF y
+ * `secure` en producción, donde va por HTTPS. En desarrollo no, porque en
+ * `http://localhost` el navegador la descartaría y no se podría entrar.
+ *
+ * @param token El testigo en claro.
+ */
 export async function setSessionCookie(token: string) {
   const store = await cookies();
   store.set(SESSION_COOKIE, token, {
@@ -275,6 +378,13 @@ export async function setSessionCookie(token: string) {
   });
 }
 
+/**
+ * Borra la cookie de sesión.
+ *
+ * Se escribe vacía con caducidad cero en vez de eliminarla, que es la forma
+ * fiable de que el navegador la tire. Las mismas banderas que al ponerla: si no
+ * coinciden, algunos navegadores dejan la vieja donde estaba.
+ */
 export async function clearSessionCookie() {
   const store = await cookies();
   store.set(SESSION_COOKIE, "", {
@@ -286,6 +396,12 @@ export async function clearSessionCookie() {
   });
 }
 
+/**
+ * Lee el testigo de la petición en curso.
+ *
+ * @returns El testigo, o `null` si no hay cookie. Que exista no significa que
+ *   valga: eso lo decide {@link validateSessionToken}.
+ */
 export async function readSessionCookie(): Promise<string | null> {
   const store = await cookies();
   return store.get(SESSION_COOKIE)?.value ?? null;

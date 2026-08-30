@@ -33,6 +33,12 @@ const CADUCIDAD_RESET_MINUTOS = 60;
 const CADUCIDAD_VERIFICACION_HORAS = 72;
 
 /** Para qué sirve un testigo. Los dos tipos comparten tabla; esto los separa. */
+/**
+ * Para qué sirve un testigo.
+ *
+ * Los dos tipos comparten tabla, y por eso el propósito se comprueba siempre:
+ * un enlace de «confirma tu correo» no puede acabar cambiando una contraseña.
+ */
 export type ProposiroToken = "reset" | "verify";
 
 /**
@@ -43,11 +49,24 @@ export type ProposiroToken = "reset" | "verify";
  */
 const PREFIJO_VERIFICACION = "v_";
 
-/** El testigo que viaja en el enlace. 32 bytes de aleatoriedad criptográfica. */
+/**
+ * El testigo que viaja en el enlace.
+ *
+ * @returns 32 bytes aleatorios en base64url. Como con las sesiones, en la base
+ *   solo se guarda su resumen: quien lea la tabla no puede usar los enlaces.
+ */
 export function generarToken(): string {
   return randomBytes(32).toString("base64url");
 }
 
+/**
+ * Resumen del testigo, que es lo único que se guarda.
+ *
+ * @param token El testigo del enlace, **con su prefijo si lo lleva**. El
+ *   prefijo va dentro del texto que se resume, así que no se puede quitar ni
+ *   añadir sin invalidar el testigo entero.
+ * @returns Su SHA-256 en hexadecimal.
+ */
 export function hashToken(token: string): string {
   return createHash("sha256").update(token).digest("hex");
 }
@@ -55,8 +74,10 @@ export function hashToken(token: string): string {
 /**
  * Crea un testigo de recuperación y envía el correo.
  *
- * Devuelve siempre `true`: quien llama no debe poder distinguir el caso «no
- * existe ese correo» del caso «enviado».
+ * @param email El correo que se ha escrito en el formulario.
+ * @returns Nada, y **no dice si existía**. Quien llama no puede distinguir «no
+ *   hay nadie con ese correo» de «enviado», porque esa diferencia convertiría
+ *   el formulario de recuperación en un comprobador de quién está apuntado.
  */
 export async function solicitarRecuperacion(email: string): Promise<void> {
   const usuario = await prismaBase.user.findUnique({
@@ -113,6 +134,13 @@ export async function solicitarRecuperacion(email: string): Promise<void> {
   });
 }
 
+/**
+ * Qué ha pasado al comprobar un testigo.
+ *
+ * Los tres motivos se distinguen aquí dentro para poder decirle a la persona
+ * algo útil —«este enlace ya se usó» es distinto de «ha caducado»—, pero un
+ * enlace de otro propósito se responde como `no-existe`.
+ */
 export type ResultadoToken =
   | { ok: true; userId: string; tokenId: string }
   | { ok: false; motivo: "no-existe" | "caducado" | "usado" };
@@ -125,6 +153,12 @@ export type ResultadoToken =
  * cualquiera puede haber reenviado— serviría para cambiar la contraseña. Es el
  * error clásico de compartir tabla y aquí está cerrado por el prefijo del
  * propio testigo, que va dentro del resumen y no se puede falsear.
+ *
+ * @param token El testigo del enlace.
+ * @param proposito Para qué se quiere usar.
+ * @returns `{ ok: true }` con el usuario y el identificador del testigo, o
+ *   `{ ok: false }` con el motivo. **No lo consume**: eso es
+ *   {@link consumirToken}, y va después de haber cambiado la contraseña.
  */
 export async function comprobarToken(
   token: string,
@@ -152,7 +186,15 @@ export async function comprobarToken(
   return { ok: true, userId: registro.userId, tokenId: registro.id };
 }
 
-/** Marca el testigo como consumido. Se llama justo al cambiar la contraseña. */
+/**
+ * Marca el testigo como usado.
+ *
+ * Va **después** de cambiar la contraseña, no antes: si el cambio falla, el
+ * enlace tiene que seguir sirviendo. Al revés, la persona se quedaría fuera con
+ * un enlace gastado y sin contraseña nueva.
+ *
+ * @param tokenId El identificador que devolvió {@link comprobarToken}.
+ */
 export async function consumirToken(tokenId: string): Promise<void> {
   await prismaBase.passwordResetToken.update({
     where: { id: tokenId },
@@ -169,6 +211,10 @@ export async function consumirToken(tokenId: string): Promise<void> {
  *
  * Se distingue del testigo de recuperación por su prefijo: así un enlace de
  * verificación nunca puede usarse para cambiar una contraseña.
+ *
+ * @param userId A quién se le manda.
+ * @returns Nada. No hace nada si el correo ya estaba verificado o si el usuario
+ *   no existe: reenviar una verificación es una acción que se repite sola.
  */
 export async function enviarVerificacionDeCorreo(userId: string): Promise<void> {
   const usuario = await prismaBase.user.findUnique({
@@ -215,11 +261,24 @@ export async function enviarVerificacionDeCorreo(userId: string): Promise<void> 
   });
 }
 
+/**
+ * ¿Es un testigo de verificación de correo?
+ *
+ * @param token El testigo del enlace.
+ * @returns `true` si lleva el prefijo. Se mira antes de nada para no gastar una
+ *   consulta con un enlace del otro tipo.
+ */
 export function esTokenDeVerificacion(token: string): boolean {
   return token.startsWith(PREFIJO_VERIFICACION);
 }
 
-/** Consume un testigo de verificación y sella la fecha en el usuario. */
+/**
+ * Consume un testigo de verificación y sella la fecha en el usuario.
+ *
+ * @param token El testigo del enlace.
+ * @returns El resultado de la comprobación. Si sale bien, el correo queda
+ *   verificado y el testigo gastado.
+ */
 export async function verificarCorreo(token: string): Promise<ResultadoToken> {
   if (!esTokenDeVerificacion(token)) return { ok: false, motivo: "no-existe" };
 
@@ -240,6 +299,10 @@ export async function verificarCorreo(token: string): Promise<ResultadoToken> {
  *
  * La ejecuta la tarea programada. No es solo higiene: son datos que apuntan a
  * cuentas concretas y no hay razón para conservarlos una vez no sirven.
+ *
+ * @returns Cuántos se han borrado. Se van los caducados y los ya usados hace
+ *   más de una semana; los usados se conservan ese tiempo por si hay que
+ *   reconstruir qué pasó con una cuenta.
  */
 export async function limpiarTokensCaducados(): Promise<number> {
   const { count } = await prismaBase.passwordResetToken.deleteMany({

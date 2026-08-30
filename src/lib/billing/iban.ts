@@ -33,10 +33,27 @@ export function normalizarIban(valor: string): string {
   return valor.replace(/[\s-]/g, "").toUpperCase();
 }
 
+/**
+ * Qué ha pasado al validar un IBAN.
+ *
+ * Cuando falla dice **por qué** en lenguaje llano. Un «IBAN no válido» a secas
+ * deja a quien lo teclea sin saber si sobra un dígito o si se equivocó de país.
+ */
 export type ResultadoIban =
   | { valido: true; iban: string; pais: string }
   | { valido: false; motivo: string };
 
+/**
+ * Valida un IBAN con el algoritmo oficial, módulo 97.
+ *
+ * No es una comprobación de formato: es la misma cuenta que hace el banco, así
+ * que un dígito cambiado se detecta aquí y no tres semanas después, cuando la
+ * remesa vuelve rechazada y el alumno lleva un mes sin pagar sin saberlo.
+ *
+ * @param entrada El IBAN tal como se ha escrito, con espacios o sin ellos.
+ * @returns `{ valido: true }` con la versión normalizada, o `{ valido: false }`
+ *   con el motivo en lenguaje llano.
+ */
 export function validarIban(valor: string): ResultadoIban {
   const iban = normalizarIban(valor);
 

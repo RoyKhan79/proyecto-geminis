@@ -50,3 +50,7 @@ next-env.d.ts
 # de /manual, así que guardarlo aquí sería tener dos manuales que se
 # contradicen, y ocho megas de fotos duplicadas en el histórico.
 /Manual de Geminis.html
+
+# La referencia del código generada con `npm run docs`. Son miles de archivos
+# y se rehace en segundos: lo que se versiona son los comentarios del código.
+/docs/api/

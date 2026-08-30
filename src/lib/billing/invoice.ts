@@ -29,12 +29,19 @@ export type LineaFactura = {
   taxRate: number;
 };
 
+/** Una línea de factura con su IVA y sus totales ya calculados. */
 export type LineaCalculada = LineaFactura & {
   baseCents: number;
   taxCents: number;
   totalCents: number;
 };
 
+/**
+ * Los totales de una factura, desglosados por tipo de IVA.
+ *
+ * Van desglosados porque la ley lo exige cuando hay varios tipos en la misma
+ * factura, y porque una academia puede tener una parte exenta y otra no.
+ */
 export type TotalesFactura = {
   lineas: LineaCalculada[];
   subtotalCents: number;
@@ -51,6 +58,16 @@ function redondear(valor: number): number {
   return Math.round(valor);
 }
 
+/**
+ * Calcula las líneas y los totales de una factura.
+ *
+ * Todo en céntimos y en enteros. El redondeo se hace **por línea** y luego se
+ * suma, que es como lo hace Hacienda: redondear el total al final da céntimos
+ * de diferencia y una factura que no cuadra con su propio desglose.
+ *
+ * @param lineas Concepto, cantidad, precio unitario y tipo de IVA.
+ * @returns Las líneas con sus importes y los totales agrupados por tipo.
+ */
 export function calcularFactura(
   lineas: LineaFactura[],
   descuentoCents = 0,

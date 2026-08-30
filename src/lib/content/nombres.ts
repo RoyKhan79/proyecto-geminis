@@ -92,6 +92,20 @@ function limpiar(texto: string): string {
     .trim();
 }
 
+/**
+ * Lee el número y el título del nombre de un archivo de temario.
+ *
+ * @param nombreArchivo El nombre tal cual, con su extensión.
+ * @returns Lo que ha sabido deducir y **con qué patrón**, para que la academia
+ *   pueda revisarlo. `numero` es `null` cuando no lo ha encontrado, y entonces
+ *   ese archivo se va al final de la lista en lugar de esconderse.
+ *
+ * @example
+ * ```ts
+ * leerNombre("Bloque II - Tema 3 - Fuentes.pdf");
+ * // { bloque: "Bloque 2", numero: 3, titulo: "Fuentes", patron: "tema" }
+ * ```
+ */
 export function leerNombre(nombreArchivo: string): LecturaDeNombre {
   const base = nombreArchivo.replace(EXTENSIONES, "");
 
@@ -154,6 +168,7 @@ export function leerNombre(nombreArchivo: string): LecturaDeNombre {
   };
 }
 
+/** Un tema propuesto: lo leído del nombre, más su etiqueta y su orden. */
 export type PropuestaDeTema = LecturaDeNombre & {
   nombreArchivo: string;
   /** Cómo se llamará el tema si nadie lo toca. */

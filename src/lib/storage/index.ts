@@ -17,6 +17,13 @@ import { env } from "@/lib/env";
  * quién pide qué (ver src/app/api/archivos/[fileId]/route.ts).
  */
 
+/**
+ * Lo que devuelve el almacén al guardar un archivo.
+ *
+ * El `checksumSha256` no es decorativo: es lo que permite detectar que un
+ * archivo se ha corrompido en el almacén y lo que evita subir dos veces el
+ * mismo documento.
+ */
 export type StoredObject = {
   key: string;
   sizeBytes: number;
@@ -57,6 +64,17 @@ export class ArchivoDeOtraAcademiaError extends Error {
   }
 }
 
+/**
+ * ¿Esta clave pertenece a esta academia?
+ *
+ * @param clave La clave del objeto, tal como está guardada en `StoredFile`.
+ * @param academyId La academia de la sesión.
+ * @returns `true` solo si la clave empieza exactamente por
+ *   `academies/<academyId>/`. La barra final es lo que importa: sin ella, una
+ *   academia cuyo identificador fuera prefijo de otro abriría sus archivos.
+ *   Con UUID de longitud fija no puede pasar hoy, pero es el error clásico de
+ *   comparar prefijos y queda cerrado por escrito.
+ */
 export function claveEsDeLaAcademia(clave: string, academyId: string): boolean {
   return clave.startsWith(`academies/${academyId}/`);
 }
@@ -67,6 +85,20 @@ export function claveEsDeLaAcademia(clave: string, academyId: string): boolean {
  * Es la única función que debería usarse para leer un archivo desde una
  * petición. `getStream` a secas queda para migraciones y scripts, donde no hay
  * academia con la que comparar.
+ */
+/**
+ * Abre un archivo comprobando antes que es de esa academia.
+ *
+ * Es la única función que debería usarse para leer un archivo desde una
+ * petición. `storage().getStream()` a secas queda para migraciones y scripts,
+ * donde no hay academia con la que comparar.
+ *
+ * @param clave Clave del objeto en el almacén.
+ * @param academyId Academia de quien lo pide.
+ * @returns El flujo de bytes, listo para servir.
+ * @throws {ArchivoDeOtraAcademiaError} Si la clave no es de esa academia. Se
+ *   lanza **antes** de tocar el almacén: si llegara a abrirlo y fallara
+ *   después, los bytes ya habrían salido del disco.
  */
 export async function abrirParaAcademia(
   clave: string,
@@ -79,6 +111,18 @@ export async function abrirParaAcademia(
 }
 
 /** Ruta del objeto. Siempre empieza por la academia: aísla también en disco. */
+/**
+ * Construye la clave con la que se guarda un archivo.
+ *
+ * @param academyId Va delante de todo, y es lo que hace posible la segunda
+ *   barrera de {@link claveEsDeLaAcademia}.
+ * @param originalName Nombre que traía el archivo. Se limpia de acentos y de
+ *   todo lo que no sea letra, número, punto o guion, y se recorta a 80
+ *   caracteres.
+ * @returns Algo como `academies/<uuid>/<uuid>/tema-12.pdf`. El UUID del medio
+ *   evita que dos archivos con el mismo nombre se pisen, sin tener que
+ *   comprobar antes si existe.
+ */
 export function buildStorageKey(
   academyId: string,
   originalName: string,
@@ -162,6 +206,13 @@ class S3Driver implements StorageDriver {
 
 let driver: StorageDriver | null = null;
 
+/**
+ * El almacén configurado, creado una sola vez.
+ *
+ * @returns Disco local en desarrollo, S3 en producción, según
+ *   `STORAGE_DRIVER`. Quien lo use no sabe cuál es: cambiar de proveedor no
+ *   toca ninguna pantalla.
+ */
 export function storage(): StorageDriver {
   if (!driver) {
     driver =
@@ -172,13 +223,26 @@ export function storage(): StorageDriver {
   return driver;
 }
 
-/** Convierte un stream de Node en el ReadableStream que espera una Response. */
+/**
+ * Convierte un flujo de Node en el que espera una `Response`.
+ *
+ * @param stream El flujo del almacén.
+ * @returns El mismo flujo en el formato de la Web. Se sirve en trozos, sin
+ *   cargar el archivo entero en memoria: un temario de 200 MB tumbaría el
+ *   servidor si se leyera de golpe.
+ */
 export function toWebStream(stream: NodeJS.ReadableStream): ReadableStream {
   return Readable.toWeb(stream as Readable) as ReadableStream;
 }
 
 // ── Reglas de subida ─────────────────────────────────────────────────────────
 
+/**
+ * Tamaño máximo por archivo: 200 MB.
+ *
+ * Da de sobra para un temario escaneado y para una grabación corta, y corta el
+ * caso de alguien subiendo una película por error.
+ */
 export const MAX_UPLOAD_BYTES = 200 * 1024 * 1024;
 
 /**
@@ -206,10 +270,24 @@ export const ALLOWED_MIME: Record<string, string> = {
   "text/plain": "Texto",
 };
 
+/**
+ * ¿Se admite este tipo de archivo?
+ *
+ * @param mime El tipo declarado en la subida.
+ * @returns `true` si está en la lista blanca de {@link ALLOWED_MIME}.
+ */
 export function isAllowedMime(mime: string) {
   return mime in ALLOWED_MIME;
 }
 
+/**
+ * Traduce un tipo MIME al tipo de recurso del temario.
+ *
+ * @param mime El tipo del archivo.
+ * @returns `PDF`, `IMAGE`, `VIDEO`, `AUDIO` o `FILE` para todo lo demás. Es lo
+ *   que decide cómo se pinta en el Campus: un PDF va al visor protegido, un
+ *   vídeo al reproductor.
+ */
 export function resourceTypeForMime(mime: string) {
   if (mime === "application/pdf") return "PDF" as const;
   if (mime.startsWith("image/")) return "IMAGE" as const;

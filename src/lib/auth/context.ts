@@ -14,6 +14,7 @@ import type { Permission } from "./permissions";
  * cuenta.
  */
 
+/** La academia con la que se está trabajando ahora mismo. */
 export type ActiveAcademy = {
   id: string;
   slug: string;
@@ -23,6 +24,13 @@ export type ActiveAcademy = {
   status: string;
 };
 
+/**
+ * Todo lo que hace falta saber de quien está haciendo la petición.
+ *
+ * Se resuelve una vez por petición y se reutiliza: `getAuthContext` va
+ * envuelto en la caché de React, así que llamarlo diez veces en una página no
+ * son diez consultas.
+ */
 export type AuthContext = {
   user: {
     id: string;
@@ -44,6 +52,13 @@ export type AuthContext = {
   memberships: { academyId: string; academyName: string; academySlug: string }[];
 };
 
+/**
+ * Resuelve la sesión de la petición en curso.
+ *
+ * @returns El contexto, o `null` si no hay sesión válida. No redirige ni lanza:
+ *   es la pieza que usan las guardas, y también las pantallas públicas que
+ *   quieren saber si hay alguien dentro sin obligar a entrar.
+ */
 export const getAuthContext = cache(async (): Promise<AuthContext | null> => {
   const token = await readSessionCookie();
   if (!token) return null;
@@ -133,6 +148,16 @@ export const getAuthContext = cache(async (): Promise<AuthContext | null> => {
 
 // ── Errores ──────────────────────────────────────────────────────────────────
 
+/**
+ * Falta el permiso para hacer algo.
+ *
+ * Lo lanzan las acciones, no las páginas: una acción que no se puede ejecutar
+ * es un error del programa —la interfaz no debería haber ofrecido ese botón— y
+ * las páginas prefieren llevar a una pantalla que lo explique.
+ *
+ * @param permission Cuál faltaba, para que el mensaje sirva de algo al
+ *   depurar. No se le enseña al usuario tal cual.
+ */
 export class ForbiddenError extends Error {
   constructor(permission?: Permission) {
     super(
@@ -146,6 +171,13 @@ export class ForbiddenError extends Error {
 
 // ── Guardas ──────────────────────────────────────────────────────────────────
 
+/**
+ * Exige sesión.
+ *
+ * @returns El contexto de quien ha entrado.
+ * @remarks Si no hay sesión **no devuelve**: redirige a `/entrar`. Como
+ *   `redirect()` lanza por dentro, el código que va después no se ejecuta.
+ */
 export async function requireAuth(): Promise<AuthContext> {
   const ctx = await getAuthContext();
   if (!ctx) redirect("/entrar");
@@ -155,6 +187,17 @@ export async function requireAuth(): Promise<AuthContext> {
 /**
  * Exige sesión + academia activa y devuelve además el cliente de base de datos
  * ya limitado a esa academia. Es el punto de partida de casi toda la aplicación.
+ *
+ * @returns El contexto con `academy`, `membershipId` y `db` garantizados, sin
+ *   necesidad de comprobar que existen.
+ * @remarks Redirige a `/entrar` sin sesión y a `/elegir-academia` si la persona
+ *   pertenece a varias y no ha elegido ninguna.
+ *
+ * @example
+ * ```ts
+ * const ctx = await requireAcademy();
+ * const alumnos = await ctx.db.membership.findMany(); // solo los de su academia
+ * ```
  */
 export async function requireAcademy(): Promise<
   AuthContext & { academy: ActiveAcademy; membershipId: string; db: TenantClient }
@@ -169,10 +212,29 @@ export async function requireAcademy(): Promise<
   };
 }
 
+/**
+ * ¿Tiene este permiso?
+ *
+ * Para decidir qué se pinta. **No sustituye a la comprobación del servidor**:
+ * ocultar un botón no es autorizar, y la acción vuelve a comprobarlo.
+ *
+ * @param ctx Contexto de la sesión.
+ * @param permission El permiso.
+ * @returns `true` si lo tiene.
+ */
 export function can(ctx: AuthContext, permission: Permission): boolean {
   return ctx.permissions.has(permission);
 }
 
+/**
+ * ¿Tiene alguno de estos permisos?
+ *
+ * Para apartados del menú que valen para varios roles.
+ *
+ * @param ctx Contexto de la sesión.
+ * @param permissions Los permisos que valdrían.
+ * @returns `true` si tiene al menos uno.
+ */
 export function canAny(ctx: AuthContext, permissions: Permission[]): boolean {
   return permissions.some((permission) => ctx.permissions.has(permission));
 }
@@ -181,6 +243,10 @@ export function canAny(ctx: AuthContext, permissions: Permission[]): boolean {
  * Guarda para Server Actions y rutas: lanza si falta el permiso.
  * En servidor SIEMPRE hay que llamar a esto aunque la interfaz ya oculte el
  * botón: ocultar no es autorizar (§51).
+ *
+ * @param permission El permiso exigido.
+ * @returns El contexto con academia y cliente de base de datos.
+ * @throws {ForbiddenError} Si falta el permiso.
  */
 export async function requirePermission(permission: Permission) {
   const ctx = await requireAcademy();
@@ -195,6 +261,10 @@ export async function requirePermission(permission: Permission) {
  * ejecutar es un error y debe lanzarlo; una página a la que alguien llega sin
  * permiso —por un enlace antiguo o por curiosidad— merece una explicación, no
  * un error del servidor.
+ *
+ * @param permission El permiso exigido.
+ * @returns El contexto con academia y cliente de base de datos.
+ * @remarks Si falta el permiso redirige a `/sin-acceso` y no devuelve.
  */
 export async function requirePagePermission(permission: Permission) {
   const ctx = await requireAcademy();
@@ -206,6 +276,11 @@ export async function requirePagePermission(permission: Permission) {
  * Guarda de página para la consola de plataforma.
  * Redirige en lugar de lanzar: una persona que llega a una URL que no le
  * corresponde merece una pantalla clara, no un error del servidor.
+ *
+ * @returns El contexto del superadministrador. **Sin academia**: ese nivel no
+ *   pertenece a ninguna, y por eso no ve el contenido ni el alumnado de
+ *   ninguna salvo que entre expresamente a dar soporte.
+ * @remarks Redirige a `/sin-acceso` si no es administrador de plataforma.
  */
 export async function requirePlatformAdmin(): Promise<AuthContext> {
   const ctx = await requireAuth();

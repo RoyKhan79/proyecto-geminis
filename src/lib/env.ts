@@ -79,7 +79,16 @@ if (!parsed.success) {
   throw new Error(`Configuración de entorno inválida:\n${detalle}`);
 }
 
+/**
+ * La configuración del entorno, ya validada.
+ *
+ * Se comprueba al arrancar y **no al usarla**: una variable mal puesta tiene
+ * que hacer que el servidor no levante, no que falle la remesa del día 1 a las
+ * ocho de la mañana.
+ */
 export const env = parsed.data;
 
+/** En producción se aprietan cosas: cookies `secure`, sin trazas en pantalla. */
 export const isProduction = env.NODE_ENV === "production";
+/** En desarrollo se aflojan otras, como servir por HTTP sin cookie `secure`. */
 export const isDevelopment = env.NODE_ENV === "development";

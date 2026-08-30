@@ -19,7 +19,18 @@ const SENSITIVE_KEYS = [
   "cookie",
 ];
 
-/** Sustituye valores sensibles por «·····» a cualquier profundidad. */
+/**
+ * Sustituye valores sensibles por «·····» a cualquier profundidad.
+ *
+ * El registro de auditoría se conserva años y lo leen personas. Una contraseña
+ * o un IBAN que se cuelen ahí quedan en claro para siempre, así que se tapan
+ * antes de escribir y no después.
+ *
+ * @param value Cualquier cosa: objeto, lista, valor suelto.
+ * @returns Una copia con los valores cuya CLAVE suene a secreto sustituidos.
+ *   Se mira la clave y no el valor: adivinar por el contenido dejaría pasar
+ *   demasiado y taparía cosas que no tocan.
+ */
 export function maskSensitive(value: unknown): unknown {
   if (Array.isArray(value)) return value.map(maskSensitive);
   if (value && typeof value === "object") {
@@ -34,6 +45,13 @@ export function maskSensitive(value: unknown): unknown {
   return value;
 }
 
+/**
+ * Un hecho que queda registrado.
+ *
+ * `impersonatorId` es el que da sentido al soporte: cuando alguien de la
+ * plataforma entra en una academia a ayudar, en el registro consta **quién
+ * estaba de verdad detrás** de cada acción, no solo la cuenta suplantada.
+ */
 export type AuditEvent = {
   academyId?: string | null;
   actorId?: string | null;
@@ -45,6 +63,14 @@ export type AuditEvent = {
   context?: Record<string, unknown>;
 };
 
+/**
+ * Registra un hecho en la auditoría.
+ *
+ * @param event Qué ha pasado y quién lo ha hecho.
+ * @returns Nada. **No lanza aunque falle**: que la auditoría no pueda escribir
+ *   no puede tumbar la operación del usuario, que ya se ha hecho. El fallo se
+ *   escribe en la salida de errores para que se vea.
+ */
 export async function recordAudit(event: AuditEvent): Promise<void> {
   try {
     await prismaBase.auditLog.create({
@@ -70,7 +96,16 @@ export async function recordAudit(event: AuditEvent): Promise<void> {
   }
 }
 
-/** Calcula qué campos han cambiado, para no guardar filas enteras. */
+/**
+ * Qué campos han cambiado, para no guardar la fila entera.
+ *
+ * @typeParam T La forma del registro.
+ * @param before Cómo estaba.
+ * @param after Lo que se ha escrito; basta con los campos tocados.
+ * @returns Un objeto con solo lo que cambia, cada uno con su `antes` y su
+ *   `despues`. Guardar la fila completa haría el registro ilegible y
+ *   arrastraría datos personales que no hacían falta.
+ */
 export function diff<T extends Record<string, unknown>>(
   before: T,
   after: Partial<T>,

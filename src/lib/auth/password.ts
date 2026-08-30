@@ -31,6 +31,17 @@ const PARAMS = { N: 65536, r: 8, p: 1, keylen: 64 } as const;
 // 128 · N · r = 64 MiB; damos margen al límite de memoria de Node.
 const MAXMEM = 160 * 1024 * 1024;
 
+/**
+ * Deriva la contraseña con scrypt, lista para guardar.
+ *
+ * @param password En claro. Se normaliza a NFKC antes de derivar: sin eso, la
+ *   misma «ñ» tecleada en un móvil y en un teclado Mac son dos cadenas
+ *   distintas y la contraseña no volvería a valer.
+ * @returns `scrypt$N$r$p$<sal base64>$<derivada base64>`. Los parámetros van
+ *   dentro a propósito, para poder subir el coste en el futuro sin invalidar
+ *   las contraseñas ya guardadas.
+ * @throws {Error} Si no llega a {@link PASSWORD_MIN_LENGTH} caracteres.
+ */
 export async function hashPassword(password: string): Promise<string> {
   assertPasswordShape(password);
   const salt = randomBytes(16);
@@ -49,6 +60,18 @@ export async function hashPassword(password: string): Promise<string> {
   ].join("$");
 }
 
+/**
+ * Comprueba una contraseña contra lo guardado.
+ *
+ * @param password La que ha escrito la persona.
+ * @param stored Lo guardado en la base, o nada.
+ * @returns `true` solo si coincide. Devuelve `false` —nunca lanza— ante un
+ *   formato corrupto o ilegible: un registro estropeado no puede tumbar la
+ *   pantalla de acceso de toda la academia.
+ * @remarks La comparación final es en **tiempo constante**. Comparar con `===`
+ *   tarda distinto según cuántos bytes coincidan, y eso deja adivinar el
+ *   resumen byte a byte midiendo el tiempo de respuesta.
+ */
 export async function verifyPassword(
   password: string,
   stored: string | null | undefined,
@@ -84,8 +107,12 @@ export async function verifyPassword(
 }
 
 /**
- * ¿Conviene rehashear? Devuelve true si la contraseña se guardó con parámetros
- * más débiles que los actuales, para poder actualizarla en el siguiente acceso.
+ * ¿Conviene volver a derivar la contraseña?
+ *
+ * @param stored Lo guardado.
+ * @returns `true` si se guardó con parámetros más flojos que los de ahora, o si
+ *   no hay nada guardado. Permite subir el coste de forma progresiva: cada
+ *   persona se actualiza la próxima vez que entra, sin pedirle nada.
  */
 export function needsRehash(stored: string | null | undefined): boolean {
   if (!stored) return true;
@@ -94,6 +121,13 @@ export function needsRehash(stored: string | null | undefined): boolean {
   return Number(parts[1]) < PARAMS.N;
 }
 
+/**
+ * Longitud mínima: 10 caracteres.
+ *
+ * Diez y sin exigir símbolos raros a propósito. Las reglas de composición
+ * empujan a `Academia2026!` en todas partes; la longitud es lo que de verdad
+ * cuesta de adivinar.
+ */
 export const PASSWORD_MIN_LENGTH = 10;
 
 function assertPasswordShape(password: string) {

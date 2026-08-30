@@ -53,6 +53,15 @@ function cambio() {
   for (const avisar of interesados) avisar();
 }
 
+/**
+ * Avisa cuando cambia lo guardado en el dispositivo.
+ *
+ * Es la mitad de `useSyncExternalStore`: la otra es {@link instantanea}.
+ *
+ * @param alCambiar Se llama en cada guardado, borrado o vaciado.
+ * @returns La función para dejar de escuchar. Hay que llamarla al desmontar, o
+ *   el componente sigue en la lista para siempre.
+ */
 export function suscribirse(alCambiar: () => void): () => void {
   interesados.add(alCambiar);
   return () => {
@@ -105,6 +114,13 @@ export function claveDeArchivo(fileId: string): string {
   return `/mochila/archivo/${fileId}`;
 }
 
+/**
+ * Un tema guardado en este dispositivo.
+ *
+ * `version` es la fecha del recurso en el servidor: si la academia sube una
+ * versión nueva del tema, deja de coincidir y se sabe que lo guardado caducó.
+ * Decirle al alumno que lo tiene sería mentirle sobre qué está estudiando.
+ */
 export type EntradaGuardada = {
   nodeId: string;
   fileId: string;
@@ -141,10 +157,24 @@ function escribirIndice(indice: Indice) {
   }
 }
 
+/**
+ * Lo que hay guardado ahora mismo.
+ *
+ * @returns Los temas ordenados por título. Lista vacía si el navegador no
+ *   admite el almacén —modo privado, por ejemplo—, nunca un error.
+ */
 export function loGuardado(): EntradaGuardada[] {
   return instantanea();
 }
 
+/**
+ * ¿Está este tema en el dispositivo?
+ *
+ * @param fileId El archivo.
+ * @param version La versión que espera quien pregunta. Si se pasa y no
+ *   coincide, devuelve `false`: lo guardado existe pero ya no sirve.
+ * @returns `true` si está y está al día.
+ */
 export function estaGuardado(fileId: string, version?: string): boolean {
   const entrada = leerIndice()[fileId];
   if (!entrada) return false;
@@ -154,6 +184,7 @@ export function estaGuardado(fileId: string, version?: string): boolean {
   return version ? entrada.version === version : true;
 }
 
+/** Un tema que el servidor autoriza a guardar, tal como llega del manifiesto. */
 export type TemaDescargable = {
   nodeId: string;
   label: string;
@@ -201,6 +232,11 @@ export async function guardarTema(tema: TemaDescargable): Promise<void> {
   escribirIndice(indice);
 }
 
+/**
+ * Quita un tema del dispositivo.
+ *
+ * @param fileId El archivo. Si no estaba, no pasa nada.
+ */
 export async function borrarTema(fileId: string): Promise<void> {
   if (!soportado()) return;
   const cache = await caches.open(CACHE);

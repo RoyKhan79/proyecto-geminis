@@ -31,6 +31,13 @@ export type GrantPrefix = {
   capabilities: Set<Capability>;
 };
 
+/**
+ * Los derechos ACTIVOS de un alumno, ya traducidos a prefijos de ruta.
+ *
+ * Se carga una vez por petición y se reutiliza. Trabajar con prefijos y no con
+ * listas de nodos es lo que hace que un derecho sobre «Temario» cubra sus
+ * doscientos temas sin guardar doscientas filas.
+ */
 export type StudentGrants = {
   /// Ramas concedidas.
   prefixes: GrantPrefix[];
@@ -207,6 +214,13 @@ export function releaseWhere(groupIds: string[], now: Date = new Date()) {
   };
 }
 
+/**
+ * Lo mínimo de un nodo para decidir si alguien puede verlo.
+ *
+ * Se pide como tipo suelto y no como el modelo entero a propósito: así queda
+ * escrito en la firma que estas funciones deciden con estos campos y con
+ * ninguno más.
+ */
 export type NodeForAccess = {
   id: string;
   path: string;
@@ -318,6 +332,13 @@ export async function isNodeReleased(
 
 // ── Banderas heredadas ───────────────────────────────────────────────────────
 
+/**
+ * Las banderas de uso de una rama del temario.
+ *
+ * Se heredan hacia abajo: gana el valor definido más cerca del nodo. `null` en
+ * la base significa «lo que diga mi padre», y por eso aquí ya vienen resueltas
+ * a `true` o `false`.
+ */
 export type InheritableFlags = {
   downloadable: boolean;
   aiEnabled: boolean;

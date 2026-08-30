@@ -52,13 +52,35 @@ import { DERIVED_MODELS, GLOBAL_MODELS, TENANT_MODELS } from "./tenant-models";
  * encendida. Ver docs/SECURITY_MODEL.md.
  */
 
+/**
+ * Un intento de tocar datos de otra academia.
+ *
+ * Se lanza en lugar de devolver un resultado vacío porque una escritura
+ * cruzada no es un caso de uso: es un fallo del programa, y corregirlo en
+ * silencio dejaría el error suelto para la próxima vez. En las LECTURAS la
+ * decisión es la contraria —se devuelve «no encontrado»— porque ahí sí hay un
+ * caso legítimo: alguien probando identificadores no debe poder distinguir
+ * «no existe» de «existe pero no es tuyo».
+ *
+ * @see NotFoundInTenantError para el caso de lectura.
+ */
 export class TenantViolationError extends Error {
+  /** @param message Qué se intentó hacer, con el identificador implicado. */
   constructor(message: string) {
     super(message);
     this.name = "TenantViolationError";
   }
 }
 
+/**
+ * El registro no existe **o no es de esta academia**, y no se dice cuál.
+ *
+ * El mensaje es deliberadamente igual en los dos casos. Distinguirlos
+ * convertiría cualquier pantalla en un detector de existencia: bastaría probar
+ * identificadores para saber qué tiene la competencia.
+ *
+ * @param model Nombre del modelo, solo para que el mensaje sea legible.
+ */
 export class NotFoundInTenantError extends Error {
   constructor(model: string) {
     super(`No se ha encontrado el registro solicitado (${model}).`);
@@ -134,6 +156,33 @@ const UUID_TX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
  * la guardia no puede envolver operaciones que ya están dentro de una
  * transacción. A cambio, **hay que acotar por `academyId` a mano**, y RLS sigue
  * puesta debajo comprobándolo.
+ *
+ * @typeParam T Lo que devuelva el bloque; se propaga tal cual.
+ * @param academyId Academia que queda fijada para toda la transacción, también
+ *   en la variable de sesión que usa Row Level Security.
+ * @param fn El bloque. Recibe el cliente de transacción **sin guardia**: cada
+ *   consulta de dentro tiene que llevar su propio `academyId`.
+ * @param opciones.timeout Milisegundos antes de abortar. Por defecto 15 000,
+ *   más que los 5 000 de Prisma: hay transacciones legítimamente largas, como
+ *   emitir una remesa con cientos de adeudos.
+ * @returns Lo que devuelva `fn`, una vez confirmada la transacción.
+ * @throws {TenantViolationError} Si `academyId` no tiene forma de UUID. Se
+ *   comprueba antes de nada porque ese valor acaba dentro de la sentencia SQL
+ *   que fija la variable de RLS.
+ *
+ * @example
+ * ```ts
+ * await transaccionDeAcademia(academia.id, async (tx) => {
+ *   const serie = await tx.invoiceSeries.findFirst({
+ *     where: { academyId: academia.id, id: serieId },
+ *   });
+ *   // …numerar y crear la factura, todo o nada
+ * });
+ * ```
+ *
+ * @see ADR sobre el bloqueo anidado (H-05): llamar a `tenantDb()` dentro de
+ *   este bloque provocaba un interbloqueo, y por eso la guardia detecta que ya
+ *   está dentro de una transacción y no vuelve a envolver.
  */
 export async function transaccionDeAcademia<T>(
   academyId: string,
@@ -220,6 +269,30 @@ async function conRls<T>(
  */
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
+/**
+ * Devuelve un cliente Prisma que no puede salirse de una academia.
+ *
+ * Es la puerta por la que pasa **todo** el acceso a datos con sesión. Lo que
+ * hace con cada tipo de operación está explicado en la cabecera del módulo.
+ *
+ * @param academyId Academia a la que queda atado el cliente. Tiene que venir de
+ *   la sesión ya validada: **nunca** de un parámetro de la petición, aunque
+ *   parezca un identificador válido.
+ * @returns Un cliente con la misma interfaz que Prisma. Los modelos globales
+ *   (User, Academy, Plan) pasan sin tocar; los derivados (StudentProfile,
+ *   ContentResource) no se pueden usar desde aquí y lanzan error, porque se
+ *   llega a ellos por su padre, que sí está protegido.
+ * @throws {TenantViolationError} Si falta el identificador o no tiene forma de
+ *   UUID. Se comprueba en la puerta: un `academyId` con otra forma significa
+ *   que algo ha ido mal antes, y ese valor acaba dentro de la sentencia que
+ *   fija la variable de RLS.
+ *
+ * @example
+ * ```ts
+ * const ctx = await requireAcademy();      // ctx.db ya es un tenantDb
+ * const alumnos = await ctx.db.membership.findMany();  // solo los suyos
+ * ```
+ */
 export function tenantDb(academyId: string) {
   if (!academyId) {
     throw new TenantViolationError(
@@ -410,4 +483,11 @@ async function ownsByUnique(model: string, where: unknown, academyId: string) {
   return (await ownershipOfUnique(model, where, academyId)) === "propio";
 }
 
+/**
+ * El tipo del cliente acotado por academia.
+ *
+ * Es el que reciben las consultas de `server/`: pedirlo como `TenantClient` en
+ * lugar de como el cliente de Prisma a secas deja escrito en la firma que esa
+ * función espera trabajar dentro de una academia.
+ */
 export type TenantClient = ReturnType<typeof tenantDb>;

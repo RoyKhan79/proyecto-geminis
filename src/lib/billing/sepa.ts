@@ -42,6 +42,12 @@ export type AdeudoSepa = {
   primerCobro: boolean;
 };
 
+/**
+ * Quién cobra: la academia, tal como la conoce el banco.
+ *
+ * El `identificadorAcreedor` no es el CIF: es el identificador SEPA que asigna
+ * el banco, y sin él la remesa se rechaza entera.
+ */
 export type DatosAcreedor = {
   nombre: string;
   iban: string;
@@ -49,6 +55,7 @@ export type DatosAcreedor = {
   identificador: string;
 };
 
+/** El fichero de adeudos listo para subir al banco, con su resumen. */
 export type FicheroSepa = {
   xml: string;
   nombreArchivo: string;

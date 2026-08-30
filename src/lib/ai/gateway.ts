@@ -22,6 +22,12 @@ import { env } from "@/lib/env";
 
 export type AiMessage = { role: "system" | "user" | "assistant"; content: string };
 
+/**
+ * Una petición al proveedor de IA.
+ *
+ * `feature` no es decorativa: es lo que permite saber después en qué se está
+ * gastando, y poder cortar una funcionalidad concreta sin apagarlas todas.
+ */
 export type AiRequest = {
   academyId: string;
   memberId?: string | null;
@@ -32,6 +38,13 @@ export type AiRequest = {
   temperature?: number;
 };
 
+/**
+ * La respuesta del proveedor, o la explicación de por qué no la hay.
+ *
+ * Cuando `ok` es `false`, `content` trae un texto **honesto** para enseñar tal
+ * cual: que la IA no está disponible. Nunca una respuesta inventada, que es lo
+ * peor que puede hacer un asistente de oposiciones.
+ */
 export type AiResponse = {
   ok: boolean;
   content: string;
@@ -58,6 +71,17 @@ const COSTE_POR_MILLON = {
   openai: { entrada: 40_000, salida: 160_000 },
 } as const;
 
+/**
+ * Pregunta al proveedor de IA. Es el único sitio del código que lo hace.
+ *
+ * @param request Qué se pregunta, quién y para qué funcionalidad.
+ * @returns Siempre una respuesta, nunca una excepción. Si no hay proveedor
+ *   configurado, si la clave falla o si el servicio no contesta, devuelve
+ *   `ok: false` con el motivo en lenguaje llano. Que se caiga un proveedor
+ *   externo no puede tumbar la pantalla de un alumno.
+ * @remarks Registra el consumo por academia y por funcionalidad antes de
+ *   devolver, también cuando falla: un intento que ha costado tokens cuenta.
+ */
 export async function askAi(request: AiRequest): Promise<AiResponse> {
   const inicio = Date.now();
   const proveedor = env.AI_PROVIDER;

@@ -12,6 +12,13 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // La referencia del código que genera TypeDoc: HTML y JavaScript ya
+    // empaquetado que nadie ha escrito. Se rehace con `npm run docs`.
+    "docs/api/**",
+    // El manual en un solo archivo, que genera `npm run manual:local`.
+    "Manual de Geminis.html",
+    // Lo que genera Prisma a partir del esquema.
+    "src/generated/**",
   ]),
 ]);
 
