@@ -30,11 +30,54 @@ export type StoredObject = {
   checksumSha256: string;
 };
 
+/**
+ * Lo que tiene que saber hacer un almacén de archivos.
+ *
+ * Dos implementaciones: disco local en desarrollo y S3 en producción. El resto
+ * de la aplicación no sabe cuál está usando, así que cambiar de proveedor no
+ * toca ni una pantalla.
+ */
 export interface StorageDriver {
+  /** Nombre corto del almacén; se guarda en cada archivo por si un día conviven. */
   readonly name: string;
+
+  /**
+   * Guarda un archivo.
+   *
+   * @param key La clave, construida siempre con {@link buildStorageKey}.
+   * @param data El contenido.
+   * @param contentType Su tipo MIME.
+   * @returns La clave definitiva, el tamaño y el resumen SHA-256.
+   */
   put(key: string, data: Buffer, contentType: string): Promise<StoredObject>;
+
+  /**
+   * Abre un archivo para servirlo.
+   *
+   * **No comprueba de quién es.** Desde una petición hay que usar
+   * {@link abrirParaAcademia}, que sí lo hace; esto queda para migraciones y
+   * scripts, donde no hay academia con la que comparar.
+   *
+   * @param key La clave del objeto.
+   * @returns Un flujo de bytes, para servir sin cargarlo entero en memoria.
+   */
   getStream(key: string): Promise<NodeJS.ReadableStream>;
+
+  /**
+   * Borra un archivo del almacén, de verdad y para siempre.
+   *
+   * @param key La clave del objeto.
+   */
   delete(key: string): Promise<void>;
+
+  /**
+   * ¿Sigue estando?
+   *
+   * @param key La clave del objeto.
+   * @returns `false` si ya no está. Se comprueba antes de servir para poder
+   *   responder «ya no está disponible» en lugar de cortar la descarga a
+   *   mitad, que es lo que ve el alumno si el archivo desapareció del almacén.
+   */
   exists(key: string): Promise<boolean>;
 }
 

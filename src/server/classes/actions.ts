@@ -29,6 +29,13 @@ const classSchema = z.object({
   meetingUrl: z.string().trim().url("El enlace no es válido.").optional().or(z.literal("")),
 });
 
+/**
+ * Programa una clase en la agenda.
+ *
+ * @returns Confirmación, o el motivo. Lo que se ponga aquí lo ve el alumnado en
+ *   su propio calendario, así que el tema de la clase no es un adorno: es lo
+ *   que le dice a cada uno qué se da mañana.
+ */
 export async function createClassAction(
   _prev: ClassState,
   formData: FormData,
@@ -124,6 +131,14 @@ const updateSchema = z.object({
   summary: z.string().trim().max(4000).optional(),
 });
 
+/**
+ * Cambia una clase ya programada.
+ *
+ * @returns Confirmación, o el motivo.
+ * @remarks Cambiar la hora no avisa a nadie por su cuenta. Es deliberado: el
+ *   aviso lo manda la academia cuando quiere y con sus palabras, no un correo
+ *   automático a las once de la noche por haber corregido una errata.
+ */
 export async function updateClassAction(
   _prev: ClassState,
   formData: FormData,
@@ -187,6 +202,13 @@ export async function updateClassAction(
   return { ok: "Clase actualizada." };
 }
 
+/**
+ * Quita una clase de la agenda.
+ *
+ * @remarks Se lleva con ella su lista de asistencia. Para una clase que se
+ *   suspende pero de la que interesa conservar quién había venido, es mejor
+ *   cambiarle el estado que borrarla.
+ */
 export async function deleteClassAction(formData: FormData) {
   const ctx = await requirePermission("classes.write");
   const classId = String(formData.get("classId") ?? "");

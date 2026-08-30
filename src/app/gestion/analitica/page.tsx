@@ -39,6 +39,13 @@ const RIESGO: Record<
   OK: { label: "Al día", tone: "positive", punto: "🟢" },
 };
 
+/**
+ * Analítica de la academia.
+ *
+ * Lo importante no son los totales de arriba: es la lista de quién necesita
+ * atención, con el motivo. Un número de riesgo sin explicación no sirve para
+ * llamar a nadie.
+ */
 export default async function AnaliticaPage() {
   const ctx = await requirePagePermission("analytics.read");
 

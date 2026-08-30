@@ -18,6 +18,7 @@ export const QUESTION_STATUS_LABEL: Record<QuestionStatus, string> = {
   ARCHIVED: "Archivada",
 };
 
+/** El color de cada estado de una pregunta, para que signifique lo mismo en toda la aplicación. */
 export const QUESTION_STATUS_TONE: Record<
   QuestionStatus,
   "neutral" | "positive" | "caution" | "critical" | "info"
@@ -29,12 +30,20 @@ export const QUESTION_STATUS_TONE: Record<
   ARCHIVED: "neutral",
 };
 
+/** Cómo se llama cada nivel de dificultad en pantalla. */
 export const DIFFICULTY_LABEL = {
   EASY: "Fácil",
   MEDIUM: "Media",
   HARD: "Difícil",
 } as const;
 
+/**
+ * El banco de preguntas, filtrado y paginado.
+ *
+ * @returns Las preguntas y el total. Incluye las marcadas como posiblemente
+ *   desactualizadas por un cambio normativo, que son justo las que hay que
+ *   mirar: se quedan visibles a propósito en lugar de esconderse.
+ */
 export async function listQuestions(
   db: TenantClient,
   filtros: {

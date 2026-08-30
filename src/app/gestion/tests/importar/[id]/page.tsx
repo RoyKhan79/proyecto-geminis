@@ -38,6 +38,11 @@ const FILA_ESTADO: Record<
   ROLLED_BACK: { label: "Revertida", tone: "neutral" },
 };
 
+/**
+ * Una importación de preguntas en curso.
+ *
+ * Detecta las repetidas, se simula antes de escribir y se puede revertir.
+ */
 export default async function ImportarPreguntasDetallePage({
   params,
 }: {

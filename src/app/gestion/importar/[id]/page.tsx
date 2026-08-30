@@ -38,6 +38,11 @@ const FILA_ESTADO: Record<
   ROLLED_BACK: { label: "Revertido", tone: "neutral" },
 };
 
+/**
+ * Una importación de alumnado en curso, paso a paso.
+ *
+ * Se simula antes de escribir nada y se puede revertir entera.
+ */
 export default async function ImportacionPage({
   params,
 }: {

@@ -16,6 +16,12 @@ import { AiPanel } from "./panel";
 
 export const metadata: Metadata = { title: "Geminis IA" };
 
+/**
+ * El copiloto de Geminis IA para el profesorado.
+ *
+ * Lo primero que hay que hacer una vez es indexar el material: sin eso la IA no
+ * tiene de dónde citar y lo dice, con razón.
+ */
 export default async function IaPage() {
   const ctx = await requirePagePermission("ai.copilot");
 

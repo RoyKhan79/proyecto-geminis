@@ -19,6 +19,25 @@ import { spawnSync } from "node:child_process";
 /** Lo que no se documenta a mano: propiedades de tipos que infiere el compilador. */
 const RUIDO = new Set(["Property"]);
 
+/**
+ * Exportaciones que lee el framework, no personas.
+ *
+ * `metadata`, `viewport` y compañía son convenciones de Next.js: se declaran
+ * para que el framework las recoja y no forman parte de la API de nadie.
+ * Escribir sesenta y cinco comentarios que digan «el título de la pestaña»
+ * llenaría la referencia de ruido y no ayudaría a nadie a entender el sistema.
+ * Se cuentan aparte para que quede dicho que no se están escondiendo.
+ */
+const CONVENCION = new Set([
+  "metadata",
+  "viewport",
+  "dynamic",
+  "revalidate",
+  "runtime",
+  "generateMetadata",
+  "generateStaticParams",
+]);
+
 const salida = spawnSync(
   "node",
   ["node_modules/typedoc/bin/typedoc", "--emit", "none", "--logLevel", "Warn"],
@@ -35,6 +54,7 @@ const lineas = texto
 
 const pendientes = [];
 let ruido = 0;
+let convencion = 0;
 
 for (const linea of lineas) {
   const m = /\[warning\]\s*(\S+)\s+\((\w+)\),\s*defined in (.+?),/.exec(linea.trim());
@@ -42,6 +62,10 @@ for (const linea of lineas) {
   const [, nombre, tipo, archivo] = m;
   if (RUIDO.has(tipo)) {
     ruido += 1;
+    continue;
+  }
+  if (CONVENCION.has(nombre.split(".").pop())) {
+    convencion += 1;
     continue;
   }
   pendientes.push({ nombre, tipo, archivo: archivo.replace(/^geminis\//, "") });
@@ -81,3 +105,4 @@ console.log(
       .join(", "),
 );
 console.log(`${ruido} propiedades de tipos inferidos, que no se documentan a mano.`);
+console.log(`${convencion} exportaciones de convención de Next.js, que lee el framework.`);

@@ -7,6 +7,12 @@ import { RecoveryForm } from "./recovery-form";
 
 export const metadata: Metadata = { title: "Recuperar contraseña" };
 
+/**
+ * Pedir un enlace para cambiar la contraseña.
+ *
+ * Responde lo mismo exista el correo o no: si no, este formulario sería un
+ * comprobador de quién está apuntado en la academia.
+ */
 export default async function RecuperarPage() {
   const ctx = await getAuthContext();
   if (ctx) redirect("/inicio");

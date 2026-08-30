@@ -21,6 +21,9 @@ const ESTADO: Record<
 
 const hora = new Intl.DateTimeFormat("es-ES", { hour: "2-digit", minute: "2-digit" });
 
+/**
+ * El listado de clases programadas.
+ */
 export default async function ClasesPage() {
   const ctx = await requirePagePermission("classes.read");
   const tablero = await loadClassBoard(ctx.db);

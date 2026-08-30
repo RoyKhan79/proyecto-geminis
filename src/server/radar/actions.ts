@@ -8,6 +8,15 @@ import { slugify } from "@/lib/utils";
 import { createContentNode } from "@/server/content/tree";
 import { DESCARTES_HABITUALES } from "./boe";
 
+/**
+ * Lo que una acción devuelve a la pantalla.
+ *
+ * `undefined` es el estado inicial, antes de que nadie haya enviado nada. El
+ * error viaja como dato y no como excepción a propósito: una excepción en una
+ * acción de servidor llega al navegador como «algo ha fallado», y aquí hace
+ * falta poder decir qué exactamente y volver a pintar el formulario con lo que
+ * la persona había escrito.
+ */
 export type RadarState = { error?: string; ok?: string } | undefined;
 
 const vigilanciaSchema = z.object({
@@ -29,6 +38,13 @@ function listaDeTexto(valor?: string): string[] {
     .slice(0, 50);
 }
 
+/**
+ * Empieza a vigilar una oposición en el BOE.
+ *
+ * @returns Confirmación, o el motivo si los datos no valen.
+ * @remarks No busca nada ahora: la vigilancia la hace `npm run radar` cada
+ *   mañana. Aquí solo se apunta qué hay que mirar.
+ */
 export async function createWatchAction(
   _prev: RadarState,
   formData: FormData,
@@ -74,6 +90,12 @@ export async function createWatchAction(
   return { ok: "Vigilancia creada. Se aplicará en la próxima pasada del radar." };
 }
 
+/**
+ * Pausa o reanuda una vigilancia.
+ *
+ * Pausar en lugar de borrar conserva lo ya encontrado, que es lo que se quiere
+ * cuando una convocatoria se resuelve y al año siguiente vuelve.
+ */
 export async function toggleWatchAction(formData: FormData) {
   const ctx = await requirePermission("settings.write");
   const watchId = String(formData.get("watchId") ?? "");
@@ -87,6 +109,12 @@ export async function toggleWatchAction(formData: FormData) {
   revalidatePath("/gestion/convocatorias");
 }
 
+/**
+ * Deja de vigilar una oposición, esta vez de verdad.
+ *
+ * @remarks Se lleva por delante los avisos asociados. Para dejar de recibirlos
+ *   sin perder el histórico está {@link toggleWatchAction}.
+ */
 export async function deleteWatchAction(formData: FormData) {
   const ctx = await requirePermission("settings.write");
   const watchId = String(formData.get("watchId") ?? "");
@@ -200,6 +228,12 @@ export async function acceptCallAction(formData: FormData) {
   revalidatePath("/gestion/oposiciones");
 }
 
+/**
+ * Descarta una convocatoria encontrada.
+ *
+ * El radar acierta mucho pero no siempre: descartar es lo que dice «esta no era
+ * la mía» sin que vuelva a aparecer mañana.
+ */
 export async function dismissCallAction(formData: FormData) {
   const ctx = await requirePermission("oppositions.write");
   const callId = String(formData.get("callId") ?? "");

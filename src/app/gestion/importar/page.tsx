@@ -31,6 +31,9 @@ const ESTADO: Record<
   ROLLED_BACK: { label: "Revertido", tone: "neutral" },
 };
 
+/**
+ * Importar alumnado desde otro sistema.
+ */
 export default async function ImportarPage() {
   const ctx = await requirePagePermission("imports.run");
 

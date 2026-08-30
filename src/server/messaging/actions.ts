@@ -21,6 +21,13 @@ const nuevoHiloSchema = z.object({
   teacherId: z.string().trim().optional(),
 });
 
+/**
+ * Abre una conversación con un alumno.
+ *
+ * @returns Confirmación, o el motivo. Se comprueba que el destinatario sea de
+ *   la academia: un identificador tecleado no abre una conversación con el
+ *   alumno de otra.
+ */
 export async function startThreadAction(
   _prev: MsgState,
   formData: FormData,
@@ -71,6 +78,13 @@ const responderSchema = z.object({
   body: z.string().trim().min(1, "Escribe algo.").max(4000),
 });
 
+/**
+ * Responde en una conversación.
+ *
+ * @returns Confirmación, o el motivo. El texto se sanea antes de guardarlo:
+ *   sin eso, un mensaje con etiquetas se ejecutaría en la pantalla de quien lo
+ *   lee, con su sesión.
+ */
 export async function replyThreadAction(
   _prev: MsgState,
   formData: FormData,
@@ -133,6 +147,11 @@ export async function replyThreadAction(
   return { ok: "Enviado." };
 }
 
+/**
+ * Cierra una conversación.
+ *
+ * No la borra: se queda en el histórico y deja de aparecer entre las abiertas.
+ */
 export async function closeThreadAction(formData: FormData) {
   const ctx = await requireAcademy();
   if (!ctx.permissions.has("manager.access")) throw new Error("Sin permiso.");

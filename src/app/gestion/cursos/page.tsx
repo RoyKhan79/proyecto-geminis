@@ -23,6 +23,12 @@ const MODALIDAD: Record<string, string> = {
   HIBRIDO: "Híbrido",
 };
 
+/**
+ * Cursos y grupos.
+ *
+ * El curso es lo que se vende; el grupo es la clase concreta, con su horario y
+ * su profesor.
+ */
 export default async function CursosPage() {
   const ctx = await requireAcademy();
   const puedeCursos = ctx.permissions.has("courses.write");

@@ -8,6 +8,12 @@ import { formatDate } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Inicio" };
 
+/**
+ * La pantalla de inicio de Manager.
+ *
+ * Lo que hay que mirar hoy: cobros pendientes, entregas sin corregir y quien
+ * lleva días sin entrar.
+ */
 export default async function ManagerHomePage() {
   const ctx = await requireAcademy();
   const { db } = ctx;

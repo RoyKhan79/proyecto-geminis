@@ -20,6 +20,15 @@ import {
   validateSessionToken,
 } from "./session";
 
+/**
+ * Lo que una acción devuelve a la pantalla.
+ *
+ * `undefined` es el estado inicial, antes de que nadie haya enviado nada. El
+ * error viaja como dato y no como excepción a propósito: una excepción en una
+ * acción de servidor llega al navegador como «algo ha fallado», y aquí hace
+ * falta poder decir qué exactamente y volver a pintar el formulario con lo que
+ * la persona había escrito.
+ */
 export type ActionState = { error?: string } | undefined;
 
 const credentialsSchema = z.object({
@@ -144,6 +153,14 @@ function destinationFor(membershipCount: number, isPlatformAdmin: boolean) {
   return "/elegir-academia";
 }
 
+/**
+ * Cierra la sesión y lleva a la pantalla de acceso.
+ *
+ * @remarks Revoca la sesión en la base **antes** de borrar la cookie: al revés,
+ *   un fallo entre las dos cosas dejaría el testigo vivo en el servidor. En el
+ *   Campus se usa a través de un botón que además vacía los temas guardados en
+ *   el dispositivo.
+ */
 export async function signOutAction() {
   const ctx = await getAuthContext();
   const token = await readSessionCookie();

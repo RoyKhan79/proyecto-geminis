@@ -15,6 +15,15 @@ import {
   vigenteEn,
 } from "./service";
 
+/**
+ * Lo que una acción devuelve a la pantalla.
+ *
+ * `undefined` es el estado inicial, antes de que nadie haya enviado nada. El
+ * error viaja como dato y no como excepción a propósito: una excepción en una
+ * acción de servidor llega al navegador como «algo ha fallado», y aquí hace
+ * falta poder decir qué exactamente y volver a pintar el formulario con lo que
+ * la persona había escrito.
+ */
 export type BillingState = { error?: string; ok?: boolean } | undefined;
 
 // ── Forma de pago del alumno ─────────────────────────────────────────────────
@@ -163,6 +172,16 @@ function aCentimos(texto: string): number | null {
   return Math.round(valor * 100);
 }
 
+/**
+ * Guarda el cargo mensual de un alumno y su cuenta bancaria.
+ *
+ * @returns Confirmación, o el motivo: el IBAN se valida con el módulo 97, la
+ *   misma cuenta que hace el banco, así que un dígito cambiado se detecta aquí
+ *   y no cuando la remesa vuelve rechazada tres semanas después.
+ * @remarks El IBAN se guarda **cifrado**; en pantalla solo se ven los últimos
+ *   dígitos. Hace falta también el mandato firmado: sin él, el banco puede
+ *   devolver el cargo y la academia se queda sin cobrar y con la comisión.
+ */
 export async function saveRecurringChargeAction(
   _prev: BillingState,
   formData: FormData,
@@ -228,6 +247,12 @@ export async function saveRecurringChargeAction(
   return { ok: true };
 }
 
+/**
+ * Quita el cargo mensual de un alumno.
+ *
+ * @remarks No toca las remesas ya emitidas: un cobro que ya se mandó al banco
+ *   está mandado, y borrarlo aquí solo dejaría la contabilidad sin explicación.
+ */
 export async function deleteRecurringChargeAction(
   _prev: BillingState,
   formData: FormData,
@@ -268,6 +293,12 @@ const acreedorSchema = z.object({
   mandatePrefix: z.string().trim().max(8).optional(),
 });
 
+/**
+ * Guarda los datos con los que la academia cobra.
+ *
+ * @returns Confirmación, o el motivo. El identificador de acreedor **no es el
+ *   CIF**: lo asigna el banco, y sin él la remesa entera se rechaza.
+ */
 export async function saveCreditorAction(
   _prev: BillingState,
   formData: FormData,

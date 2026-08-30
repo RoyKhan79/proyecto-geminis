@@ -8,6 +8,12 @@ import { Card, EmptyState } from "@/components/ui/primitives";
 
 export const metadata: Metadata = { title: "Elegir academia" };
 
+/**
+ * Elegir con qué academia se trabaja.
+ *
+ * Solo la ve quien pertenece a más de una: un profesor que da clase en dos
+ * sitios, o alguien que además estudia.
+ */
 export default async function ElegirAcademiaPage() {
   const ctx = await requireAuth();
 

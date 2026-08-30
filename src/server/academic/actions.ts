@@ -118,6 +118,14 @@ const editionSchema = z.object({
   examDate: z.string().trim().optional(),
 });
 
+/**
+ * Crea una convocatoria de una oposición.
+ *
+ * La convocatoria es de la que cuelgan el temario y las preguntas, y por eso
+ * una nueva no obliga a rehacer nada: se duplica lo que sirva.
+ *
+ * @returns Confirmación, o el motivo.
+ */
 export async function createEditionAction(
   _prev: FormState,
   formData: FormData,
@@ -171,6 +179,14 @@ const courseSchema = z.object({
   capacity: z.coerce.number().int().min(0).optional(),
 });
 
+/**
+ * Crea un curso: lo que la academia vende.
+ *
+ * @returns Confirmación, o el motivo.
+ * @remarks El curso lleva asociados los derechos de acceso al contenido, así
+ *   que matricular a alguien en él es lo que le abre el temario. No hay que
+ *   hacer las dos cosas por separado.
+ */
 export async function createCourseAction(
   _prev: FormState,
   formData: FormData,
@@ -225,6 +241,13 @@ const groupSchema = z.object({
   capacity: z.coerce.number().int().min(0).optional(),
 });
 
+/**
+ * Crea un grupo: la clase concreta, con su horario y su profesor.
+ *
+ * @returns Confirmación, o el motivo.
+ * @remarks El grupo manda sobre el **ritmo** al que se abre el temario, así que
+ *   conviene tenerlos creados antes de subir contenido.
+ */
 export async function createGroupAction(
   _prev: FormState,
   formData: FormData,
@@ -278,6 +301,13 @@ const teacherSchema = z.object({
   specialties: z.string().trim().max(400).optional(),
 });
 
+/**
+ * Da de alta a un profesor o a personal administrativo.
+ *
+ * @returns Confirmación, o el motivo. Si ese correo ya existe en el sistema, se
+ *   le añade a esta academia en lugar de crear una cuenta nueva: la misma
+ *   persona puede dar clase en dos academias sin tener dos contraseñas.
+ */
 export async function createTeacherAction(
   _prev: FormState,
   formData: FormData,
@@ -521,6 +551,11 @@ const editarConvocatoriaSchema = z.object({
   status: z.enum(["PLANNED", "OPEN", "CLOSED", "ARCHIVED"]).default("OPEN"),
 });
 
+/**
+ * Edita una convocatoria.
+ *
+ * @returns Confirmación, o el motivo.
+ */
 export async function updateEditionAction(
   _prev: FormState,
   formData: FormData,

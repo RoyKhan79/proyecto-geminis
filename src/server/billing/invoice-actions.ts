@@ -14,6 +14,15 @@ import {
 } from "@/lib/billing/invoice";
 import { inicioDeMes, nombreDelMes } from "./service";
 
+/**
+ * Lo que una acción devuelve a la pantalla.
+ *
+ * `undefined` es el estado inicial, antes de que nadie haya enviado nada. El
+ * error viaja como dato y no como excepción a propósito: una excepción en una
+ * acción de servidor llega al navegador como «algo ha fallado», y aquí hace
+ * falta poder decir qué exactamente y volver a pintar el formulario con lo que
+ * la persona había escrito.
+ */
 export type InvoiceState = { error?: string; ok?: boolean; id?: string } | undefined;
 
 /**
@@ -40,6 +49,14 @@ const serieSchema = z.object({
   isRectifying: z.string().optional(),
 });
 
+/**
+ * Crea o edita una serie de facturación.
+ *
+ * La serie es lo que fija la numeración correlativa y si va exenta de IVA por
+ * el artículo 20.Uno.9º de la ley del IVA, que es el caso de mucha enseñanza.
+ *
+ * @returns Confirmación, o el motivo.
+ */
 export async function saveInvoiceSeriesAction(
   _prev: InvoiceState,
   formData: FormData,
@@ -165,6 +182,16 @@ async function reservarNumero(
   });
 }
 
+/**
+ * Emite una factura y le asigna su número.
+ *
+ * @returns El identificador de la factura emitida, o el motivo del fallo.
+ * @remarks A partir de aquí **la factura no se puede modificar ni borrar**: si
+ *   hay que corregirla se emite una rectificativa, que es lo que exige la ley.
+ *   La numeración se reserva dentro de una transacción con bloqueo, porque dos
+ *   personas emitiendo a la vez sacarían el mismo número y eso es un problema
+ *   con Hacienda, no un error de pantalla.
+ */
 export async function issueInvoiceAction(
   _prev: InvoiceState,
   formData: FormData,
@@ -444,6 +471,12 @@ export async function rectifyInvoiceAction(
   return { ok: true, id: rectificativa.id };
 }
 
+/**
+ * Marca una factura como cobrada.
+ *
+ * Cambia el estado del cobro, no la factura: el documento sigue siendo
+ * inmutable.
+ */
 export async function markInvoicePaidAction(formData: FormData) {
   const ctx = await requirePermission("payments.write");
   const invoiceId = String(formData.get("invoiceId") ?? "");

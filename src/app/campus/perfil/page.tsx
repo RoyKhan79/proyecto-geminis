@@ -17,6 +17,13 @@ import { formatDate, initials } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Perfil" };
 
+/**
+ * El perfil del alumno: sus datos, sus matrículas y sus dispositivos activos.
+ *
+ * La lista de sesiones abiertas está aquí y no escondida en un ajuste porque es
+ * la herramienta que tiene una persona para darse cuenta de que alguien más
+ * está usando su cuenta.
+ */
 export default async function PerfilPage() {
   const ctx = await requireAcademy();
 

@@ -42,6 +42,12 @@ const MODO_LABEL: Record<string, string> = {
   SIMULATION: "Simulacro",
 };
 
+/**
+ * Los tests del alumno: lo que puede practicar por su cuenta y lo que convoca
+ * la academia.
+ *
+ * Los simulacros que aparecen son solo los de SU oposición.
+ */
 export default async function CampusTestsPage({
   searchParams,
 }: {

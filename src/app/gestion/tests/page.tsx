@@ -25,6 +25,9 @@ import { QuestionForm } from "./question-form";
 
 export const metadata: Metadata = { title: "Tests" };
 
+/**
+ * El banco de preguntas de la academia.
+ */
 export default async function GestionTestsPage({
   searchParams,
 }: {

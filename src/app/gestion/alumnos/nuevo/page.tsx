@@ -9,6 +9,11 @@ import { StudentForm } from "../student-form";
 
 export const metadata: Metadata = { title: "Nuevo alumno" };
 
+/**
+ * Alta de un alumno.
+ *
+ * Matricularlo en un curso es lo que le abre el contenido: no son dos pasos.
+ */
 export default async function NuevoAlumnoPage() {
   const ctx = await requirePagePermission("students.write");
   const courses = await loadCourseOptions(ctx.db);

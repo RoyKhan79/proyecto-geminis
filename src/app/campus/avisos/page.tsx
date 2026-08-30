@@ -8,6 +8,12 @@ import { formatDateTime } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Avisos" };
 
+/**
+ * Los avisos del alumno: lo que ha pasado desde la última vez que entró.
+ *
+ * Se marcan como leídos al abrir la pantalla, no al pulsar en cada uno: nadie
+ * repasa una lista de avisos uno a uno.
+ */
 export default async function AvisosPage() {
   const ctx = await requireAcademy();
 

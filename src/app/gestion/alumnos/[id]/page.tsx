@@ -48,6 +48,12 @@ const PAYMENT_LABEL: Record<string, string> = {
   CANCELLED: "Cancelado",
 };
 
+/**
+ * La ficha de un alumno: datos, matrículas, derechos, pagos y rendimiento.
+ *
+ * Es la pantalla que se abre cuando alguien llama por teléfono, así que lo
+ * primero que se ve es lo que suelen preguntar.
+ */
 export default async function FichaAlumnoPage({
   params,
 }: {

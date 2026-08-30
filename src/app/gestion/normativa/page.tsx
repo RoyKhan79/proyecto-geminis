@@ -35,6 +35,12 @@ const CAMBIO: Record<string, string> = {
   CORRECTED: "Corrección",
 };
 
+/**
+ * La normativa que la academia sigue, enlazada con los temas que la explican.
+ *
+ * Cuando una ley cambia, los temas y las preguntas afectadas se marcan para
+ * revisar. No se cambia nada solo.
+ */
 export default async function NormativaPage() {
   const ctx = await requirePagePermission("legislation.read");
 

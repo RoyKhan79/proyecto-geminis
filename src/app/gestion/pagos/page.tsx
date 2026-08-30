@@ -40,6 +40,12 @@ const METODO: Record<string, string> = {
   OTHER: "Otro",
 };
 
+/**
+ * El estado de cuentas: quién ha pagado, quién debe y qué se ha devuelto.
+ *
+ * Marcar un recibo como devuelto suspende el acceso del alumno, que es lo que
+ * hace que esta lista sirva para algo y no sea solo un registro.
+ */
 export default async function PagosPage({
   searchParams,
 }: {

@@ -11,6 +11,7 @@
  * pregunta al móvil qué hora es.
  */
 
+/** Lo mínimo de un examen para saber en qué momento está. */
 export type ExamenParaEstado = {
   status: string;
   opensAt: Date | null;
@@ -18,6 +19,7 @@ export type ExamenParaEstado = {
   timeLimitMinutes: number | null;
 };
 
+/** Lo mínimo de una entrega para saber en qué momento está. */
 export type EntregaParaEstado = {
   status: string;
   startedAt: Date | null;
@@ -40,6 +42,22 @@ export type EstadoExamen =
   /** Se cerró la convocatoria y este alumno no llegó a empezarlo. */
   | { fase: "caducado"; cerroEn: Date };
 
+/**
+ * En qué momento está un examen para este alumno.
+ *
+ * La usan por igual la pantalla, el guardado automático y la entrega. Que sea
+ * una sola función es el punto: si cada una calculase el tiempo por su lado,
+ * acabarían discrepando justo en el minuto que importa.
+ *
+ * @param examen Hora de apertura, cierre y minutos por alumno.
+ * @param entrega Cuándo lo abrió y si ya lo entregó.
+ * @param ahora La hora de referencia. Se pasa como argumento para poder
+ *   probarla: un test de plazos que dependa del reloj de la máquina falla un
+ *   martes a las dos de la mañana y nadie sabe por qué.
+ * @returns La fase, con lo que hace falta en cada una: cuándo abre, cuándo
+ *   termina, cuántos segundos quedan. **La hora que vale es la del servidor**;
+ *   la cuenta atrás del navegador solo pinta.
+ */
 export function estadoDelExamen(
   examen: ExamenParaEstado,
   entrega: EntregaParaEstado,

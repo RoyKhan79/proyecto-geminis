@@ -12,6 +12,9 @@ import {
 
 export const metadata: Metadata = { title: "Contenido" };
 
+/**
+ * Elegir la convocatoria cuyo contenido se quiere editar.
+ */
 export default async function ContenidoPage() {
   const ctx = await requirePagePermission("content.read");
 

@@ -14,6 +14,12 @@ import { formatDate } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Configuración" };
 
+/**
+ * La configuración de la academia y su tabla de roles y permisos.
+ *
+ * La tabla se pinta del catálogo único, así que enseña lo que de verdad
+ * comprueba el servidor y no una copia escrita aparte.
+ */
 export default async function ConfiguracionPage() {
   // El personal administrativo no ve la configuración ni los permisos de la
   // academia: no forma parte de su trabajo y expone cómo está montado el acceso.

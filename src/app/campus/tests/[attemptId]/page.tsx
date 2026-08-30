@@ -16,6 +16,13 @@ import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Test" };
 
+/**
+ * Un test en curso, pregunta a pregunta.
+ *
+ * El reloj, cuando lo hay, lo lleva el servidor: la cuenta atrás del navegador
+ * solo pinta. Al agotarse se entrega sola, porque un test colgado sin entregar
+ * pierde el trabajo del alumno.
+ */
 export default async function IntentoPage({
   params,
   searchParams,

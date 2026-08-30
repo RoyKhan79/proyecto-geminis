@@ -8,6 +8,12 @@ import { PaceList, type GrupoRitmo, type TemaRitmo } from "./pace-list";
 
 export const metadata: Metadata = { title: "Ritmo del temario" };
 
+/**
+ * El ritmo del temario: hasta dónde tiene abierto cada grupo.
+ *
+ * Es lo que permite subir el temario completo el primer día y que cada clase
+ * vea solo por dónde va.
+ */
 export default async function RitmoPage({
   params,
 }: {

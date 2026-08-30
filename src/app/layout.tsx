@@ -63,6 +63,14 @@ export const viewport: Viewport = {
   ],
 };
 
+/**
+ * El armazón de toda la aplicación.
+ *
+ * Las variables de las tipografías van en `<html>` y no en `<body>` a
+ * propósito: los tokens del sistema de diseño se declaran en `:root`, y si las
+ * variables colgaran de `<body>` esas declaraciones no encontrarían la fuente y
+ * se invalidarían en silencio.
+ */
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {

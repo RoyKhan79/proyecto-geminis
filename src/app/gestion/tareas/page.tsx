@@ -25,6 +25,12 @@ const ESTADO: Record<
   GRADED: { label: "Corregido", tone: "positive" },
 };
 
+/**
+ * Las tareas mandadas y sus entregas, para corregirlas.
+ *
+ * Los exámenes de desarrollo viven en su propia pantalla: se corrigen igual
+ * pero no se hacen igual.
+ */
 export default async function TareasPage() {
   const ctx = await requirePagePermission("classes.read");
 

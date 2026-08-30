@@ -25,6 +25,9 @@ import { fechaParaInput, formatDate } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Oposiciones" };
 
+/**
+ * Las oposiciones que prepara la academia.
+ */
 export default async function OposicionesPage() {
   const ctx = await requireAcademy();
   const puedeEscribir = ctx.permissions.has("oppositions.write");

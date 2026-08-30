@@ -17,6 +17,9 @@ import {
 
 export const metadata: Metadata = { title: "Profesores" };
 
+/**
+ * El profesorado y el personal de la academia, con su rol.
+ */
 export default async function ProfesoresPage() {
   const ctx = await requireAcademy();
   const puedeEscribir = ctx.permissions.has("teachers.write");

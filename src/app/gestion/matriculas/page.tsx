@@ -27,6 +27,11 @@ const ESTADO: Record<EnrollmentStatus, { label: string; tone: "positive" | "caut
   CANCELLED: { label: "Cancelada", tone: "neutral" },
 };
 
+/**
+ * Las matrículas de la academia.
+ *
+ * Matricular crea además el derecho de acceso al contenido del curso.
+ */
 export default async function MatriculasPage({
   searchParams,
 }: {

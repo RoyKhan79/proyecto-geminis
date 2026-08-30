@@ -10,6 +10,9 @@ import { formatDateTime } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Mensajes" };
 
+/**
+ * Las conversaciones con el alumnado.
+ */
 export default async function MensajesManagerPage({
   searchParams,
 }: {

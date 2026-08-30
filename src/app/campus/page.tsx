@@ -18,6 +18,12 @@ import { formatDateTime } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Inicio" };
 
+/**
+ * La pantalla de inicio del Campus.
+ *
+ * Lo primero es el plan del día: qué toca estudiar hoy y qué hay pendiente. El
+ * resto de destinos van debajo, en accesos rápidos.
+ */
 export default async function CampusHomePage() {
   const ctx = await requireAcademy();
   const studentId = ctx.membershipId;

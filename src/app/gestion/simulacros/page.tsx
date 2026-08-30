@@ -33,6 +33,9 @@ function penalizacionLegible(valor: number): string {
   return `−${valor} por fallo`;
 }
 
+/**
+ * Los simulacros: exámenes tipo test convocados, con reloj y penalización.
+ */
 export default async function SimulacrosPage() {
   const ctx = await requirePagePermission("tests.read");
   const panel = await loadSimulationPanel(ctx.db);

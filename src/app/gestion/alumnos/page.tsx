@@ -33,6 +33,9 @@ function readParam(params: Record<string, string | string[] | undefined>, key: s
   return typeof value === "string" && value.length > 0 ? value : undefined;
 }
 
+/**
+ * El listado de alumnado, con búsqueda y filtros.
+ */
 export default async function AlumnosPage({
   searchParams,
 }: {

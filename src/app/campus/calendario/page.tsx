@@ -12,6 +12,11 @@ const horaFormatter = new Intl.DateTimeFormat("es-ES", {
   minute: "2-digit",
 });
 
+/**
+ * Las clases del alumno, día a día, con el tema de cada una.
+ *
+ * Sale de la agenda que lleva la academia: aquí no se programa nada, solo se ve.
+ */
 export default async function CalendarioPage() {
   const ctx = await requireAcademy();
 

@@ -28,6 +28,16 @@ function p(group: Group, label: string) {
   return { group, label } as const;
 }
 
+/**
+ * EL CATÁLOGO ÚNICO DE PERMISOS.
+ *
+ * Cada permiso existe aquí y en ningún otro sitio. Un permiso que no esté en
+ * esta tabla no se puede conceder, comprobar ni pintar, y eso es deliberado:
+ * los sistemas de permisos se pudren cuando cada pantalla inventa el suyo.
+ *
+ * El nombre va en `área.verbo` para que se lea sin explicación: `students.read`
+ * se entiende sin ir a buscar qué hace.
+ */
 export const PERMISSIONS = {
   // ── Personas ───────────────────────────────────────────────────────────────
   "students.read": p("personas", "Ver alumnos"),
@@ -100,8 +110,15 @@ export const PERMISSIONS = {
   "campus.access": p("plataforma", "Entrar en Geminis Campus"),
 } as const;
 
+/**
+ * Un permiso válido.
+ *
+ * Sale del propio catálogo, así que escribir mal un permiso no compila. Es la
+ * diferencia entre un error a las cinco de la tarde y un agujero que nadie ve.
+ */
 export type Permission = keyof typeof PERMISSIONS;
 
+/** Todos los permisos. Lo usan la pantalla de configuración y la auditoría. */
 export const ALL_PERMISSIONS = Object.keys(PERMISSIONS) as Permission[];
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -134,6 +151,13 @@ export const ALL_PERMISSIONS = Object.keys(PERMISSIONS) as Permission[];
 // no ve más allá de su academia.
 // ─────────────────────────────────────────────────────────────────────────────
 
+/**
+ * Los tres niveles del sistema, explicados para leer.
+ *
+ * Se pinta tal cual en la configuración de la academia. Está aquí y no en la
+ * pantalla porque la frontera entre niveles es una decisión del producto, y la
+ * explicación tiene que vivir al lado de lo que la implementa.
+ */
 export const NIVELES = [
   {
     nivel: 1,
@@ -166,6 +190,7 @@ export const NIVELES = [
 // Cada academia recibe una copia editable de estos roles al crearse.
 // ─────────────────────────────────────────────────────────────────────────────
 
+/** Las claves de los roles que trae el sistema de fábrica. */
 export const SYSTEM_ROLE_KEYS = {
   ACADEMY_ADMIN: "ACADEMY_ADMIN",
   TEACHER: "TEACHER",
@@ -173,6 +198,7 @@ export const SYSTEM_ROLE_KEYS = {
   STUDENT: "STUDENT",
 } as const;
 
+/** Uno de los roles de fábrica. La academia puede crear más además de estos. */
 export type SystemRoleKey = keyof typeof SYSTEM_ROLE_KEYS;
 
 const TEACHER_PERMISSIONS: Permission[] = [
@@ -241,6 +267,14 @@ const STUDENT_PERMISSIONS: Permission[] = [
   "ai.student",
 ];
 
+/**
+ * Qué puede hacer cada rol de fábrica.
+ *
+ * Es la definición de la que salen los roles al dar de alta una academia. Un
+ * detalle que importa: el alumnado **no** lleva `content.read`. Ese permiso
+ * significa «ver el contenido como personal de la academia», y dárselo a un
+ * alumno le abriría el temario entero saltándose sus derechos de acceso.
+ */
 export const SYSTEM_ROLES: Record<
   SystemRoleKey,
   { name: string; description: string; permissions: Permission[] }
@@ -272,6 +306,14 @@ export const SYSTEM_ROLES: Record<
   },
 };
 
+/**
+ * ¿Es un permiso del catálogo?
+ *
+ * @param value Un texto cualquiera, normalmente venido de la base de datos.
+ * @returns `true` si existe, y además se lo dice a TypeScript. Se usa al leer
+ *   los permisos guardados: un permiso que se renombró en el código y sigue en
+ *   una fila antigua no puede colarse como válido.
+ */
 export function isValidPermission(value: string): value is Permission {
   return value in PERMISSIONS;
 }

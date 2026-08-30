@@ -6,6 +6,12 @@ import { Card, EmptyState } from "@/components/ui/primitives";
 
 export const metadata: Metadata = { title: "Sin acceso" };
 
+/**
+ * La pantalla de «esto no es para ti».
+ *
+ * Existe porque una persona que llega a una dirección que no le corresponde
+ * merece una explicación, no un error del servidor.
+ */
 export default function SinAccesoPage() {
   return (
     <main className="mx-auto flex min-h-dvh max-w-md items-center px-4">

@@ -10,6 +10,13 @@ import { Button } from "@/components/ui/button";
 import { BRAND } from "@/lib/brand";
 import { initials } from "@/lib/utils";
 
+/**
+ * El armazón de Manager: barra lateral, cabecera y aviso de soporte.
+ *
+ * El menú se construye con los permisos de quien ha entrado, así que lo que no
+ * se puede hacer tampoco se ve. Ocultar no es autorizar: cada pantalla vuelve a
+ * comprobarlo por su cuenta.
+ */
 export default async function ManagerLayout({
   children,
 }: {

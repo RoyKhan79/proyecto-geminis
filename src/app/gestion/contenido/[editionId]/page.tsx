@@ -9,6 +9,12 @@ import { ContentTree, type TreeNode } from "./tree";
 
 export const metadata: Metadata = { title: "Contenido" };
 
+/**
+ * El árbol de contenido de una convocatoria.
+ *
+ * Los apartados los nombra la academia. Desde aquí se sube material, se cambian
+ * las banderas de cada rama y se entra al asistente de temario.
+ */
 export default async function ArbolContenidoPage({
   params,
 }: {

@@ -11,6 +11,7 @@ import { descifrar } from "@/lib/crypto/field";
 
 export const PAGE_SIZE = 25;
 
+/** Los filtros del listado de alumnado, tal como llegan de la barra de búsqueda. */
 export type StudentFilters = {
   search?: string;
   status?: StudentStatus | "ALL";
@@ -19,10 +20,24 @@ export type StudentFilters = {
   page?: number;
 };
 
+/**
+ * Una fila del listado.
+ *
+ * Se deriva del tipo de retorno en lugar de escribirse a mano: así el `select`
+ * de la consulta y lo que la pantalla espera no pueden desincronizarse.
+ */
 export type StudentListItem = Awaited<
   ReturnType<typeof listStudents>
 >["items"][number];
 
+/**
+ * El listado de alumnado, filtrado y paginado.
+ *
+ * @param db Cliente ya acotado a la academia. Al pedirlo como `TenantClient`
+ *   queda escrito en la firma que esta consulta no puede salirse de ella.
+ * @param filters Búsqueda, estado, curso y página.
+ * @returns Las filas y el total, para poder pintar el paginador.
+ */
 export async function listStudents(db: TenantClient, filters: StudentFilters) {
   const page = Math.max(1, filters.page ?? 1);
   const search = filters.search?.trim();
@@ -95,6 +110,15 @@ export async function listStudents(db: TenantClient, filters: StudentFilters) {
   };
 }
 
+/**
+ * La ficha completa de un alumno: matrículas, derechos, pagos y rendimiento.
+ *
+ * @param db Cliente acotado a la academia.
+ * @param membershipId Qué alumno.
+ * @returns La ficha, o `null` si ese identificador no es de esta academia. Las
+ *   dos cosas se responden igual a propósito: quien prueba identificadores no
+ *   debe poder averiguar quién estudia en la academia de al lado.
+ */
 export async function getStudent(db: TenantClient, membershipId: string) {
   const alumno = await db.membership.findUnique({
     where: { id: membershipId },
@@ -233,6 +257,7 @@ export async function loadCourseOptions(db: TenantClient) {
   });
 }
 
+/** Cómo se llama cada estado en pantalla, en el idioma de la academia. */
 export const STUDENT_STATUS_LABEL: Record<StudentStatus, string> = {
   PENDING: "Pendiente",
   ACTIVE: "Activo",
@@ -241,6 +266,13 @@ export const STUDENT_STATUS_LABEL: Record<StudentStatus, string> = {
   ALUMNI: "Antiguo alumno",
 };
 
+/**
+ * El color de cada estado.
+ *
+ * Va aparte de la etiqueta para que el color signifique siempre lo mismo en
+ * toda la aplicación: un alumno de baja se ve igual en su ficha, en el listado
+ * y en la lista de cobros.
+ */
 export const STUDENT_STATUS_TONE: Record<
   StudentStatus,
   "neutral" | "positive" | "caution" | "critical" | "info"

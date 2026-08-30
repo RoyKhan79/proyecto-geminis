@@ -34,6 +34,12 @@ const ESTADO: Record<
   DISMISSED: { label: "Descartada", tone: "neutral" },
 };
 
+/**
+ * Las convocatorias de cada oposición.
+ *
+ * De ellas cuelgan el temario y las preguntas, y por eso una convocatoria nueva
+ * no obliga a rehacer nada.
+ */
 export default async function ConvocatoriasPage() {
   const ctx = await requirePagePermission("oppositions.read");
   const panel = await loadRadarPanel(ctx.db, ctx.academy.id);

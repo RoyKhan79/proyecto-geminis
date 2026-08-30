@@ -24,6 +24,13 @@ import { formatDate } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Estudiar" };
 
+/**
+ * Un tema del temario, con su documento en el visor protegido.
+ *
+ * Si el alumno no tiene derecho de acceso, para él ese tema no existe: se
+ * responde «no encontrado» y no «no puedes verlo», que revelaría que hay algo
+ * detrás que no ha pagado.
+ */
 export default async function NodoPage({
   params,
 }: {

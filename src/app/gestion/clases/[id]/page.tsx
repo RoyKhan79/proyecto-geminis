@@ -30,6 +30,12 @@ const ASISTENCIA = [
   { value: "ABSENT", label: "Falta" },
 ] as const;
 
+/**
+ * Una clase concreta, con su lista de asistencia.
+ *
+ * La asistencia admite cinco estados porque en una academia «no vino»,
+ * «avisó» y «vio la grabación» no son lo mismo.
+ */
 export default async function ClasePage({
   params,
 }: {

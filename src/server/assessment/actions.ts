@@ -13,6 +13,15 @@ import { loadStudentGrants, studentNodeWhere } from "@/lib/access/content-access
 import { prismaBase } from "@/lib/db/client";
 import { pickDueForReview, pickQuestions } from "./queries";
 
+/**
+ * Lo que una acción devuelve a la pantalla.
+ *
+ * `undefined` es el estado inicial, antes de que nadie haya enviado nada. El
+ * error viaja como dato y no como excepción a propósito: una excepción en una
+ * acción de servidor llega al navegador como «algo ha fallado», y aquí hace
+ * falta poder decir qué exactamente y volver a pintar el formulario con lo que
+ * la persona había escrito.
+ */
 export type AssessmentState = { error?: string; ok?: boolean } | undefined;
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -32,6 +41,13 @@ const questionSchema = z.object({
   publicar: z.string().optional(),
 });
 
+/**
+ * Crea una pregunta en el banco.
+ *
+ * @returns Confirmación, o el motivo. Se comprueba que haya una sola respuesta
+ *   correcta y que las opciones no estén vacías: una pregunta mal montada no
+ *   se detecta hasta que veinte alumnos la han fallado sin poder acertarla.
+ */
 export async function createQuestionAction(
   _prev: AssessmentState,
   formData: FormData,
@@ -103,6 +119,13 @@ export async function createQuestionAction(
   return { ok: true };
 }
 
+/**
+ * Cambia el estado de una pregunta: borrador, publicada, archivada.
+ *
+ * Publicar es la decisión humana que exige el flujo de la IA: lo que genera el
+ * copiloto entra siempre como borrador y no llega a ningún alumno hasta que
+ * alguien pasa por aquí.
+ */
 export async function setQuestionStatusAction(formData: FormData) {
   const ctx = await requirePermission("questions.publish");
   const questionId = String(formData.get("questionId") ?? "");

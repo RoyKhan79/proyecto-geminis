@@ -15,6 +15,9 @@ import { CommunicationForm } from "./communication-form";
 
 export const metadata: Metadata = { title: "Comunicaciones" };
 
+/**
+ * Envíos a muchos: a un grupo, a un curso o a quien deba dinero.
+ */
 export default async function ComunicacionesPage() {
   const ctx = await requirePagePermission("communications.send");
 

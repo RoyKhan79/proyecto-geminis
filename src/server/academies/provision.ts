@@ -41,6 +41,15 @@ export async function createAcademyWithRoles(input: {
   return academy;
 }
 
+/**
+ * Crea los cuatro roles de una academia recién dada de alta.
+ *
+ * Administrador, Profesor, Personal administrativo y Alumno, cada uno con sus
+ * permisos. Son **de esa academia**, no compartidos: así puede renombrarlos o
+ * ajustarlos sin tocar los de las demás.
+ *
+ * @param academyId La academia nueva.
+ */
 export async function createSystemRoles(academyId: string) {
   for (const [key, definition] of Object.entries(SYSTEM_ROLES) as [
     SystemRoleKey,
@@ -93,6 +102,7 @@ export async function syncSystemRolePermissions(academyId: string) {
   }
 }
 
+/** Los datos con los que se da de alta a una persona en una academia. */
 export type NewMember = {
   email: string;
   firstName: string;
@@ -156,6 +166,14 @@ export async function addMemberToAcademy(academyId: string, member: NewMember) {
   return { user, membership };
 }
 
+/**
+ * Los permisos que lleva un rol del sistema.
+ *
+ * @param key El rol.
+ * @returns Su lista de permisos, tal como está definida en el catálogo único.
+ *   Se lee de ahí y no de la base para que el catálogo sea la única fuente:
+ *   dos listas que hay que mantener a la vez acaban discrepando.
+ */
 export function permissionsOfRole(key: SystemRoleKey): Permission[] {
   return SYSTEM_ROLES[key].permissions;
 }
