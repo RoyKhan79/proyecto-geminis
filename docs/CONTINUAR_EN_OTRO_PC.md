@@ -116,3 +116,16 @@ Y el mapa completo, por si hace falta:
 | `docs/GUIA_APP_MOVIL.md` | Probar academia ↔ alumno de extremo a extremo |
 | `docs/REQUISITOS_CUMPLIDOS.md` | Los 136 puntos del encargo, uno a uno |
 | `/manual` (en la aplicación) | El manual de uso, con capturas |
+
+### El manual sin arrancar nada
+
+Con la aplicación en marcha una vez:
+
+```bash
+npm run manual:capturas   # rehace las diecisiete capturas
+npm run manual:local      # las mete en un solo archivo HTML
+```
+
+Sale un «Manual de Geminis.html» de unos 8 MB que se abre con doble clic, sin
+servidor y sin conexión: el texto, los estilos, las tipografías y las fotos van
+dentro. Es lo que se le pasa a una academia.

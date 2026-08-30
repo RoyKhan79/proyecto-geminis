@@ -46,7 +46,8 @@
     "ia:fuga": "node --env-file=.env --import tsx scripts/probar-fuga-ia.ts",
     "pentest": "node scripts/pentest.mjs",
     "desplegar:comprobar": "node --env-file=.env --import tsx scripts/comprobar-despliegue.ts",
-    "manual:capturas": "node --import tsx scripts/capturas.ts"
+    "manual:capturas": "node --import tsx scripts/capturas.ts",
+    "manual:local": "node --import tsx scripts/manual-local.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.7.1",
