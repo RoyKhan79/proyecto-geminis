@@ -21,6 +21,24 @@ copiando `.env.example` a `.env`.
 
 ---
 
+## 0 · Rehacer el ZIP
+
+Cada vez que cambie algo:
+
+```bash
+npm run manual:capturas   # si han cambiado pantallas
+npm run manual:local      # el manual en un solo archivo
+npm run zip               # el ZIP, en el Escritorio
+```
+
+`npm run zip` mete el código, el histórico de git, la documentación, las
+capturas, el manual suelto y la conversación. Deja fuera lo que se regenera.
+
+Para una copia que se pueda enseñar a alguien: `npm run zip -- --sin-secretos`,
+que quita el `.env` y la conversación.
+
+---
+
 ## 1 · Poner en marcha el proyecto
 
 Hace falta **Node 22** o superior. En Windows, desde <https://nodejs.org>.
