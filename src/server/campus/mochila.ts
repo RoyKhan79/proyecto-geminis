@@ -110,7 +110,8 @@ export async function construirMochila(
   const nodos = await prismaBase.contentNode.findMany({
     where: {
       academyId,
-      deletedAt: null,
+      // `deletedAt: null` NO se repite aquí: `studentNodeWhere` ya lo trae, y
+      // escribirlo dos veces sobre la misma clave es el patrón del fallo H-07.
       // `studentNodeWhere` ya aplica el ritmo del temario dentro. No se vuelve
       // a esparcir `releaseWhere` encima: pisaría su clave `AND` y es la forma
       // exacta del fallo H-07, aunque el resultado saliera igual.

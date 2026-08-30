@@ -26,6 +26,7 @@
     "radar": "node --env-file=.env --import tsx scripts/radar.ts",
     "demo:normativa": "node --env-file=.env --import tsx scripts/demo-legislation.ts",
     "ia:probar": "node --env-file=.env --import tsx scripts/probar-ia.ts",
+    "indexar": "node --env-file=.env --import tsx scripts/indexar.ts",
     "iconos": "node --import tsx scripts/iconos.ts",
     "mantenimiento": "node --env-file=.env --import tsx scripts/mantenimiento.ts",
     "auditoria": "node scripts/auditoria-interna.mjs && node scripts/auditoria.mjs",
@@ -44,7 +45,8 @@
     "copia:restaurar": "node --env-file=.env --import tsx scripts/restaurar-copia.ts",
     "ia:fuga": "node --env-file=.env --import tsx scripts/probar-fuga-ia.ts",
     "pentest": "node scripts/pentest.mjs",
-    "desplegar:comprobar": "node --env-file=.env --import tsx scripts/comprobar-despliegue.ts"
+    "desplegar:comprobar": "node --env-file=.env --import tsx scripts/comprobar-despliegue.ts",
+    "manual:capturas": "node --import tsx scripts/capturas.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.7.1",
@@ -80,7 +82,7 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
-    "@types/node": "^20",
+    "@types/node": "^20.19.43",
     "@types/nodemailer": "^8.0.1",
     "@types/papaparse": "^5.5.2",
     "@types/pg": "^8.21.0",
@@ -89,6 +91,7 @@
     "embedded-postgres": "^18.4.0-beta.17",
     "eslint": "^9",
     "eslint-config-next": "16.3.0",
+    "playwright": "^1.62.1",
     "prisma": "^7.9.1",
     "tailwindcss": "^4",
     "tsx": "^4.23.12",

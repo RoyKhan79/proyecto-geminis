@@ -60,6 +60,23 @@ async function main() {
   console.log(
     `  · Sin indicar tema: el de curso completo ve ${libreCompleto.length} fragmentos; el de solo tests, ${libreRestringido.length}`,
   );
+
+  // Si NADIE ve nada es que no hay material indexado, no que la IA filtre.
+  //
+  // Dicho de otro modo: cero contra cero no demuestra nada, y hasta que esto
+  // estuvo aquí la prueba lo cantaba como «la IA deja escapar material no
+  // contratado · NO desplegar así». Una prueba que grita fuga cuando lo que
+  // pasa es que falta un paso previo acaba ignorándose, y el día que haya una
+  // fuga de verdad nadie la mirará.
+  if (libreCompleto.length === 0) {
+    console.error(
+      "\n✗ No hay material indexado en esta academia, así que esta prueba no\n" +
+        "  demuestra nada. Indexa primero:\n\n" +
+        "      npm run indexar\n",
+    );
+    process.exit(1);
+  }
+
   comprobar(
     "el alumno con menos contratado ve menos que el que lo tiene todo",
     libreRestringido.length < libreCompleto.length,

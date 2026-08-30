@@ -566,3 +566,40 @@ dice qué prepara la academia y para cuándo. Y sobre todo era una lista inútil
 el alumno pulsaba y se topaba con que no tenía temas para ese simulacro.
 **La lista no es la barrera.** La comprobación al empezar existe porque a esa
 acción llega un identificador, y un identificador se teclea.
+
+### ADR-0056 · Una prueba que no puede probar nada lo dice ⭐
+**Decisión.** Cuando a una comprobación le falta el dato que necesita para
+probar algo —ningún simulacro publicado, ningún tema descargable, nada
+indexado— **se canta como omitida** y se cuenta aparte, en lugar de saltarse el
+bloque en silencio o de dar por buena una comparación vacía.
+**Por qué.** Tres pruebas de este proyecto pasaban sin haber probado nada:
+- La mochila comparaba «cero temas contra cero temas» y daba el aislamiento por
+  bueno, cuando lo que pasaba es que ningún producto de la demostración incluía
+  el derecho de descarga.
+- El ataque a los simulacros no se lanzaba porque la demostración no tenía
+  ninguno publicado, y la batería terminaba con «ningún ataque ha conseguido
+  nada» siendo verdad solo porque el ataque no llegó a salir.
+- `npm run ia:fuga` decía **«la IA deja escapar material no contratado · NO
+  desplegar así»** cuando lo que ocurría es que no había nada indexado.
+**Lo que enseña el tercero.** Una prueba que grita fuga cuando falta un paso
+previo acaba ignorándose, y el día que haya una fuga de verdad nadie la mirará.
+Ahora distingue los dos casos y dice qué comando falta.
+**Y la demostración es parte del arnés.** Si la demo no ejercita una función,
+las pruebas de esa función pasan vacías. Por eso el temario de la demo es
+descargable, el curso completo incluye `DOWNLOAD_CONTENT` y hay un simulacro
+publicado: no es decorado, es lo que hace que los ataques tengan a qué atacar.
+
+### ADR-0057 · El manual enseña capturas que se regeneran solas
+**Decisión.** Las capturas del manual las hace `npm run manual:capturas`
+recorriendo la aplicación real con cada rol, y se guardan en `public/manual/`.
+No se pegan a mano.
+**Por qué.** Unas capturas pegadas envejecen con el primer rediseño y nadie las
+rehace, así que el manual acaba enseñando un producto que ya no existe. Esto se
+vuelve a lanzar en un minuto.
+**Dos detalles que importan.** El script **se niega a correr si no encuentra la
+academia de demostración**: una captura de la lista de alumnos son datos
+personales de gente real, y acabarían dentro de un manual que se comparte. Y el
+Campus se captura con tamaño de teléfono, porque enseñarlo estirado a 1440 px
+sería enseñar otra cosa.
+**Si falta una captura** no se rompe la página: se pinta un aviso con el comando
+que hay que lanzar.

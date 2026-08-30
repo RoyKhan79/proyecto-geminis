@@ -4,10 +4,9 @@ import { notFound } from "next/navigation";
 import { ChevronLeft, FileText, Timer } from "lucide-react";
 import { requireAcademy } from "@/lib/auth/context";
 import { loadExamForStudent } from "@/server/exams/queries";
-import { iniciarExamenAction } from "@/server/exams/actions";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/primitives";
 import { formatDateTime } from "@/lib/utils";
+import { BotonEmpezar } from "./empezar";
 import { EditorDeExamen } from "./editor";
 
 export const metadata: Metadata = { title: "Examen" };
@@ -84,12 +83,7 @@ export default async function ExamenPage({
               </span>
             </p>
 
-            <form action={iniciarExamenAction.bind(null, undefined)}>
-              <input type="hidden" name="submissionId" value={examen.submissionId} />
-              <Button type="submit" className="w-full">
-                Empezar el examen
-              </Button>
-            </form>
+            <BotonEmpezar submissionId={examen.submissionId} />
           </CardContent>
         </Card>
       ) : null}

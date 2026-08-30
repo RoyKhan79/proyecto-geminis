@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { requireAcademy } from "@/lib/auth/context";
+import { construirMochila } from "@/server/campus/mochila";
 import { MochilaPanel } from "./mochila-panel";
 
 export const metadata: Metadata = { title: "Descargas" };
@@ -15,6 +16,11 @@ export const metadata: Metadata = { title: "Descargas" };
 export default async function DescargasPage() {
   const ctx = await requireAcademy();
 
+  // La lista se resuelve aquí, en el servidor. Pedirla otra vez desde el
+  // navegador nada más abrir sería enseñar un «cargando» por un dato que ya
+  // teníamos en la mano.
+  const mochila = await construirMochila(ctx.academy.id, ctx.membershipId);
+
   return (
     <>
       <div className="space-y-1">
@@ -26,7 +32,10 @@ export default async function DescargasPage() {
         </p>
       </div>
 
-      <MochilaPanel membershipId={ctx.membershipId} />
+      <MochilaPanel
+        membershipId={ctx.membershipId}
+        temasIniciales={mochila.temas}
+      />
     </>
   );
 }

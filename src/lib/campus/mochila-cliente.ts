@@ -26,6 +26,74 @@
  *    uno no puede quedarse a mano del siguiente.
  */
 
+/**
+ * LA MOCHILA COMO ALMACÉN EXTERNO
+ *
+ * Lo guardado vive en el disco del navegador, no en React. Para que las
+ * pantallas lo lean sin desincronizarse hay un contador de versión y una lista
+ * de interesados: cualquier cambio —guardar, borrar, vaciar— la sube y avisa.
+ *
+ * Es lo que permite usar `useSyncExternalStore` en los componentes en lugar de
+ * un `useEffect` que llame a `setState` nada más montar. Aquello funcionaba,
+ * pero provoca un render en cascada en cada montaje y, sobre todo, no tiene
+ * respuesta para el renderizado en servidor: durante la hidratación no hay
+ * almacén que leer. Con esto, el servidor responde «no guardado» y el navegador
+ * corrige en el primer instante, que es la verdad en los dos sitios.
+ */
+let version = 0;
+let cacheDeLista: EntradaGuardada[] | null = null;
+const interesados = new Set<() => void>();
+
+/** Una sola instancia, siempre la misma: React compara por identidad. */
+const LISTA_VACIA: EntradaGuardada[] = [];
+
+function cambio() {
+  version += 1;
+  cacheDeLista = null;
+  for (const avisar of interesados) avisar();
+}
+
+export function suscribirse(alCambiar: () => void): () => void {
+  interesados.add(alCambiar);
+  return () => {
+    interesados.delete(alCambiar);
+  };
+}
+
+/**
+ * La lista de lo guardado, para `useSyncExternalStore`.
+ *
+ * Se cachea porque tiene que devolver EL MISMO array mientras nada cambie:
+ * React compara la respuesta con la anterior por identidad, y un array nuevo en
+ * cada llamada lo mete en un bucle infinito de renders. El caché se tira en
+ * `cambio()`, que es el único sitio donde deja de ser cierta.
+ */
+export function instantanea(): EntradaGuardada[] {
+  if (!soportado()) return LISTA_VACIA;
+  if (cacheDeLista === null) {
+    cacheDeLista = Object.values(leerIndice()).sort((a, b) =>
+      a.label.localeCompare(b.label, "es"),
+    );
+  }
+  return cacheDeLista;
+}
+
+/**
+ * En el servidor no hay mochila.
+ *
+ * No es un detalle de tipos: durante la hidratación React usa ESTA respuesta,
+ * no la del navegador. Sin ella, el servidor pintaría «Guardar» y el navegador
+ * «Guardado» en el mismo instante, que es un error de hidratación.
+ */
+export function instantaneaEnServidor(): EntradaGuardada[] {
+  return LISTA_VACIA;
+}
+
+/** Versión actual del almacén. Sirve para saber que algo ha cambiado. */
+export function versionDeLaMochila(): number {
+  return version;
+}
+
 const CACHE = "geminis-mochila-v1";
 const INDICE = "geminis.mochila.indice";
 /** De quién es lo guardado. Un móvil se comparte más de lo que parece. */
@@ -64,6 +132,7 @@ function leerIndice(): Indice {
 }
 
 function escribirIndice(indice: Indice) {
+  cambio();
   try {
     localStorage.setItem(INDICE, JSON.stringify(indice));
   } catch {
@@ -73,9 +142,7 @@ function escribirIndice(indice: Indice) {
 }
 
 export function loGuardado(): EntradaGuardada[] {
-  return Object.values(leerIndice()).sort((a, b) =>
-    a.label.localeCompare(b.label, "es"),
-  );
+  return instantanea();
 }
 
 export function estaGuardado(fileId: string, version?: string): boolean {
@@ -178,6 +245,7 @@ export async function comprobarDueno(membershipId: string): Promise<boolean> {
 export async function vaciarMochila(): Promise<void> {
   if (!soportado()) return;
   await caches.delete(CACHE);
+  cambio();
   try {
     localStorage.removeItem(INDICE);
     localStorage.removeItem(DUENO);
@@ -219,6 +287,6 @@ export async function sincronizar(
 }
 
 /** Cuánto ocupa la mochila, para decirlo en la pantalla. */
-export function espacioOcupado(): number {
-  return loGuardado().reduce((suma, e) => suma + e.sizeBytes, 0);
+export function espacioOcupado(entradas: EntradaGuardada[] = instantanea()): number {
+  return entradas.reduce((suma, e) => suma + e.sizeBytes, 0);
 }

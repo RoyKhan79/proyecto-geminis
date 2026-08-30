@@ -18,8 +18,8 @@ Tres capas, todas automáticas y todas ejecutables con un comando:
 | Comando | Qué mira | Resultado |
 | --- | --- | --- |
 | `npm run auditoria:interna` | El **código**: pantallas sin comprobación de acceso, acciones sin permiso, consultas que se saltan el aislamiento, HTML sin sanear, modelos sin clasificar, secretos escritos a mano | **33 / 33** |
-| `npm run auditoria:http` | La **aplicación levantada**: qué responde de verdad a un atacante con y sin sesión | **44 / 44** |
-| `npm run verificar` | Tipos, estilo, pruebas y compilación | **137 pruebas, 0 fallos** |
+| `npm run auditoria:http` | La **aplicación levantada**: qué responde de verdad a un atacante con y sin sesión | **46 / 46** |
+| `npm run verificar` | Tipos, estilo, pruebas y compilación | **182 pruebas, 0 fallos** |
 | `npm run rls:probar` | Que la **segunda barrera** protege aunque la primera falle | **5 / 5** |
 | `npm run rls:concurrencia` | Que dos academias a la vez no se cruzan | **200 consultas, 0 cruces** |
 | `npm run remesa:probar` | El fichero de adeudos que se manda al banco | **6 / 6** |
@@ -27,6 +27,8 @@ Tres capas, todas automáticas y todas ejecutables con un comando:
 | `npm run ia:fuga` | Que la IA no deje escapar temario no contratado | **32 nodos, 0 fugas** |
 | `npm run dispositivos:probar` | Límite de sesiones por alumno | **7 / 7** |
 | `npm run copia:restaurar` | Que una copia de seguridad sirve de verdad | **6 / 6** |
+| `npm run pentest` | Ataques reales contra el servicio en marcha | **43 / 43 repelidos** |
+| `npm run desplegar:comprobar` | Que el servidor está listo para datos reales | **configuración, no código** |
 
 La diferencia entre las dos primeras importa. La interna encuentra el descuido
 el día que se comete —una pantalla nueva a la que se le olvidó pedir permiso—.
@@ -250,7 +252,7 @@ copias de seguridad, límite de dispositivos y observabilidad.
 
 | Asunto | Estado | Qué hace falta |
 | --- | --- | --- |
-| **Test de intrusión sobre el sistema desplegado** | Parcial | Hay una batería de ataque propia (`npm run pentest`) que ejecuta 60+ intentos reales contra el servicio en marcha. No sustituye a un profesional atacando la instalación real con su infraestructura delante |
+| **Test de intrusión sobre el sistema desplegado** | Parcial | Hay una batería de ataque propia (`npm run pentest`) con 43 ataques contra el servicio en marcha, y **canta los que no ha podido lanzar** en lugar de terminar en verde sin haberlos probado. No sustituye a un profesional atacando la instalación real con su infraestructura delante |
 | **Cifrado del disco del servidor** | Comprobable | Es configuración del gestor de base de datos y del almacén, no código. `npm run desplegar:comprobar` falla si no está confirmada, y `docs/DESPLIEGUE.md` explica cómo ponerla. Los datos bancarios ya van cifrados a nivel de columna, que cubre el volcado; esto cubre el disco robado |
 | **Segunda barrera para los archivos** | Cerrado | La clave de todo objeto empieza por `academies/<id>/`, y `abrirParaAcademia()` lo comprueba antes de devolver un byte, con independencia de la consulta que trajo el archivo. Probado en `tests/security.test.ts` y atacado en `npm run pentest` |
 | **Credenciales del almacén** | Abierto | Quien tenga las llaves del bucket ve todo lo que hay dentro, y eso ninguna barrera de la aplicación lo tapa. Es gestión de secretos, no código |

@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { Check, CloudOff, Download, Loader2, Trash2 } from "lucide-react";
 import {
   borrarTema,
   estaGuardado,
   guardarTema,
+  suscribirse,
   type TemaDescargable,
 } from "@/lib/campus/mochila-cliente";
 import { Button } from "@/components/ui/button";
@@ -23,31 +24,26 @@ import { Button } from "@/components/ui/button";
  * pintó la página y pulsa, el servidor dice que no y aquí no se guarda nada.
  */
 export function GuardarTema({ tema }: { tema: TemaDescargable }) {
-  // Empieza en null y no en false: hasta que el navegador no ha mirado su
-  // almacén no se sabe, y pintar «Guardar» a alguien que ya lo tiene, para
-  // cambiarlo un instante después, es un parpadeo feo en la pantalla que más
-  // se abre de toda la aplicación.
-  const [dentro, setDentro] = useState<boolean | null>(null);
   const [trabajando, setTrabajando] = useState(false);
   const [fallo, setFallo] = useState<string | null>(null);
 
-  useEffect(() => {
-    setDentro(estaGuardado(tema.fileId, tema.version));
-  }, [tema.fileId, tema.version]);
-
-  if (dentro === null) return null;
+  // Se lee del almacén del navegador, no de un estado propio: así el botón de
+  // esta pantalla y la lista de Descargas nunca discrepan sobre si un tema está
+  // guardado. La tercera función es la respuesta del servidor —«no guardado»—,
+  // y es la que React usa durante la hidratación para que no haya un instante
+  // en el que el HTML y el navegador digan cosas distintas.
+  const dentro = useSyncExternalStore(
+    suscribirse,
+    () => estaGuardado(tema.fileId, tema.version),
+    () => false,
+  );
 
   async function alternar() {
     setTrabajando(true);
     setFallo(null);
     try {
-      if (dentro) {
-        await borrarTema(tema.fileId);
-        setDentro(false);
-      } else {
-        await guardarTema(tema);
-        setDentro(true);
-      }
+      if (dentro) await borrarTema(tema.fileId);
+      else await guardarTema(tema);
     } catch (error) {
       setFallo(error instanceof Error ? error.message : "No se ha podido guardar.");
     } finally {

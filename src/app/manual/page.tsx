@@ -3,6 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getAuthContext } from "@/lib/auth/context";
 import { BRAND } from "@/lib/brand";
+import { Captura } from "./captura";
 import { Indice } from "./indice";
 import {
   Apartado,
@@ -210,6 +211,11 @@ export default async function ManualPage() {
                 nada.
               </Paso>
             </Pasos>
+
+            <Captura
+              nombre="gestion-inicio"
+              pie="La pantalla de inicio de Manager. A la izquierda, todo lo que la academia puede hacer, agrupado por Personas, Académico y Academia; lo que no te aparezca es que tu rol no lo tiene."
+            />
           </div>
 
           <Apartado
@@ -262,6 +268,11 @@ export default async function ManualPage() {
                 de golpe sin mirarlos no debería pasar por descuido.
               </p>
             </Regla>
+
+            <Captura
+              nombre="gestion-contenido"
+              pie="El árbol del temario. Los apartados los nombra la academia; aquí se ve cuántos elementos hay y cuántos están publicados."
+            />
 
             <Sub>Las banderas de cada rama</Sub>
             <P>
@@ -323,6 +334,11 @@ export default async function ManualPage() {
               </p>
             </Regla>
 
+            <Captura
+              nombre="gestion-alumnos"
+              pie="El listado de alumnado. Desde aquí se entra a la ficha de cada uno, con sus matrículas, sus pagos y su rendimiento."
+            />
+
             <Sub>Forma de pago</Sub>
             <P>
               En la ficha de cada alumno se elige cómo paga: efectivo, tarjeta,
@@ -344,6 +360,11 @@ export default async function ManualPage() {
               devuelto suspende el acceso del alumno, que es lo que hace que la
               lista sirva para algo y no sea solo un registro.
             </P>
+
+            <Captura
+              nombre="gestion-pagos"
+              pie="El estado de cuentas: quién ha pagado, quién debe y qué se ha devuelto."
+            />
 
             <Sub>Remesas de cobro</Sub>
             <P>
@@ -368,6 +389,11 @@ export default async function ManualPage() {
               </p>
             </Nota>
 
+            <Captura
+              nombre="gestion-remesas"
+              pie="Las remesas emitidas. De cada una sale el archivo XML que se sube al banco."
+            />
+
             <Sub>Facturas</Sub>
             <P>
               <Ruta>/gestion/facturas</Ruta> emite facturas con su base imponible,
@@ -375,6 +401,11 @@ export default async function ManualPage() {
               emitida <strong>no se puede modificar ni borrar</strong>: si hay que
               corregirla se emite una rectificativa, que es lo que exige la ley.
             </P>
+            <Captura
+              nombre="gestion-facturas"
+              pie="Las facturas emitidas, con su numeración correlativa. Una vez emitida no se toca: si hay que corregirla, se emite una rectificativa."
+            />
+
             <Nota>
               <p>
                 Si la enseñanza que impartes está exenta de IVA por el artículo
@@ -395,6 +426,11 @@ export default async function ManualPage() {
               aula o su enlace. Lo que pongas aquí lo ve el alumnado en su propio
               calendario.
             </P>
+            <Captura
+              nombre="gestion-agenda"
+              pie="La agenda, con las clases colocadas por día. Lo que se ponga aquí lo ve el alumnado en su propio calendario."
+            />
+
             <P>
               <Ruta>/gestion/clases</Ruta> es la lista, y entrando en una clase se
               pasa lista. La asistencia admite presente, ausente, justificado, en
@@ -440,6 +476,11 @@ export default async function ManualPage() {
                   "Un supuesto o un trabajo para casa, con plazo de días.",
                 ],
               ]}
+            />
+
+            <Captura
+              nombre="gestion-examenes"
+              pie="Un examen de desarrollo convocado. De un vistazo: quién está escribiendo ahora mismo, quién ha entregado y cuántos quedan por corregir."
             />
 
             <Sub>Cargar preguntas</Sub>
@@ -521,6 +562,11 @@ export default async function ManualPage() {
                 costar la plaza.
               </p>
             </Regla>
+            <Captura
+              nombre="gestion-ia"
+              pie="El copiloto. El botón de indexar es lo primero que hay que pulsar: sin material indexado, la IA no tiene de dónde sacar nada."
+            />
+
             <P>
               Funciona sin contratar ninguna API externa. Si conectas una, mejora
               la redacción; si no, sigue respondiendo con su propio motor.
@@ -558,6 +604,11 @@ export default async function ManualPage() {
               una vez por semana. Lo importante no son los totales: es la lista de{" "}
               <strong>quién necesita atención</strong>.
             </P>
+            <Captura
+              nombre="gestion-analitica"
+              pie="Analítica. Lo que importa no son los totales de arriba, sino la lista de quién necesita atención y por qué."
+            />
+
             <P>
               El riesgo se calcula con reglas explicables y te dice el motivo, no
               un número mágico: días sin entrar, ningún test este mes, material sin
@@ -606,6 +657,12 @@ export default async function ManualPage() {
                 <strong>Instalar</strong>; si no, está en el menú de tres puntos.
               </Ficha>
             </Fichas>
+            <Captura
+              nombre="campus-inicio"
+              movil
+              pie="La pantalla de inicio del alumno. Abajo, la barra con los cinco destinos principales; arriba, los accesos al resto."
+            />
+
             <Nota>
               <p>
                 <strong>
@@ -624,6 +681,12 @@ export default async function ManualPage() {
               profesor ya haya abierto para esa clase: lo demás, sencillamente, no
               está.
             </P>
+            <Captura
+              nombre="campus-estudiar"
+              movil
+              pie="El temario del alumno. Solo aparece lo contratado y lo que el profesor ya haya abierto."
+            />
+
             <P>
               Al entrar en un tema se abre el documento en el visor, sin salir de
               la aplicación. Si la academia lo permite, hay botón para
@@ -647,6 +710,12 @@ export default async function ManualPage() {
               Después, sin red —en el metro, en el pueblo—, esos temas se abren
               igual desde Estudiar.
             </P>
+            <Captura
+              nombre="campus-descargas"
+              movil
+              pie="Descargas. Cada tema con lo que ocupa, y arriba cuánto llevas guardado en el dispositivo."
+            />
+
             <Regla>
               <p>
                 <strong>Guardar no abre ninguna puerta.</strong> Solo aparece lo
@@ -681,6 +750,12 @@ export default async function ManualPage() {
                 reloj y su penalización por fallo. Solo salen los de tu oposición.
               </Punto>
             </Lista>
+            <Captura
+              nombre="campus-tests"
+              movil
+              pie="Tests. Arriba lo que el alumno puede practicar por su cuenta; más abajo, los simulacros que convoca la academia."
+            />
+
             <P>
               El <strong>repaso programado</strong> es el que más rinde: te
               devuelve cada pregunta justo cuando estabas a punto de olvidarla, y
@@ -717,6 +792,12 @@ export default async function ManualPage() {
                 seguir escribiendo.
               </Paso>
             </Pasos>
+            <Captura
+              nombre="campus-examenes"
+              movil
+              pie="Los exámenes convocados, cada uno con su estado. El que ya está corregido enseña la nota y el comentario del profesor."
+            />
+
             <Regla>
               <p>
                 <strong>Puedes cerrar la aplicación sin miedo.</strong> Lo escrito
@@ -741,6 +822,12 @@ export default async function ManualPage() {
               dice de qué documento y de qué página lo ha sacado. Si estás dentro
               de un tema, la pregunta se entiende en el contexto de ese tema.
             </P>
+            <Captura
+              nombre="campus-ia"
+              movil
+              pie="Geminis IA en el Campus. Cada respuesta llega con la cita de dónde ha salido."
+            />
+
             <P>
               Cuando algo no está en tu material, lo dice: «No encuentro esa
               información en el material de tu academia. Consúltalo con tu
@@ -768,6 +855,12 @@ export default async function ManualPage() {
                 : desde dónde has entrado y cerrar sesión a distancia.
               </Ficha>
             </Fichas>
+            <Captura
+              nombre="campus-perfil"
+              movil
+              pie="El perfil, con las sesiones abiertas: desde qué dispositivo se ha entrado y cuándo. Se pueden cerrar a distancia."
+            />
+
             <Nota>
               <p>
                 <strong>Hay un límite de dispositivos por alumno.</strong> Lo pone

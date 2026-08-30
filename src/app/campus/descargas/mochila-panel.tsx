@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import {
   CheckCircle2,
@@ -18,8 +18,10 @@ import {
   espacioOcupado,
   estaGuardado,
   guardarTema,
-  loGuardado,
+  instantanea,
+  instantaneaEnServidor,
   sincronizar,
+  suscribirse,
   vaciarMochila,
   type TemaDescargable,
 } from "@/lib/campus/mochila-cliente";
@@ -40,35 +42,76 @@ function talla(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-type Estado = "cargando" | "listo" | "sin-conexion" | "error";
+type Estado = "listo" | "sin-conexion" | "error";
 
-export function MochilaPanel({ membershipId }: { membershipId: string }) {
-  const [estado, setEstado] = useState<Estado>("cargando");
-  const [temas, setTemas] = useState<TemaDescargable[]>([]);
-  const [guardados, setGuardados] = useState<Set<string>>(new Set());
+export function MochilaPanel({
+  membershipId,
+  temasIniciales,
+}: {
+  membershipId: string;
+  /**
+   * La lista ya viene resuelta del servidor.
+   *
+   * Antes se pedía desde el navegador nada más montar, lo que significaba
+   * enseñar un cargando por un dato que el servidor tenía en la mano al pintar
+   * la página. Se sigue pudiendo pedir de nuevo —el botón «Actualizar», o al
+   * volver la conexión—, pero la primera vez no.
+   */
+  temasIniciales: TemaDescargable[];
+}) {
+  const [estado, setEstado] = useState<Estado>("listo");
+  const [temas, setTemas] = useState<TemaDescargable[]>(temasIniciales);
   const [caducados, setCaducados] = useState<Set<string>>(new Set());
-  const [ocupado, setOcupado] = useState(0);
   const [trabajando, setTrabajando] = useState<string | null>(null);
   const [aviso, setAviso] = useState<string | null>(null);
   const [fallo, setFallo] = useState<string | null>(null);
 
-  const refrescarLocal = useCallback(() => {
-    setGuardados(new Set(loGuardado().map((e) => e.fileId)));
-    setOcupado(espacioOcupado());
-  }, []);
+  // Lo guardado se lee del almacén del navegador, no de un estado propio. Así
+  // esta lista y el botón de la pantalla de cada tema no pueden discrepar, y no
+  // hay que acordarse de refrescar nada después de cada guardado o borrado.
+  const entradas = useSyncExternalStore(
+    suscribirse,
+    instantanea,
+    instantaneaEnServidor,
+  );
 
+  const guardados = useMemo(
+    () => new Set(entradas.map((e) => e.fileId)),
+    [entradas],
+  );
+  const ocupado = useMemo(() => espacioOcupado(entradas), [entradas]);
+
+  /**
+   * Pone el dispositivo al día con lo que dice el servidor.
+   *
+   * Es la pieza que hace aceptable guardar temario en un móvil: compara lo
+   * guardado con la lista autorizada y borra lo que ya no está —una baja, un
+   * derecho caducado, una descarga que la academia retira—.
+   */
+  const conciliar = useCallback(
+    async (lista: TemaDescargable[]) => {
+      if (await comprobarDueno(membershipId)) {
+        setAviso(
+          "Se han borrado los temas guardados en este dispositivo porque eran de otra cuenta.",
+        );
+      }
+
+      const { retirados, caducados: cad } = await sincronizar(lista);
+      setCaducados(new Set(cad));
+      if (retirados > 0) {
+        setAviso(
+          retirados === 1
+            ? "Se ha retirado 1 tema que ya no tienes disponible."
+            : `Se han retirado ${retirados} temas que ya no tienes disponibles.`,
+        );
+      }
+    },
+    [membershipId],
+  );
+
+  /** Volver a preguntar al servidor: el botón «Actualizar» y el volver la red. */
   const cargar = useCallback(async () => {
     setFallo(null);
-
-    // Lo primero de todo, antes incluso de mirar la red: ¿es mío lo que hay
-    // guardado aquí? Si el dispositivo lo usó otra persona, se vacía.
-    if (await comprobarDueno(membershipId)) {
-      setAviso(
-        "Se han borrado los temas guardados en este dispositivo porque eran de otra cuenta.",
-      );
-      refrescarLocal();
-    }
-
     try {
       const respuesta = await fetch("/api/campus/mochila", {
         credentials: "same-origin",
@@ -78,32 +121,26 @@ export function MochilaPanel({ membershipId }: { membershipId: string }) {
 
       const datos = (await respuesta.json()) as { temas: TemaDescargable[] };
       setTemas(datos.temas);
-
-      // Lo primero que se hace con la lista fresca es limpiar el dispositivo.
-      // Si un tema ha dejado de estar autorizado, se va antes de pintar nada.
-      const { retirados, caducados: cad } = await sincronizar(datos.temas);
-      setCaducados(new Set(cad));
-      if (retirados > 0) {
-        setAviso(
-          retirados === 1
-            ? "Se ha retirado 1 tema que ya no tienes disponible."
-            : `Se han retirado ${retirados} temas que ya no tienes disponibles.`,
-        );
-      }
-
-      refrescarLocal();
+      await conciliar(datos.temas);
       setEstado("listo");
     } catch {
-      // Sin red: no se puede sincronizar, pero lo guardado sigue ahí y se puede
-      // seguir estudiando. Es justo el caso para el que existe esta pantalla.
-      refrescarLocal();
+      // Sin red: lo guardado sigue ahí y se puede seguir estudiando. Es justo
+      // el caso para el que existe esta pantalla.
       setEstado(navigator.onLine ? "error" : "sin-conexion");
     }
-  }, [refrescarLocal, membershipId]);
+  }, [conciliar]);
 
-  useEffect(() => {
-    void cargar();
-  }, [cargar]);
+  // Conciliar al abrir, con la lista que ya trajo el servidor.
+  //
+  // Esto es exactamente lo que un efecto debe hacer y lo que la propia
+  // documentación de la regla admite: sincronizar con un sistema externo, que
+  // aquí es el almacén del dispositivo. No pide datos ni cambia lo que se
+  // pinta; borra del móvil lo que ha dejado de estar autorizado. Lo único que
+  // toca del estado es el aviso que explica qué se ha retirado, y callarlo
+  // sería peor: los temas desaparecerían del móvil sin decir por qué.
+  //
+  // eslint-disable-next-line react-hooks/set-state-in-effect, react-hooks/exhaustive-deps
+  useEffect(() => void conciliar(temasIniciales), [conciliar]);
 
   async function alGuardar(tema: TemaDescargable) {
     setTrabajando(tema.fileId);
@@ -115,7 +152,6 @@ export function MochilaPanel({ membershipId }: { membershipId: string }) {
         siguiente.delete(tema.fileId);
         return siguiente;
       });
-      refrescarLocal();
     } catch (error) {
       setFallo(error instanceof Error ? error.message : "No se ha podido guardar.");
     } finally {
@@ -126,7 +162,6 @@ export function MochilaPanel({ membershipId }: { membershipId: string }) {
   async function alBorrar(fileId: string) {
     setTrabajando(fileId);
     await borrarTema(fileId);
-    refrescarLocal();
     setTrabajando(null);
   }
 
@@ -141,22 +176,10 @@ export function MochilaPanel({ membershipId }: { membershipId: string }) {
   async function alVaciar() {
     setTrabajando("todo");
     await vaciarMochila();
-    refrescarLocal();
     setTrabajando(null);
   }
 
   const pendientes = temas.filter((t) => !estaGuardado(t.fileId, t.version));
-
-  if (estado === "cargando") {
-    return (
-      <Card>
-        <CardContent className="flex items-center justify-center gap-2 py-12 text-sm text-ink-muted">
-          <Loader2 className="size-4 animate-spin" aria-hidden />
-          Comprobando qué puedes descargar…
-        </CardContent>
-      </Card>
-    );
-  }
 
   return (
     <div className="space-y-4">

@@ -13,16 +13,38 @@ import { estadoDelExamen } from "./estado";
  * de acciones, justo para poder llamarse desde un script: aquel lleva
  * `"use server"` y arrastra `next/headers`, que fuera de una petición no existe.
  *
- * Sin sesión, así que usa el cliente sin tenant. Es una de las poquísimas
- * excepciones al aislamiento por academia, y es legítima porque no lee ni
- * expone datos de nadie: solo cambia un estado que ya venía decidido por el
- * reloj, para todas las academias por igual.
+ * Sin sesión, así que usa el cliente sin la guardia de academia. Pero **acota
+ * por academia de todas formas**, recorriéndolas una a una en lugar de barrer
+ * la tabla entera. Podría haberse escrito como una excepción justificada —solo
+ * cambia un estado que ya venía decidido por el reloj— y la auditoría interna
+ * lo habría dejado pasar con una marca. No se ha hecho: una regla que dice
+ * «ninguna consulta sin acotar por academia» vale mucho más sin excepciones que
+ * con una bien argumentada, porque la siguiente excepción se argumenta sola.
  */
 export async function cerrarExamenesVencidos(): Promise<number> {
   const ahora = new Date();
 
+  const academias = await prismaBase.academy.findMany({
+    where: { deletedAt: null },
+    select: { id: true },
+  });
+
+  let cerrados = 0;
+
+  for (const academia of academias) {
+    cerrados += await cerrarLosDeUnaAcademia(academia.id, ahora);
+  }
+
+  return cerrados;
+}
+
+async function cerrarLosDeUnaAcademia(
+  academyId: string,
+  ahora: Date,
+): Promise<number> {
   const abiertos = await prismaBase.submission.findMany({
     where: {
+      academyId,
       submittedAt: null,
       startedAt: { not: null },
       assignment: { kind: "EXAM", status: "PUBLISHED", deletedAt: null },
@@ -53,7 +75,11 @@ export async function cerrarExamenesVencidos(): Promise<number> {
   // El filtro repite `submittedAt: null` a propósito: entre la lectura y esta
   // escritura el alumno ha podido entregar, y su entrega manda sobre la nuestra.
   const { count } = await prismaBase.submission.updateMany({
-    where: { id: { in: vencidos.map((e) => e.id) }, submittedAt: null },
+    where: {
+      academyId,
+      id: { in: vencidos.map((e) => e.id) },
+      submittedAt: null,
+    },
     data: { status: "SUBMITTED", submittedAt: ahora, autoSubmitted: true },
   });
 

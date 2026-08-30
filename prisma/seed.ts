@@ -273,6 +273,11 @@ async function seedAdministrativo(db: ReturnType<typeof tenantDb>, typeId: strin
     label: "Temario",
     icon: "book-open",
     status: "PUBLISHED",
+    // La demostración deja el temario descargable para que se pueda enseñar la
+    // mochila del alumnado —estudiar sin cobertura— sin tener que configurarlo
+    // a mano. En una academia real esta bandera es una decisión suya, y por eso
+    // viene cerrada por defecto.
+    downloadable: true,
   });
 
   const bloques = [
@@ -388,6 +393,13 @@ async function seedAdministrativo(db: ReturnType<typeof tenantDb>, typeId: strin
       { productId: cursoCompleto.id, nodeId: tests.id, capability: "TAKE_SIMULATIONS" },
       { productId: cursoCompleto.id, nodeId: normativa.id, capability: "VIEW_CONTENT" },
       { productId: cursoCompleto.id, nodeId: temario.id, capability: "USE_AI_TUTOR" },
+      // El curso completo incluye llevarse el temario. Ver y descargar son
+      // permisos distintos a propósito (§113), y sin este derecho la mochila
+      // del alumnado —estudiar sin cobertura— quedaba inalcanzable en la
+      // demostración: la pantalla salía vacía y los ataques que la prueban
+      // pasaban sin haber probado nada. El pack de solo tests NO lo lleva, que
+      // es lo que mantiene el contraste entre los dos planes.
+      { productId: cursoCompleto.id, nodeId: temario.id, capability: "DOWNLOAD_CONTENT" },
     ],
   });
 
@@ -768,8 +780,11 @@ async function seedExamenes(
   const ahora = Date.now();
   const dia = 24 * 60 * 60 * 1000;
 
+  // Se convoca a todo el curso y no a un grupo suelto: en la demo el alumnado
+  // está repartido en tres grupos, y un examen de uno solo dejaría a dos
+  // tercios de la lista sin nada que enseñar.
   const matriculados = await db.enrollment.findMany({
-    where: { groupId: administrativo.grupo.id, deletedAt: null },
+    where: { courseId: administrativo.course.id, deletedAt: null },
     select: { studentId: true },
   });
   if (matriculados.length === 0) return;
@@ -787,7 +802,6 @@ async function seedExamenes(
         title: datos.title,
         instructions: datos.instructions,
         courseId: administrativo.course.id,
-        groupId: administrativo.grupo.id,
         editionId: administrativo.edition.id,
         opensAt: datos.opensAt,
         dueAt: datos.dueAt,
@@ -840,6 +854,29 @@ async function seedExamenes(
     opensAt: new Date(ahora - 20 * dia),
     dueAt: new Date(ahora - 20 * dia + 2 * 60 * 60 * 1000),
     timeLimitMinutes: 90,
+  });
+
+  // Un simulacro publicado, atado a SU convocatoria. Además de dar contenido a
+  // la demo, es lo que hace que la batería de ataque pueda comprobar que un
+  // alumno de otra oposición no lo abre: sin ninguno publicado, ese ataque no
+  // se lanzaba y la batería terminaba en verde sin haberlo probado.
+  await db.testDefinition.create({
+    data: {
+      title: "Simulacro · Bloque I de Administrativo",
+      description:
+        "Cincuenta preguntas de los temas abiertos, con el tiempo y la penalización del examen real.",
+      kind: "SIMULATION",
+      status: "PUBLISHED",
+      editionId: administrativo.edition.id,
+      questionCount: 50,
+      timeLimitMinutes: 70,
+      penaltyPerWrong: 0.33,
+      revealMode: "AT_END",
+      maxAttempts: 2,
+      availableFrom: new Date(ahora - dia),
+      availableUntil: new Date(ahora + 30 * dia),
+      createdById: teacherId,
+    },
   });
 
   const primera = matriculados[0];
