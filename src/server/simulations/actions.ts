@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { recordAudit } from "@/lib/audit";
 import { requireAcademy, requirePermission } from "@/lib/auth/context";
-import { loadStudentGrants, releaseWhere, studentNodeWhere } from "@/lib/access/content-access";
+import { loadStudentGrants, studentNodeWhere } from "@/lib/access/content-access";
 
 /**
  * SIMULACROS
@@ -249,8 +249,11 @@ export async function startSimulationAction(formData: FormData) {
   const nodos = await ctx.db.contentNode.findMany({
     where: {
       kind: "TOPIC",
+      // `studentNodeWhere` ya aplica el ritmo del temario. Antes se volvía a
+      // esparcir `releaseWhere` encima y la segunda pisaba la clave `AND` de la
+      // primera: salía lo mismo de casualidad, pero es la forma exacta del fallo
+      // H-07 y no se deja escrita así.
       ...studentNodeWhere(grants),
-      ...releaseWhere(grants.groupIds),
     },
     select: { id: true },
   });

@@ -212,7 +212,49 @@ funciona **sin contratar ninguna API** (ADR-0028).
 3. **Ordenador** · Manager → abre la entrega, ponle nota y un comentario.
 4. **Móvil** · Recarga: ves tu nota y el comentario.
 
-### Prueba H · El aislamiento entre academias
+### Prueba H · Guardar temas para estudiar sin cobertura
+
+Esta es la que convence a un opositor, porque describe su día real.
+
+**En el móvil**, como alumno: *Descargas*. Salen los temas que su academia le
+permite descargar —solo esos: ni los que no tiene contratados, ni los que el
+profesor no ha abierto todavía, ni las ramas con marca de agua—. Pulsa **Guardar
+los que faltan**.
+
+**Ahora quítale la red**: modo avión, o desconecta la wifi. Abre *Estudiar* y
+entra en uno de los temas guardados. **El PDF se abre igual.** Los que no
+guardaste dirán que no están en el dispositivo, que es la verdad.
+
+**Y ahora la parte que importa de verdad.** Vuelve al ordenador, entra como
+academia y quítale a ese alumno el derecho de descarga (Manager → *Contenido* →
+la rama → desmarca la descarga). En el móvil, con red otra vez, abre *Descargas*:
+los temas retirados **desaparecen del dispositivo** y te lo dice en pantalla.
+
+Es lo que hace que guardar temas sea aceptable: una baja, un derecho que caduca o
+una descarga que la academia retira vacían la mochila en la siguiente conexión.
+Lo guardado además lleva dueño: si entra otra persona en ese mismo móvil, se
+borra antes de enseñarle nada.
+
+### Prueba I · Un examen de desarrollo, de principio a fin
+
+**En el ordenador**, como academia: Manager → *Exámenes* → **Convocar examen**.
+Ponle 5 minutos de reloj para poder verlo entero sin esperar. Publícalo.
+
+**En el móvil**, como alumno: llega el aviso, *Exámenes* → **Empezar el examen**.
+A partir de ahí:
+
+- Escribe un par de frases y espera cuatro segundos: aparece **Guardado**.
+- **Cierra la aplicación del todo** y vuelve a abrirla. El texto sigue ahí y el
+  reloj **ha seguido corriendo**: no se reinicia por salir, ni cambiando la hora
+  del móvil. El reloj lo lleva el servidor.
+- Deja que llegue a cero sin entregar. Se entrega solo, con lo último que
+  habías escrito. Quedarse sin tiempo no puede significar perder el examen.
+
+**De vuelta en el ordenador**: Manager → *Exámenes*. Ves quién está escribiendo
+en ese momento, quién ha entregado y cuál se cerró solo. Ábrelo, léelo, ponle
+nota y un comentario. En el móvil del alumno aparece corregido.
+
+### Prueba J · El aislamiento entre academias
 
 Esta no se ve, y es la más importante de todas.
 

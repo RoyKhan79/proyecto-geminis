@@ -11,6 +11,7 @@
 import { prismaBase } from "@/lib/db/client";
 import { limpiarTokensCaducados } from "@/lib/auth/recovery";
 import { limpiarContadores } from "@/lib/rate-limit";
+import { cerrarExamenesVencidos } from "@/server/exams/cierre";
 
 async function main() {
   console.log("Mantenimiento de Proyecto Geminis");
@@ -52,6 +53,13 @@ async function main() {
   // fila por cada IP que haya intentado entrar alguna vez.
   const contadores = await limpiarContadores();
   console.log(`  · ${contadores} contadores de intentos vencidos eliminados`);
+
+  // Exámenes de desarrollo a los que se les agotó el tiempo y nadie llegó a
+  // cerrar: el alumno se quedó sin batería, cerró el portátil, se fue la luz.
+  // Sin esto la entrega se quedaría «pendiente» para siempre y el profesor no
+  // la vería en su lista de corregir, con el examen ya escrito y guardado.
+  const examenes = await cerrarExamenesVencidos();
+  console.log(`  · ${examenes} exámenes vencidos cerrados con lo último guardado`);
 
   console.log("✓ Terminado");
 }

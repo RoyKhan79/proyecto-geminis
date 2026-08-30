@@ -1,7 +1,6 @@
 import { prismaBase } from "@/lib/db/client";
 import {
   loadStudentGrants,
-  releaseWhere,
   studentNodeWhere,
 } from "@/lib/access/content-access";
 
@@ -77,8 +76,9 @@ export async function recuperarFragmentos(params: {
     const nodos = await prismaBase.contentNode.findMany({
       where: {
         academyId: params.academyId,
+        // `studentNodeWhere` ya trae el ritmo del temario dentro. Repetirlo en
+        // un segundo `spread` pisaba su clave `AND`; justo el patrón de H-07.
         ...studentNodeWhere(grants),
-        ...releaseWhere(grants.groupIds),
       },
       select: { id: true },
     });

@@ -17,6 +17,12 @@ import { recuperarFragmentos } from "@/lib/ai/retrieval";
 import { trocear, extraerTextoPdf } from "@/lib/ai/indexer";
 import { coincide, DESCARTES_HABITUALES } from "@/server/radar/boe";
 import { sanitizeHtml } from "@/lib/sanitize";
+import {
+  ArchivoDeOtraAcademiaError,
+  abrirParaAcademia,
+  buildStorageKey,
+  claveEsDeLaAcademia,
+} from "@/lib/storage";
 
 /**
  * AUDITORÍA DE SEGURIDAD AUTOMATIZADA
@@ -477,5 +483,48 @@ describe("saneado de HTML", () => {
   it("los enlaces salen con rel de seguridad", () => {
     const limpio = sanitizeHtml('<a href="https://boe.es">BOE</a>');
     expect(limpio).toContain('rel="noopener noreferrer nofollow"');
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe("segunda barrera para los archivos", () => {
+  /**
+   * La base de datos tiene dos barreras: la guardia de la aplicación y las
+   * políticas de PostgreSQL. Los archivos tenían una sola —la comprobación de
+   * la ruta que los sirve— y eso quedaba anotado como riesgo abierto en la
+   * auditoría: un fallo ahí no lo tapaba nada por debajo.
+   *
+   * La segunda barrera aprovecha algo que ya era cierto: la clave de todo
+   * objeto empieza por su academia. Antes de devolver un byte se comprueba.
+   */
+  const A = "11111111-1111-1111-1111-111111111111";
+  const B = "22222222-2222-2222-2222-222222222222";
+
+  it("una clave construida para una academia es suya y de nadie más", () => {
+    const clave = buildStorageKey(A, "tema-12.pdf");
+    expect(claveEsDeLaAcademia(clave, A)).toBe(true);
+    expect(claveEsDeLaAcademia(clave, B)).toBe(false);
+  });
+
+  it("no se cuela un identificador que solo EMPIECE igual", () => {
+    // Sin la barra final, la academia «1111…1111» abriría los archivos de una
+    // academia cuyo identificador empezara por el suyo. No puede pasar hoy
+    // —son UUID de longitud fija— pero es el error clásico de comparar
+    // prefijos, y aquí se deja cerrado por escrito.
+    expect(claveEsDeLaAcademia(`academies/${A}extra/x/f.pdf`, A)).toBe(false);
+  });
+
+  it("no valen las rutas relativas para salir de la carpeta", () => {
+    expect(claveEsDeLaAcademia(`academies/${B}/../${A}/f.pdf`, A)).toBe(false);
+    expect(claveEsDeLaAcademia(`../academies/${A}/f.pdf`, A)).toBe(false);
+  });
+
+  it("abrir un archivo ajeno falla antes de tocar el almacén", async () => {
+    // Lo importante es que reviente ANTES de leer nada: si llegara a abrir el
+    // archivo y fallara después, ya habría sacado los bytes del disco.
+    await expect(
+      abrirParaAcademia(`academies/${B}/x/tema.pdf`, A),
+    ).rejects.toThrow(ArchivoDeOtraAcademiaError);
   });
 });

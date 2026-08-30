@@ -11,6 +11,16 @@
 // puede devolver un trabajo para que lo rehaga sin perder lo anterior.
 // ─────────────────────────────────────────────────────────────────────────────
 
+/// Un trabajo para casa y un examen de desarrollo se corrigen igual, pero no se
+/// hacen igual: el trabajo tiene plazo de días y el examen tiene reloj. Se
+/// distinguen aquí en lugar de duplicar todo el flujo de corrección.
+enum AssignmentKind {
+  /// Supuesto, trabajo o programación: plazo largo, se entrega cuando se puede.
+  TASK
+  /// Examen de desarrollo: se hace de una sentada, con tiempo contado.
+  EXAM
+}
+
 enum AssignmentStatus {
   DRAFT
   PUBLISHED
@@ -42,7 +52,20 @@ model Assignment {
 
   title        String
   instructions String?
+  kind         AssignmentKind   @default(TASK)
   status       AssignmentStatus @default(DRAFT)
+
+  // ── Solo para exámenes de desarrollo ──────────────────────────────────────
+  /// Antes de esta hora el examen no se puede empezar. Es lo que permite
+  /// convocar a todo un grupo a la misma hora sin repartir contraseñas.
+  opensAt DateTime?
+  /// Minutos desde que el ALUMNO lo abre, no desde `opensAt`. Así quien entra
+  /// cinco minutos tarde pierde cinco minutos, no el examen entero, y quien
+  /// tiene una adaptación puede tener su propio tiempo sin mover la convocatoria.
+  timeLimitMinutes Int?
+  /// Permitir adjuntar archivos. En un examen de desarrollo la academia puede
+  /// querer que se escriba en la plataforma y no se suba nada de fuera.
+  allowFiles Boolean @default(true)
 
   dueAt DateTime?
   /// Se admite entregar después de la fecha, marcándolo como fuera de plazo.
@@ -64,6 +87,7 @@ model Assignment {
 
   @@index([academyId, status, dueAt])
   @@index([academyId, groupId])
+  @@index([academyId, kind, opensAt])
   @@map("assignments")
 }
 
@@ -79,9 +103,22 @@ model Submission {
 
   status SubmissionStatus @default(PENDING)
 
-  /// Texto que escribe el alumno junto a los archivos.
+  /// Texto que escribe el alumno junto a los archivos. En un examen de
+  /// desarrollo es la respuesta entera, y se guarda sola cada pocos segundos.
   body        String?
   submittedAt DateTime?
+
+  /// Cuándo abrió el alumno el examen. A partir de aquí corre su reloj, y el
+  /// reloj que vale es este, el del servidor: el del navegador solo se pinta.
+  /// Se escribe UNA vez; no se reinicia aunque recargue o cambie de móvil.
+  startedAt DateTime?
+  /// Se cerró solo al agotarse el tiempo, sin que el alumno le diera a entregar.
+  /// Se entrega lo último que se guardó: quedarse sin tiempo no puede significar
+  /// perder lo escrito.
+  autoSubmitted Boolean @default(false)
+  /// Última vez que se guardó el borrador. Sirve para poder decirle al alumno
+  /// «guardado hace 4 segundos» y para saber qué se perdió si algo falla.
+  draftSavedAt DateTime?
 
   // ── Corrección ────────────────────────────────────────────────────────────
   score      Decimal? @db.Decimal(5, 2)

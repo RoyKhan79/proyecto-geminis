@@ -244,15 +244,16 @@ Es lo que más se ha mirado, porque es lo único que no admite un fallo.
 
 ## 5. Lo que sigue sin estar resuelto
 
-Se dice aquí y no en una nota al pie.
+Se dice aquí y no en una nota al pie. Lo que estaba en esta lista y ya no está,
+está cerrado con prueba: limitador distribuido, cifrado de datos bancarios,
+copias de seguridad, límite de dispositivos y observabilidad.
 
 | Asunto | Estado | Qué hace falta |
 | --- | --- | --- |
-| **Limitador de fuerza bruta** | En memoria del proceso | Con varias instancias, cada una lleva su cuenta. La interfaz ya es la que tendrá la versión con Redis (ADR-0016) |
-| **Cifrado en reposo** | No implementado | Es configuración del gestor de base de datos y del almacén de archivos, no código |
-| **Copias de seguridad** | No implementado | Decisión de despliegue. Deben ser por academia, para poder restaurar una sin tocar las demás |
-| **Límite de dispositivos** | No implementado | Las sesiones son revocables y se ve desde dónde se entra, pero nada impide tres sesiones a la vez |
-| **Revisión externa** | **Hecha una** sobre el código, que encontró H-07 | Sigue faltando un test de intrusión sobre el sistema desplegado |
+| **Test de intrusión sobre el sistema desplegado** | Parcial | Hay una batería de ataque propia (`npm run pentest`) que ejecuta 60+ intentos reales contra el servicio en marcha. No sustituye a un profesional atacando la instalación real con su infraestructura delante |
+| **Cifrado del disco del servidor** | Comprobable | Es configuración del gestor de base de datos y del almacén, no código. `npm run desplegar:comprobar` falla si no está confirmada, y `docs/DESPLIEGUE.md` explica cómo ponerla. Los datos bancarios ya van cifrados a nivel de columna, que cubre el volcado; esto cubre el disco robado |
+| **Segunda barrera para los archivos** | Cerrado | La clave de todo objeto empieza por `academies/<id>/`, y `abrirParaAcademia()` lo comprueba antes de devolver un byte, con independencia de la consulta que trajo el archivo. Probado en `tests/security.test.ts` y atacado en `npm run pentest` |
+| **Credenciales del almacén** | Abierto | Quien tenga las llaves del bucket ve todo lo que hay dentro, y eso ninguna barrera de la aplicación lo tapa. Es gestión de secretos, no código |
 
 ---
 

@@ -157,6 +157,15 @@ export async function loadStudentGrants(
  * Es lo que permite subir el temario completo el primer día y que el alumno
  * solo vea por dónde va su clase.
  */
+/**
+ * OJO al usarla: `studentNodeWhere` YA la incluye dentro. Esparcir las dos sobre
+ * el mismo objeto —`...studentNodeWhere(g), ...releaseWhere(g.groupIds)`— hace
+ * que la segunda pise la clave `AND` de la primera. Ahora mismo el resultado
+ * salía igual de casualidad, porque las dos generaban el mismo filtro, pero es
+ * exactamente la forma del fallo H-07: dos `spread` sobre la misma clave, gana
+ * el último, y TypeScript no dice nada. Si hace falta otra hora de referencia,
+ * pásala como segundo argumento de `studentNodeWhere`.
+ */
 export function releaseWhere(groupIds: string[], now: Date = new Date()) {
   return {
     AND: [
@@ -248,7 +257,7 @@ export function studentCanAccessNode(
  * el alumno puede ver. Se aplica en la propia consulta, no filtrando después:
  * así no se pagina sobre datos que luego hay que descartar.
  */
-export function studentNodeWhere(grants: StudentGrants) {
+export function studentNodeWhere(grants: StudentGrants, now: Date = new Date()) {
   const branchFilters = grants.prefixes.map((grant) => ({
     OR: [{ id: grant.nodeId }, { path: { startsWith: grant.prefix } }],
   }));
@@ -265,7 +274,7 @@ export function studentNodeWhere(grants: StudentGrants) {
     OR: [{ isFree: true }, ...branchFilters, ...editionFilter],
     // El ritmo se aplica en la misma consulta: lo que el profesor todavía no ha
     // abierto no llega ni a salir de la base de datos.
-    ...releaseWhere(grants.groupIds),
+    ...releaseWhere(grants.groupIds, now),
   };
 }
 

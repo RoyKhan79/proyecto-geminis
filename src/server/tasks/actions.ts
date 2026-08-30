@@ -330,8 +330,12 @@ export async function gradeSubmissionAction(
     changes: { nota: data.score ?? null },
   });
 
+  // Se corrigen desde las dos pantallas —tareas y exámenes de desarrollo— con
+  // la misma acción, así que hay que refrescar las dos.
   revalidatePath("/gestion/tareas");
+  revalidatePath("/gestion/examenes");
   revalidatePath("/campus/tareas");
+  revalidatePath("/campus/examenes");
   return { ok: devolver ? "Devuelto al alumno." : "Corregido." };
 }
 

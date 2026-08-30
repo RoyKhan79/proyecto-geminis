@@ -31,6 +31,53 @@ export interface StorageDriver {
   exists(key: string): Promise<boolean>;
 }
 
+/**
+ * SEGUNDA BARRERA PARA LOS ARCHIVOS
+ *
+ * La base de datos tiene dos barreras: la guardia de la aplicación y las
+ * políticas de PostgreSQL. Los archivos tenían una sola —la comprobación de la
+ * ruta que los sirve—, y eso quedaba anotado como riesgo abierto en la
+ * auditoría: un fallo ahí no lo tapaba nada por debajo.
+ *
+ * Esto lo cierra aprovechando algo que ya era cierto: **la clave de todo objeto
+ * empieza por su academia**. Antes de devolver un solo byte se comprueba que la
+ * clave corresponde a quien lo pide. Es una comprobación independiente de la
+ * consulta a la base: si algún día una consulta devolviera el archivo de otra
+ * academia, aquí se para igualmente.
+ *
+ * No sustituye a la comprobación de permisos —eso sigue en la ruta—, sino que
+ * la respalda, que es lo que significa tener dos barreras.
+ */
+export class ArchivoDeOtraAcademiaError extends Error {
+  constructor(clave: string, academyId: string) {
+    super(
+      `El archivo «${clave}» no pertenece a la academia ${academyId}. No se sirve.`,
+    );
+    this.name = "ArchivoDeOtraAcademiaError";
+  }
+}
+
+export function claveEsDeLaAcademia(clave: string, academyId: string): boolean {
+  return clave.startsWith(`academies/${academyId}/`);
+}
+
+/**
+ * Abre un archivo comprobando antes que es de esa academia.
+ *
+ * Es la única función que debería usarse para leer un archivo desde una
+ * petición. `getStream` a secas queda para migraciones y scripts, donde no hay
+ * academia con la que comparar.
+ */
+export async function abrirParaAcademia(
+  clave: string,
+  academyId: string,
+): Promise<NodeJS.ReadableStream> {
+  if (!claveEsDeLaAcademia(clave, academyId)) {
+    throw new ArchivoDeOtraAcademiaError(clave, academyId);
+  }
+  return storage().getStream(clave);
+}
+
 /** Ruta del objeto. Siempre empieza por la academia: aísla también en disco. */
 export function buildStorageKey(
   academyId: string,

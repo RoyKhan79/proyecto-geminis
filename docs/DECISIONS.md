@@ -473,3 +473,59 @@ rojo cada vez que alguien lo abre después de un rato. Un panel que da falsas
 alarmas se deja de mirar, y entonces no sirve para nada.
 **Ya ha servido.** La primera ejecución detectó dos IBAN guardados en claro por
 un script de prueba que escribía saltándose la capa de cifrado.
+
+### ADR-0051 · Los archivos también tienen dos barreras ⭐
+**Decisión.** La clave de todo objeto del almacén empieza por
+`academies/<id de la academia>/`, y `abrirParaAcademia()` comprueba esa
+pertenencia antes de devolver un solo byte, con independencia de la consulta que
+haya traído el archivo.
+**Por qué.** La base de datos tenía dos barreras —la guardia de la aplicación y
+las políticas de PostgreSQL— y los archivos una sola. Estaba anotado como riesgo
+abierto en la auditoría: un fallo en la ruta que sirve documentos no lo tapaba
+nada por debajo.
+**Lo que hizo posible cerrarlo.** No hubo que migrar nada: las claves ya se
+construían así desde el principio. Solo faltaba comprobarlo.
+**Dónde no llega.** Quien tenga las credenciales del bucket sigue viéndolo todo.
+Esa es gestión de secretos, y así se dice en `docs/DESPLIEGUE.md`.
+
+### ADR-0052 · La mochila no abre ninguna puerta nueva
+**Decisión.** Un tema se puede guardar en el dispositivo para estudiar sin
+conexión solo si el alumno ya podía descargarlo a mano: derecho de acceso,
+derecho de descarga, rama marcada como descargable y tema abierto por el
+profesor. El manifiesto (`/api/campus/mochila`) es una lista, no un permiso: la
+descarga sigue pasando por `/api/archivos/[fileId]`, que lo vuelve a comprobar
+todo.
+**Por qué.** Quien opositó sabe que no siempre se estudia con cobertura. Pero un
+archivo en el disco de un móvil está fuera del alcance de cualquier comprobación
+del servidor, así que la decisión de guardarlo tiene que ser explícita y
+revocable.
+**Cómo se revoca.** Cada vez que hay red se compara lo guardado con el
+manifiesto y se borra lo que ya no está: una baja, un derecho caducado o una
+descarga que la academia retira vacían la mochila en la siguiente conexión.
+Además lo guardado lleva dueño, y entrar con otra cuenta en el mismo dispositivo
+la vacía antes de enseñar nada.
+**Lo que se deja fuera a propósito.** Las ramas con marca de agua no entran en
+la mochila. Una marca de agua dice «quiero saber de quién es cada copia que
+circula», y un archivo servido sin conexión iría sin ella. Antes que servirlo
+sin marca, no se guarda.
+
+### ADR-0053 · El reloj de un examen lo lleva el servidor, y lo escrito no se pierde ⭐
+**Decisión.** En un examen de desarrollo, `startedAt` se escribe **una sola vez**
+(con `updateMany … where startedAt: null`, que es lo que impide reiniciarlo) y a
+partir de ahí el tiempo restante lo calcula siempre el servidor. La cuenta atrás
+del navegador solo pinta, y se recoloca con cada guardado automático usando los
+segundos que devuelve el servidor.
+**Por qué.** Cambiar la hora del móvil, recargar, abrir el examen en otro
+dispositivo o pulsar dos veces «Empezar» no pueden dar ni un segundo de más.
+**La otra mitad, igual de importante.** El borrador se guarda solo a los 4
+segundos de dejar de escribir y como tarde cada 30. Si se agota el tiempo, lo
+último guardado **es** la entrega: quedarse sin tiempo no puede significar perder
+cincuenta minutos de examen. Si el envío final llega vacío por un fallo de red,
+se conserva el borrador anterior en lugar de sobrescribirlo.
+**El caso que nadie prevé.** El alumno se queda sin batería a falta de diez
+minutos y no vuelve a abrir la pantalla. Sin nada más, esa entrega se quedaría
+«pendiente» para siempre y el profesor no la vería para corregir. Por eso
+`cerrarExamenesVencidos()` va en el mantenimiento nocturno.
+**Margen de gracia de 15 segundos.** Entre pulsar «Entregar» y que llegue la
+petición pasa tiempo real. Rechazar por dos segundos una entrega hecha a tiempo
+sería injusto y no protege de nada, porque el borrador ya estaba guardado.

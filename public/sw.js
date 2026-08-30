@@ -16,6 +16,15 @@
 const VERSION = "geminis-v1";
 const ESENCIALES = ["/campus", "/sin-conexion"];
 
+/**
+ * La mochila: temas que el alumno ha decidido guardar para estudiar sin
+ * cobertura. Este service worker NO escribe aquí jamás —lo hace la página,
+ * cuando alguien pulsa «Guardar»— y solo lee cuando la red ha fallado. La
+ * distinción importa: material de pago en un disco ajeno es una decisión del
+ * alumno, no un efecto secundario de haber abierto una página.
+ */
+const MOCHILA = "geminis-mochila-v1";
+
 self.addEventListener("install", (event) => {
   event.waitUntil(
     caches
@@ -30,7 +39,14 @@ self.addEventListener("activate", (event) => {
     caches
       .keys()
       .then((claves) =>
-        Promise.all(claves.filter((c) => c !== VERSION).map((c) => caches.delete(c))),
+        // La mochila sobrevive a los despliegues: la llenó el alumno, no
+        // nosotros, y borrarla al publicar una versión le dejaría sin temario
+        // justo cuando se ha quedado sin cobertura.
+        Promise.all(
+          claves
+            .filter((c) => c !== VERSION && c !== MOCHILA)
+            .map((c) => caches.delete(c)),
+        ),
       )
       .then(() => self.clients.claim()),
   );
@@ -42,6 +58,31 @@ self.addEventListener("fetch", (event) => {
 
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
+
+  // Documentos del temario: red primero, siempre. Solo si la red falla se mira
+  // la mochila, y solo lo que el alumno guardó a propósito. Nunca se escribe
+  // aquí: si el documento llega por red, se sirve y se olvida.
+  const documento = url.pathname.match(/^\/api\/archivos\/([^/]+)$/);
+  if (documento) {
+    event.respondWith(
+      fetch(request).catch(async () => {
+        const guardado = await caches
+          .open(MOCHILA)
+          .then((cache) => cache.match(`/mochila/archivo/${documento[1]}`));
+        return (
+          guardado ??
+          new Response(
+            JSON.stringify({
+              error:
+                "Sin conexión y este tema no está guardado en el dispositivo.",
+            }),
+            { status: 503, headers: { "Content-Type": "application/json" } },
+          )
+        );
+      }),
+    );
+    return;
+  }
 
   // Nada de material privado en la caché del dispositivo.
   const privado =

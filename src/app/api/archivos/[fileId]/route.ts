@@ -8,7 +8,12 @@ import {
 } from "@/lib/access/content-access";
 import { prismaBase } from "@/lib/db/client";
 import { recordAudit } from "@/lib/audit";
-import { storage, toWebStream } from "@/lib/storage";
+import {
+  abrirParaAcademia,
+  claveEsDeLaAcademia,
+  storage,
+  toWebStream,
+} from "@/lib/storage";
 
 /**
  * SERVICIO DE ARCHIVOS
@@ -107,6 +112,20 @@ export async function GET(
     }
   }
 
+  // SEGUNDA BARRERA PARA LOS ARCHIVOS
+  //
+  // Independiente de la consulta de arriba: la clave de todo objeto empieza por
+  // su academia, así que se comprueba aquí también. Si algún día un fallo en esa
+  // consulta trajera un archivo ajeno, no se sirve igualmente. Va ANTES incluso
+  // de mirar si el archivo existe, para no confirmar por el código de respuesta
+  // la existencia de nada que no sea nuestro.
+  if (!claveEsDeLaAcademia(file.storageKey, ctx.academy.id)) {
+    console.error(
+      `[aislamiento] La clave «${file.storageKey}» no es de la academia ${ctx.academy.id}. Petición rechazada.`,
+    );
+    return NextResponse.json({ error: "Archivo no encontrado." }, { status: 404 });
+  }
+
   const almacen = storage();
   if (!(await almacen.exists(file.storageKey))) {
     return NextResponse.json(
@@ -127,7 +146,12 @@ export async function GET(
     });
   }
 
-  const stream = await almacen.getStream(file.storageKey);
+  // Segunda barrera, independiente de la consulta de arriba: la clave de todo
+  // archivo empieza por su academia, así que se comprueba antes de devolver un
+  // solo byte. Si algún día un fallo en la consulta trajera un archivo ajeno,
+  // aquí se para igualmente. Los archivos pasan así a tener dos barreras, como
+  // la base de datos.
+  const stream = await abrirParaAcademia(file.storageKey, ctx.academy.id);
   const nombre = encodeURIComponent(file.originalName);
 
   return new NextResponse(toWebStream(stream), {

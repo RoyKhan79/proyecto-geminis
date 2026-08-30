@@ -30,7 +30,10 @@ export default async function TareasPage() {
 
   const [tareas, cursos, temas] = await Promise.all([
     ctx.db.assignment.findMany({
-      where: { deletedAt: null },
+      // Los exámenes de desarrollo viven en esta misma tabla pero tienen su
+      // propia pantalla, con hora de apertura y reloj. Mezclarlos aquí haría
+      // que un examen convocado pareciese una tarea sin plazo.
+      where: { deletedAt: null, kind: "TASK" },
       orderBy: { createdAt: "desc" },
       take: 30,
       select: {

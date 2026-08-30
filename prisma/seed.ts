@@ -73,6 +73,7 @@ async function main() {
   await seedMatriculasYAccesos(db, alumnos, administrativo, magisterio);
   await seedClases(db, administrativo, profesores[0].membership.id);
   await seedPreguntas(db, administrativo, profesores[0].membership.id);
+  await seedExamenes(db, administrativo, profesores[0].membership.id);
 
   console.log("\n✓ Listo. Puedes entrar con:");
   console.log(`   Administración   admin@academiademo.test      / ${DEMO_PASSWORD}`);
@@ -378,6 +379,11 @@ async function seedAdministrativo(db: ReturnType<typeof tenantDb>, typeId: strin
       { productId: cursoCompleto.id, nodeId: clases.id, capability: "VIEW_CONTENT" },
       { productId: cursoCompleto.id, nodeId: clases.id, capability: "ATTEND_CLASSES" },
       { productId: cursoCompleto.id, nodeId: clases.id, capability: "WATCH_RECORDINGS" },
+      // VIEW_CONTENT hace falta también aquí: sin él, quien tiene el curso
+      // completo puede hacer los tests pero no abrir la sección para verlos, y
+      // la pantalla de estudiar le enseñaba un enlace que daba 404. Lo destapó
+      // la batería de ataque comparando lo que se lista con lo que se abre.
+      { productId: cursoCompleto.id, nodeId: tests.id, capability: "VIEW_CONTENT" },
       { productId: cursoCompleto.id, nodeId: tests.id, capability: "TAKE_TESTS" },
       { productId: cursoCompleto.id, nodeId: tests.id, capability: "TAKE_SIMULATIONS" },
       { productId: cursoCompleto.id, nodeId: normativa.id, capability: "VIEW_CONTENT" },
@@ -745,6 +751,116 @@ async function seedMatriculasYAccesos(
       },
     });
   }
+}
+
+/**
+ * Exámenes de desarrollo de demostración.
+ *
+ * Tres, porque los tres estados que importan se ven distintos y hay que poder
+ * enseñarlos: uno abierto ahora mismo con reloj, uno convocado para dentro de
+ * unos días y uno ya corregido con su nota y su comentario.
+ */
+async function seedExamenes(
+  db: ReturnType<typeof tenantDb>,
+  administrativo: Administrativo,
+  teacherId: string,
+) {
+  const ahora = Date.now();
+  const dia = 24 * 60 * 60 * 1000;
+
+  const matriculados = await db.enrollment.findMany({
+    where: { groupId: administrativo.grupo.id, deletedAt: null },
+    select: { studentId: true },
+  });
+  if (matriculados.length === 0) return;
+
+  const convocar = async (datos: {
+    title: string;
+    instructions: string;
+    opensAt: Date | null;
+    dueAt: Date | null;
+    timeLimitMinutes: number | null;
+  }) => {
+    const examen = await db.assignment.create({
+      data: {
+        kind: "EXAM",
+        title: datos.title,
+        instructions: datos.instructions,
+        courseId: administrativo.course.id,
+        groupId: administrativo.grupo.id,
+        editionId: administrativo.edition.id,
+        opensAt: datos.opensAt,
+        dueAt: datos.dueAt,
+        timeLimitMinutes: datos.timeLimitMinutes,
+        maxScore: 10,
+        allowLate: false,
+        status: "PUBLISHED",
+        createdById: teacherId,
+      },
+    });
+
+    await db.submission.createMany({
+      data: matriculados.map((m) => ({
+        assignmentId: examen.id,
+        studentId: m.studentId,
+        status: "PENDING" as const,
+      })),
+      skipDuplicates: true,
+    });
+
+    return examen;
+  };
+
+  // 1. Abierto ahora, con reloj de 90 minutos.
+  await convocar({
+    title: "Examen de desarrollo · El acto administrativo",
+    instructions:
+      "Desarrolle el concepto de acto administrativo, sus elementos y sus clases, " +
+      "con especial atención a los requisitos de validez. Extensión orientativa: cuatro caras.",
+    opensAt: new Date(ahora - 2 * 60 * 60 * 1000),
+    dueAt: new Date(ahora + 5 * dia),
+    timeLimitMinutes: 90,
+  });
+
+  // 2. Convocado para dentro de una semana: todavía no se puede empezar.
+  await convocar({
+    title: "Examen de desarrollo · Procedimiento administrativo común",
+    instructions:
+      "Fases del procedimiento administrativo común, con los plazos de cada una " +
+      "y las consecuencias de su incumplimiento.",
+    opensAt: new Date(ahora + 7 * dia),
+    dueAt: new Date(ahora + 7 * dia + 3 * 60 * 60 * 1000),
+    timeLimitMinutes: 120,
+  });
+
+  // 3. Uno pasado y corregido, para que la primera alumna vea una nota suya.
+  const corregido = await convocar({
+    title: "Examen de desarrollo · Fuentes del Derecho administrativo",
+    instructions: "Jerarquía normativa y potestad reglamentaria.",
+    opensAt: new Date(ahora - 20 * dia),
+    dueAt: new Date(ahora - 20 * dia + 2 * 60 * 60 * 1000),
+    timeLimitMinutes: 90,
+  });
+
+  const primera = matriculados[0];
+  await db.submission.updateMany({
+    where: { assignmentId: corregido.id, studentId: primera.studentId },
+    data: {
+      status: "GRADED",
+      startedAt: new Date(ahora - 20 * dia),
+      submittedAt: new Date(ahora - 20 * dia + 80 * 60 * 1000),
+      draftSavedAt: new Date(ahora - 20 * dia + 80 * 60 * 1000),
+      body:
+        "La jerarquía normativa se recoge en el artículo 9.3 de la Constitución. " +
+        "En el ámbito administrativo se concreta en el artículo 128 de la Ley 39/2015…",
+      score: 7.5,
+      feedback:
+        "Bien estructurado y con las citas correctas. Te falta desarrollar el " +
+        "principio de competencia frente al de jerarquía: repásalo, cae mucho.",
+      gradedById: teacherId,
+      gradedAt: new Date(ahora - 18 * dia),
+    },
+  });
 }
 
 async function seedClases(

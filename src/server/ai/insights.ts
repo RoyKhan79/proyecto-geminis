@@ -1,6 +1,6 @@
 import type { TenantClient } from "@/lib/db/tenant";
 import type { StudentGrants } from "@/lib/access/content-access";
-import { releaseWhere, studentNodeWhere } from "@/lib/access/content-access";
+import { studentNodeWhere } from "@/lib/access/content-access";
 
 /**
  * GEMINIS IA · lo que propone por su cuenta
@@ -159,8 +159,9 @@ export async function proponerPlanDelDia(params: {
     const visibles = await db.contentNode.findMany({
       where: {
         id: { in: recienAbiertos.map((r) => r.nodeId) },
-        ...studentNodeWhere(grants),
-        ...releaseWhere(grants.groupIds, ahora),
+        // La hora de referencia va como argumento, no en un segundo `spread`
+        // que pisaba la clave `AND` del primero (ver H-07).
+        ...studentNodeWhere(grants, ahora),
       },
       select: { id: true, label: true },
     });

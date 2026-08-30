@@ -37,10 +37,18 @@ export function ExamTimer({
 
   if (restante === null) return null;
 
-  const minutos = Math.floor(restante / 60);
+  const horas = Math.floor(restante / 3600);
+  const minutos = Math.floor((restante % 3600) / 60);
   const segundos = restante % 60;
   const apurado = restante < 300;
   const critico = restante < 60;
+
+  // Un examen de desarrollo puede durar dos horas; «135:12» no se lee. Con
+  // horas por delante se lee de un vistazo, que es para lo que sirve un reloj.
+  const texto =
+    horas > 0
+      ? `${horas}:${String(minutos).padStart(2, "0")}:${String(segundos).padStart(2, "0")}`
+      : `${minutos}:${String(segundos).padStart(2, "0")}`;
 
   return (
     <div
@@ -56,7 +64,7 @@ export function ExamTimer({
       )}
     >
       <Timer className="size-4" aria-hidden />
-      {minutos}:{String(segundos).padStart(2, "0")}
+      {texto}
       <span className="sr-only">restantes</span>
     </div>
   );

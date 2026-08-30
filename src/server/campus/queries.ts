@@ -60,6 +60,15 @@ export async function loadAccessibleSections(
   grants: StudentGrants,
   editionId: string,
 ) {
+  // Nota sobre el filtro: `studentNodeWhere` acota por rama contratada y por
+  // ritmo del temario, pero no puede expresar en SQL la CAPACIDAD concreta
+  // (ver, hacer tests, asistir…), que depende de cada derecho.
+  //
+  // Por eso después se pasa cada nodo por `studentCanAccessNode`, que es
+  // exactamente la misma función que usa la pantalla del tema al abrirlo. Es
+  // deliberado: si el listado y el detalle usan criterios distintos, acaban
+  // discrepando, y eso ya pasó: se enseñaba una sección que al pulsarla daba
+  // 404. Ahora, por construcción, lo que se lista es lo que se puede abrir.
   const nodes = await db.contentNode.findMany({
     where: {
       editionId,
@@ -81,7 +90,7 @@ export async function loadAccessibleSections(
     },
   });
 
-  return nodes;
+  return nodes.filter((nodo) => studentCanAccessNode(grants, nodo, "VIEW_CONTENT"));
 }
 
 /** Hijos de un nodo que el alumno puede abrir, con su progreso. */
@@ -92,7 +101,10 @@ export async function loadChildren(
   parentId: string,
 ) {
   const children = await db.contentNode.findMany({
-    where: { parentId, ...studentNodeWhere(grants) },
+    where: {
+      parentId,
+      ...studentNodeWhere(grants),
+    },
     orderBy: { position: "asc" },
     select: {
       id: true,
@@ -113,7 +125,11 @@ export async function loadChildren(
     },
   });
 
-  return children;
+  // Mismo criterio que arriba y que el detalle: lo que se lista es lo que se
+  // puede abrir.
+  return children.filter((nodo) =>
+    studentCanAccessNode(grants, nodo, "VIEW_CONTENT"),
+  );
 }
 
 /** Nodo concreto, comprobando el derecho de acceso antes de devolverlo. */

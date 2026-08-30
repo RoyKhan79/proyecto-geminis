@@ -1,11 +1,11 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { LogOut, ShieldAlert } from "lucide-react";
-import { signOutAction } from "@/lib/auth/actions";
+import { ShieldAlert } from "lucide-react";
 import { stopImpersonationAction } from "@/server/platform/actions";
 import { requireAcademy } from "@/lib/auth/context";
 import { CampusTabBar } from "@/components/campus/tab-bar";
 import { InstallPrompt } from "@/components/campus/install-prompt";
+import { BotonSalir } from "@/components/campus/salir";
 import { BRAND } from "@/lib/brand";
 import { Button } from "@/components/ui/button";
 
@@ -60,11 +60,7 @@ export default async function CampusLayout({
           </Button>
         ) : null}
 
-        <form action={signOutAction}>
-          <Button type="submit" variant="ghost" size="icon" aria-label="Cerrar sesión">
-            <LogOut aria-hidden />
-          </Button>
-        </form>
+        <BotonSalir />
       </header>
 
       <main className="mx-auto w-full max-w-3xl flex-1 space-y-5 p-4 pb-24">
