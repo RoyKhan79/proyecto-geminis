@@ -123,6 +123,12 @@ vistazo cómo el contenido depende de lo contratado.
 | `npm run mantenimiento` | Limpia sesiones y enlaces caducados (cron diario) |
 | `npm run verificar` | Tipos, estilo, pruebas y compilación, todo seguido |
 | `npm run auditoria` | Las dos auditorías: la del código y la del servidor |
+| `npm run ia:fuga` | Intenta sacarle a la IA temario no contratado, desde cada tema |
+| `npm run rls:probar` | Comprueba que la segunda barrera protege de verdad |
+| `npm run dispositivos:probar` | Comprueba el límite de sesiones por alumno |
+| `npm run copia` | Copia de seguridad, completa y por academia |
+| `npm run copia:restaurar -- <archivo>` | Comprueba que esa copia sirve |
+| `npm run superadmin -- <correo> "<contraseña>"` | Crea el superadministrador |
 | `npm run ia:probar` | Comprueba desde la terminal que Geminis IA responde |
 | `npm run iconos` | Regenera los iconos de la app con los colores de marca |
 

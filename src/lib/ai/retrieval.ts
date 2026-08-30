@@ -93,11 +93,26 @@ export async function recuperarFragmentos(params: {
   //     Los documentos cuelgan DENTRO del tema, así que filtrar por el id del
   //     tema a secas no encontraba ni un fragmento: el material está en sus
   //     hijos. Se usa la ruta materializada (ADR-0007).
+  //
+  //     OJO: la rama se INTERSECA con lo permitido, nunca lo sustituye. Aquí
+  //     hubo un fallo real (H-07): se escribían las dos condiciones como dos
+  //     `...spread` seguidos sobre la misma clave `nodeId`, y en JavaScript
+  //     gana el último. El filtro de lo contratado se perdía en silencio y un
+  //     alumno podía preguntar por la sección padre para que la IA le citara
+  //     temario que no había pagado. TypeScript no avisa de esto.
   let rama: string[] | null = null;
 
   if (params.nodeId) {
+    // El nodo por el que se pregunta tiene que estar TAMBIÉN entre los
+    // permitidos. Si no, no se sigue: sin esta comprobación, un identificador
+    // ajeno serviría para descubrir la ruta de una rama entera.
+    const permitidos = nodosPermitidos ? new Set(nodosPermitidos) : null;
+    if (permitidos && !permitidos.has(params.nodeId)) return [];
+
+    // Llegados aquí, para el alumnado el nodo ya está comprobado contra la
+    // lista de permitidos, que es la que lleva los derechos y el ritmo.
     const nodo = await prismaBase.contentNode.findFirst({
-      where: { id: params.nodeId, academyId: params.academyId },
+      where: { id: params.nodeId, academyId: params.academyId, deletedAt: null },
       select: { id: true, path: true },
     });
     if (!nodo) return [];
@@ -110,16 +125,24 @@ export async function recuperarFragmentos(params: {
       },
       select: { id: true },
     });
-    rama = [nodo.id, ...descendientes.map((d) => d.id)];
+
+    const subarbol = [nodo.id, ...descendientes.map((d) => d.id)];
+
+    // La intersección: de la rama, solo lo que además esté permitido.
+    rama = permitidos ? subarbol.filter((id) => permitidos.has(id)) : subarbol;
+    if (rama.length === 0) return [];
   }
+
+  // Una sola lista de nodos, ya cruzada. Nunca dos condiciones sobre la misma
+  // clave, que es lo que causó el fallo.
+  const nodosFinales = rama ?? nodosPermitidos;
 
   // 2. Fragmentos de fuentes indexadas y activas, dentro de esos nodos.
   const fragmentos = await prismaBase.documentChunk.findMany({
     where: {
       academyId: params.academyId,
       source: { status: "INDEXED" },
-      ...(nodosPermitidos ? { nodeId: { in: nodosPermitidos } } : {}),
-      ...(rama ? { nodeId: { in: rama } } : {}),
+      ...(nodosFinales ? { nodeId: { in: nodosFinales } } : {}),
       // Solo material que la academia ha autorizado para la IA.
       OR: [
         { node: { aiEnabled: true } },

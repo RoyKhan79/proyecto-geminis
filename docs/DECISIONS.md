@@ -419,3 +419,43 @@ No es una comprobación que se pueda olvidar: es que no existe el camino. Para
 entrar en una academia tiene que impersonar, y eso queda registrado.
 **Comprobado en la auditoría HTTP:** el superadministrador recibe una redirección
 al pedir el alumnado o el contenido de una academia.
+
+### ADR-0046 · Los datos bancarios se cifran en la propia columna
+**Decisión.** El IBAN del alumnado y el de la academia se guardan cifrados con
+AES-256-GCM y una clave del entorno (`FIELD_ENCRYPTION_KEY`), obligatoria en
+producción.
+**Por qué.** Protege del escenario realista: una copia de seguridad que se
+pierde, un volcado que acaba donde no debe, o «pásame el dump para depurar
+esto». No protege de un servidor comprometido, y decir lo contrario sería
+mentir.
+**Detalles que importan.** Vector de inicialización nuevo en cada cifrado, así
+que dos IBAN iguales no se parecen en la base; y GCM autentica, así que una fila
+manipulada no se descifra en lugar de devolver basura que parezca un número de
+cuenta.
+
+### ADR-0047 · El limitador de intentos cuenta en la base de datos
+**Decisión.** Sustituye al contador en memoria del ADR-0016.
+**Por qué.** Con varias instancias, un contador en memoria deja pasar tantos
+intentos como instancias haya. Eso no es limitar, es aparentarlo.
+**Detalle.** El incremento va en un solo `INSERT … ON CONFLICT`: veinte
+peticiones simultáneas cuentan veinte, no una. Probado.
+
+### ADR-0048 · Límite de sesiones por alumno, y se echa a la más antigua
+**Decisión.** Cada academia fija cuántas sesiones simultáneas permite. Al
+superarlo se cierra la más antigua, no se rechaza la nueva. Al profesorado no se
+le limita.
+**Por qué.** Compartir la cuenta es la primera fuga de ingresos de una academia.
+Rechazar la sesión nueva castigaría al titular, que es quien acaba de escribir
+su contraseña; cerrando la antigua, quien tenía la cuenta prestada se queda
+fuera y el titular lo nota.
+
+### ADR-0049 · Nunca dos condiciones sobre la misma clave en un `where` ⭐
+**Decisión.** Cuando dos filtros afectan al mismo campo, se cruzan en una sola
+lista antes de construir la consulta. Nunca se escriben como dos `...spread`
+consecutivos.
+**Por qué.** Es el origen del hallazgo H-07, el más grave del proyecto: el
+filtro de lo contratado y el del tema pedido se escribieron como dos spreads
+sobre `nodeId`, ganó el último, y la IA acabó citando temario no pagado. Las dos
+líneas son válidas por separado y TypeScript no dice nada.
+**Cómo se evita que vuelva.** `npm run ia:fuga` intenta la fuga desde cada nodo
+de la academia con el alumno que menos ha contratado.

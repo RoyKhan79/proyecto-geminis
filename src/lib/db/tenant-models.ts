@@ -78,6 +78,7 @@ export const GLOBAL_MODELS = new Set<string>([
   "User",
   "Session",
   "PasswordResetToken",
+  "RateLimitCounter",
   "MembershipRole",
   "RolePermission",
   "StudentProfile",

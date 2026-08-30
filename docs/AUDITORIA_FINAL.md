@@ -24,6 +24,9 @@ Tres capas, todas automáticas y todas ejecutables con un comando:
 | `npm run rls:concurrencia` | Que dos academias a la vez no se cruzan | **200 consultas, 0 cruces** |
 | `npm run remesa:probar` | El fichero de adeudos que se manda al banco | **6 / 6** |
 | `npm run facturas:probar` | Numeración correlativa, totales y rectificativas | **6 / 6** |
+| `npm run ia:fuga` | Que la IA no deje escapar temario no contratado | **32 nodos, 0 fugas** |
+| `npm run dispositivos:probar` | Límite de sesiones por alumno | **7 / 7** |
+| `npm run copia:restaurar` | Que una copia de seguridad sirve de verdad | **6 / 6** |
 
 La diferencia entre las dos primeras importa. La interna encuentra el descuido
 el día que se comete —una pantalla nueva a la que se le olvidó pedir permiso—.
@@ -51,7 +54,9 @@ La HTTP encuentra lo que el código *parece* hacer pero no hace.
 | Cifrado en reposo | **Pendiente** | Decisión de despliegue, no de código |
 | Copias de seguridad | **Pendiente** | Decisión de despliegue |
 
-**Hallazgos abiertos: 0.**
+**Hallazgos abiertos: 0.** Siete encontrados en total; los siete cerrados y con
+prueba de regresión. El más grave —H-07— lo encontró una revisión independiente
+sobre el código, no las auditorías propias.
 
 ---
 
@@ -113,6 +118,46 @@ timeout a los cinco segundos.
 Afectaba a reservar el número de una factura y a borrar una oposición en
 cascada. Se detectó al probar la facturación de extremo a extremo, no en
 producción. Corregido con `transaccionDeAcademia` (ADR-0041).
+
+### H-07 · La IA dejaba escapar temario no contratado · GRAVE · cerrado
+
+Lo encontró una **revisión independiente**, no yo, y es el hallazgo más
+importante de todo el proyecto: rompía la promesa central del producto.
+
+Al preguntarle a la IA por un tema concreto, el filtro de lo contratado se
+perdía. El motivo cabe en dos líneas de código:
+
+```ts
+...(nodosPermitidos ? { nodeId: { in: nodosPermitidos } } : {}),  // lo contratado
+...(rama            ? { nodeId: { in: rama } }            : {}),  // el tema pedido
+```
+
+Son dos `...spread` seguidos sobre la misma clave. En JavaScript gana el
+último, así que el filtro de derechos se descartaba **en silencio**. TypeScript
+no avisa: las dos líneas son válidas por separado.
+
+Lo que quedaba en pie era solo el filtro de academia. Un alumno con un pack
+pequeño podía preguntar por la sección padre —cuyo identificador ve en el
+enlace «Volver» de su propia pantalla de estudiar— y la IA le respondía citando
+literalmente temario de bloques que no había pagado, e incluso material en
+borrador. Ninguna otra barrera lo tapaba: RLS comprueba la academia, no los
+derechos.
+
+Y era **peor** que antes de esta ronda: el cambio para que la búsqueda alcanzara
+los documentos colgados dentro de un tema convirtió la sustitución de un nodo en
+la de una rama entera.
+
+Corregido cruzando las dos listas en lugar de sustituir una por otra, y
+comprobando que el nodo por el que se pregunta esté también entre los
+permitidos. Con prueba permanente: `npm run ia:fuga` recorre **los 32 nodos de
+la academia** intentando la fuga desde cada uno con el alumno que menos ha
+contratado, y falla si escapa un solo fragmento.
+
+**La lección.** Tres auditorías propias no lo vieron. Es exactamente el tipo de
+fallo que solo encuentra alguien que no escribió el código: no hay nada
+sospechoso a la vista, la línea de al lado es correcta, y el comportamiento solo
+se nota si se prueba el caso concreto. Es el mejor argumento posible para lo
+primero de la lista del punto 7.
 
 ### H-06 · La fecha de cobro se enviaba con un día menos · ALTO · cerrado
 

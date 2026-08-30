@@ -86,6 +86,9 @@ async function aplicarLimiteDeDispositivos(
   userId: string,
   sesionRecienCreada: string,
 ): Promise<number> {
+  // tenant-ok · se miran TODAS las academias de la persona a propósito. Una
+  // misma cuenta puede ser alumna en una y profesora en otra, y el límite tiene
+  // que salir de todas: acotar por una sola dejaría fuera la que manda.
   const membresias = await prismaBase.membership.findMany({
     where: { userId, deletedAt: null },
     select: {
