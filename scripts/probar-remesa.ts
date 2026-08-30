@@ -10,6 +10,7 @@
 import { prismaBase } from "@/lib/db/client";
 import { tenantDb } from "@/lib/db/tenant";
 import { generarFicheroAdeudos } from "@/lib/billing/sepa";
+import { cifrar } from "@/lib/crypto/field";
 import { preverMes, inicioDeMes, nombreDelMes } from "@/server/billing/service";
 
 const MES = new Date(2026, 8, 1); // septiembre de 2026
@@ -51,7 +52,15 @@ async function main() {
     const existente = await db.billingProfile.findFirst({
       where: { studentId: alumno.id }, select: { id: true },
     });
-    const datos = { ...cfg, chargeDay: 5, mandateUsed: false };
+    // El IBAN se cifra igual que lo haría la aplicación. Escribirlo en claro
+    // desde un script dejaría datos sin cifrar en la base, y es exactamente lo
+    // que detectó el panel de salud la primera vez que se ejecutó.
+    const datos = {
+      ...cfg,
+      iban: cfg.iban ? cifrar(cfg.iban) : null,
+      chargeDay: 5,
+      mandateUsed: false,
+    };
     if (existente) await db.billingProfile.update({ where: { id: existente.id }, data: datos });
     else await db.billingProfile.create({ data: { studentId: alumno.id, ...datos } });
 

@@ -50,8 +50,19 @@ export default async function NodoPage({
     ? `${ctx.academy.name} · ${ctx.user.firstName} ${ctx.user.lastName ?? ""} · ${formatDate(new Date())}`
     : null;
 
-  const volverHref = nodo.parentId
-    ? `/campus/estudiar/${nodo.parentId}`
+  // «Volver» solo apunta al padre si el alumno puede verlo de verdad.
+  //
+  // Antes apuntaba siempre, y eso enseñaba el identificador de una sección que
+  // podía no tener contratada. Lo señaló la revisión de seguridad: era la pieza
+  // que hacía cómodo el intento de fuga por la IA (H-07). Aunque el destino ya
+  // devolvía 404 y la fuga está cerrada, un enlace que lleva a una pantalla de
+  // «no existe» tampoco es aceptable como experiencia.
+  const padreVisible = nodo.parentId
+    ? await loadNodeForStudent(ctx.db, grants, nodo.parentId, ctx.academy.id)
+    : null;
+
+  const volverHref = padreVisible
+    ? `/campus/estudiar/${padreVisible.id}`
     : "/campus/estudiar";
 
   return (

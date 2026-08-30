@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { LogOut } from "lucide-react";
+import { Activity, LogOut } from "lucide-react";
 import { signOutAction } from "@/lib/auth/actions";
 import { requirePlatformAdmin } from "@/lib/auth/context";
 import { prismaBase } from "@/lib/db/client";
@@ -52,6 +52,12 @@ export default async function PlataformaPage() {
         description={`Conectado como ${ctx.user.email}.`}
         actions={
           <>
+          <Button asChild variant="secondary">
+            <Link href="/plataforma/salud">
+              <Activity aria-hidden />
+              Salud del sistema
+            </Link>
+          </Button>
           <NewAcademyForm />
           <form action={signOutAction}>
             <Button type="submit" variant="ghost" size="icon" aria-label="Cerrar sesión">

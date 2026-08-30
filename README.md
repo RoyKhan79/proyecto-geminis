@@ -46,8 +46,10 @@ Y además, sobre el plan inicial:
 | **Recuperar contraseña** | Y verificación de correo, con testigos de un solo uso |
 | **Textos legales** | Política de privacidad y condiciones de uso |
 
-En cifras: **63 tablas · 55 pantallas · 36.000 líneas · 109 pruebas automáticas ·
-66 comprobaciones de auditoría** (33 sobre el código y 33 contra el servidor).
+En cifras: **70 tablas · 60 pantallas · 45.000 líneas · 148 pruebas automáticas ·
+79 comprobaciones de auditoría** (33 sobre el código y 46 contra el servidor),
+más las pruebas específicas de aislamiento, cobros, facturas, dispositivos,
+copias de seguridad y fuga por la IA.
 
 El detalle está en [docs/MVP_ROADMAP.md](docs/MVP_ROADMAP.md), la revisión punto
 por punto del encargo en

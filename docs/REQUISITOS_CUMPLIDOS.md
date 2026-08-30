@@ -149,7 +149,7 @@ Recorrido de los 136 puntos del encargo. Tres estados:
 | 65 | Sin código gigante ni duplicado | Hecho: lógica en `src/server`, componentes sin negocio |
 | 66-67 | Decidir y avanzar, documentando | Hecho: 39 decisiones registradas |
 | 86 | Nada de datos falsos en producción | Hecho: todo sale de la base de datos |
-| 87 | Observabilidad preparada | Parcial: auditoría sí, métricas pendientes |
+| 87 | Observabilidad | Hecho: panel de salud en la consola de plataforma, con latencia, uso, tareas programadas y —lo importante— comprobación en caliente de que las protecciones siguen puestas (ADR-0050) |
 | 88 | Backups | Pendiente: decisión de despliegue |
 | 89 | Portabilidad | Hecho: exportación completa |
 | 90 | Producto real, no demo | Hecho |

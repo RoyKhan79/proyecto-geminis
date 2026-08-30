@@ -439,6 +439,20 @@ async function main() {
   // Lo que de verdad separa el nivel 1 del 2: el superadmin NO ve datos de
   // ninguna academia. Si esto fallara, «ninguna academia ve a otra» sería falso
   // para la persona con más acceso del sistema.
+  const salud = await pedir(superadmin, "/plataforma/salud");
+  comprobar(
+    "el superadministrador ve el panel de salud",
+    salud.status === 200,
+    `→ ${salud.status}`,
+  );
+
+  const saludAjena = await pedir(admin, "/plataforma/salud");
+  comprobar(
+    "una academia NO ve el panel de salud de la plataforma",
+    saludAjena.status !== 200,
+    `→ ${saludAjena.status}`,
+  );
+
   const superEnGestion = await pedir(superadmin, "/gestion/alumnos");
   comprobar(
     "el superadministrador NO ve el alumnado de una academia",

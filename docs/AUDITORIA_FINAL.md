@@ -47,6 +47,7 @@ La HTTP encuentra lo que el código *parece* hacer pero no hace.
 | XSS | **Sólido** | Saneado por lista blanca al guardar y al pintar |
 | Cabeceras HTTP | **Sólido** | CSP, HSTS, X-Frame-Options, Referrer-Policy, Permissions-Policy |
 | Trazabilidad | **Sólido** | Auditoría por academia con enmascarado de datos sensibles |
+| Observabilidad | **Sólido** | Panel de salud que comprueba en caliente que las protecciones siguen puestas, no solo métricas de uso (ADR-0050) |
 | RGPD | **Suficiente** | Anonimización, exportación, política de privacidad y condiciones |
 | Fuerza bruta | **Provisional** | Limitador en memoria del proceso (ADR-0016) |
 | Cobros y datos bancarios | **Sólido** | IBAN validado con dígito de control, fichero SEPA comprobado, el IBAN nunca entra en la auditoría |
@@ -251,8 +252,7 @@ Se dice aquí y no en una nota al pie.
 | **Cifrado en reposo** | No implementado | Es configuración del gestor de base de datos y del almacén de archivos, no código |
 | **Copias de seguridad** | No implementado | Decisión de despliegue. Deben ser por academia, para poder restaurar una sin tocar las demás |
 | **Límite de dispositivos** | No implementado | Las sesiones son revocables y se ve desde dónde se entra, pero nada impide tres sesiones a la vez |
-| **Revisión externa** | No hecha | Lo más importante de esta lista |
-| **Métricas** | No implementado | La auditoría registra qué pasó; falta saber cómo va el sistema |
+| **Revisión externa** | **Hecha una** sobre el código, que encontró H-07 | Sigue faltando un test de intrusión sobre el sistema desplegado |
 
 ---
 

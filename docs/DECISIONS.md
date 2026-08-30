@@ -459,3 +459,17 @@ sobre `nodeId`, ganó el último, y la IA acabó citando temario no pagado. Las 
 líneas son válidas por separado y TypeScript no dice nada.
 **Cómo se evita que vuelva.** `npm run ia:fuga` intenta la fuga desde cada nodo
 de la academia con el alumno que menos ha contratado.
+
+### ADR-0050 · El panel de salud comprueba las protecciones, no solo el uso
+**Decisión.** `/plataforma/salud` mide latencia y uso, pero sobre todo verifica
+**en caliente** que el rol de conexión no se salta RLS, que las políticas están
+activas, que la clave de cifrado existe y que no queda ningún IBAN en claro.
+**Por qué.** El hallazgo H-04 fue una protección activada que no protegía nada,
+y estuvo así hasta que alguien la puso a prueba a mano. Un panel que solo enseña
+números de uso no habría dicho nada. Este lo comprueba cada vez que se abre.
+**Detalle que parece menor.** La latencia se mide con una consulta previa de
+calentamiento. Sin ella, la primera incluye abrir la conexión y el panel sale en
+rojo cada vez que alguien lo abre después de un rato. Un panel que da falsas
+alarmas se deja de mirar, y entonces no sirve para nada.
+**Ya ha servido.** La primera ejecución detectó dos IBAN guardados en claro por
+un script de prueba que escribía saltándose la capa de cifrado.
