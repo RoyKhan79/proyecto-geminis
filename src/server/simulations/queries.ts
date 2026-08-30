@@ -75,18 +75,65 @@ export async function loadSimulationPanel(db: TenantClient) {
   };
 }
 
-/** Simulacros que este alumno puede hacer ahora mismo. */
+/**
+ * Simulacros que este alumno puede hacer ahora mismo.
+ *
+ * Filtrados por SU convocatoria. Antes se devolvían todos los publicados de la
+ * academia, y una academia que prepara Administrativo y Magisterio a la vez le
+ * enseñaba a cada alumno los simulacros del otro. No era una fuga de contenido
+ * —al empezarlo, las preguntas se filtran por lo contratado— pero sí de
+ * información (el título de un simulacro dice qué prepara la academia y para
+ * cuándo) y, sobre todo, era una lista que no se podía usar: el alumno pulsaba
+ * y se encontraba con que no tenía temas para ese simulacro.
+ *
+ * De dónde sale «su» convocatoria: de las matrículas activas. Se usan esas y no
+ * los derechos de acceso porque una matrícula es el hecho —está apuntado a este
+ * curso— mientras que un derecho puede cubrir una rama suelta de temario sin
+ * que la persona esté en ese curso.
+ *
+ * Un simulacro sin convocatoria (`editionId` nulo) lo ven todos: es la forma que
+ * tiene la academia de convocar algo general, y quitárselo sería quitarle una
+ * herramienta que sí quería.
+ */
 export async function loadStudentSimulations(
   db: TenantClient,
   studentId: string,
   ahora = Date.now(),
 ) {
+  const matriculas = await db.enrollment.findMany({
+    where: {
+      studentId,
+      deletedAt: null,
+      status: { in: ["ACTIVE", "PAST_DUE"] },
+    },
+    select: { course: { select: { oppositionEditionId: true } } },
+  });
+
+  const misEdiciones = [
+    ...new Set(matriculas.map((m) => m.course.oppositionEditionId)),
+  ];
+
   const simulacros = await db.testDefinition.findMany({
     where: {
       kind: "SIMULATION",
       status: "PUBLISHED",
       deletedAt: null,
-      OR: [{ availableFrom: null }, { availableFrom: { lte: new Date(ahora) } }],
+      AND: [
+        {
+          OR: [
+            { availableFrom: null },
+            { availableFrom: { lte: new Date(ahora) } },
+          ],
+        },
+        {
+          OR: [
+            { editionId: null },
+            ...(misEdiciones.length > 0
+              ? [{ editionId: { in: misEdiciones } }]
+              : []),
+          ],
+        },
+      ],
     },
     orderBy: { createdAt: "desc" },
     select: {

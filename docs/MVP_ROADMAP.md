@@ -94,7 +94,7 @@ Modelo ya listo: `ImportJob`, `ImportRow`.
 - Propuestas diarias con su motivo, sin que nadie pregunte ✅ (ADR-0030)
 - Búsqueda vectorial con `pgvector` — pendiente (ADR-0011); hoy es léxica
 - Detección de duplicados y ambigüedades — pendiente
-- Asistente guiado de importación de temario — pendiente
+- Asistente guiado de importación de temario ✅ (ADR-0054)
 
 ## ✅ Fase 6 — Normativa *(E)* · **terminada**
 
@@ -140,7 +140,6 @@ impersonación auditada, white-label y exportación RGPD.
 
 ## Lo siguiente, por orden de urgencia
 
-1. Asistente guiado de importación de temario
 6. Pasarela de pago
 7. Boletines autonómicos en el radar
 9. Notificaciones push

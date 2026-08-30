@@ -529,3 +529,40 @@ minutos y no vuelve a abrir la pantalla. Sin nada más, esa entrega se quedaría
 **Margen de gracia de 15 segundos.** Entre pulsar «Entregar» y que llegue la
 petición pasa tiempo real. Rechazar por dos segundos una entrega hecha a tiempo
 sería injusto y no protege de nada, porque el borrador ya estaba guardado.
+
+### ADR-0054 · El asistente de temario propone; la academia nombra
+**Decisión.** El asistente lee el número y el título del nombre de cada archivo
+(`Tema 01 - El acto administrativo.pdf`, `T12_Fuentes.PDF`, `01. Procedimiento`)
+y enseña **la lista completa de lo que se va a crear, editable**, antes de tocar
+la base de datos. Lo que se crea son las etiquetas que la academia ha aprobado,
+no las que dedujo el lector.
+**Por qué.** El temario de una academia está en una carpeta con sesenta PDF, y
+montarlo tema a tema es la tarde de trabajo que hace que no llegue a probar el
+producto. Pero el principio de que los nombres los pone la academia no se rompe
+por comodidad: una propuesta editable lo respeta, una imposición automática no.
+**Todo entra en borrador salvo que se diga.** Publicar sesenta temas de golpe a
+todo el alumnado no puede pasar por descuido, igual que no puede pasar con lo
+que genera la IA.
+**Se deshace.** Cada tanda lleva su marca en `metadata.importBatch`, y se retira
+entera. No hizo falta una tabla nueva: `metadata` ya existía como campo libre.
+**Lo que no se automatiza.** En un título ENTERAMENTE EN MAYÚSCULAS no hay
+señal que distinga «LPAC» de «ACTO». Se usa una lista de siglas reales de
+temario español y, ante la duda, se deja en minúscula: eso la academia lo
+corrige de un vistazo en la tabla; lo contrario deja títulos gritando en la
+pantalla del alumno.
+**Detalle que costó un fallo.** El patrón usaba `\b` tras el número, y para una
+expresión regular el guion bajo es una letra: `T12_Fuentes` no casaba. Justo la
+forma de nombrar archivos más común en Windows.
+
+### ADR-0055 · Un alumno solo ve los simulacros de su oposición
+**Decisión.** `loadStudentSimulations` filtra por las convocatorias en las que
+el alumno tiene matrícula activa, y `startSimulationAction` vuelve a
+comprobarlo. Un simulacro sin convocatoria es general y lo ve todo el mundo.
+**Por qué.** Antes se devolvían todos los publicados de la academia. Una
+academia que prepara Administrativo y Magisterio le enseñaba a cada alumno los
+simulacros del otro. No era fuga de contenido —al empezarlo, las preguntas ya se
+filtraban por lo contratado— pero sí de información: el título de un simulacro
+dice qué prepara la academia y para cuándo. Y sobre todo era una lista inútil:
+el alumno pulsaba y se topaba con que no tenía temas para ese simulacro.
+**La lista no es la barrera.** La comprobación al empezar existe porque a esa
+acción llega un identificador, y un identificador se teclea.

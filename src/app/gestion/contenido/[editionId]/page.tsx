@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ChevronLeft, Info, SlidersHorizontal } from "lucide-react";
+import { ChevronLeft, Info, SlidersHorizontal, Wand2 } from "lucide-react";
 import { requirePagePermission } from "@/lib/auth/context";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, PageHeader } from "@/components/ui/primitives";
@@ -101,12 +101,20 @@ export default async function ArbolContenidoPage({
           </Link>
         }
         actions={
-          <Button asChild variant="secondary" size="sm">
-            <Link href={`/gestion/contenido/${editionId}/ritmo`}>
-              <SlidersHorizontal aria-hidden />
-              Ritmo del temario
-            </Link>
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button asChild variant="secondary" size="sm">
+              <Link href={`/gestion/contenido/${editionId}/ritmo`}>
+                <SlidersHorizontal aria-hidden />
+                Ritmo del temario
+              </Link>
+            </Button>
+            <Button asChild size="sm">
+              <Link href={`/gestion/contenido/${editionId}/asistente`}>
+                <Wand2 aria-hidden />
+                Subir temario entero
+              </Link>
+            </Button>
+          </div>
         }
       />
 

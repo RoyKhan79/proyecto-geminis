@@ -227,6 +227,25 @@ export async function startSimulationAction(formData: FormData) {
   }
   const sim = simulacro!;
 
+  // El simulacro tiene que ser de una convocatoria en la que este alumno esté
+  // matriculado. La lista de la pantalla ya lo filtra, pero la lista no puede
+  // ser la única barrera: aquí llega un identificador, y un identificador se
+  // teclea. Un simulacro sin convocatoria es general y lo puede hacer cualquiera.
+  if (sim.editionId) {
+    const matricula = await ctx.db.enrollment.findFirst({
+      where: {
+        studentId: ctx.membershipId,
+        deletedAt: null,
+        status: { in: ["ACTIVE", "PAST_DUE"] },
+        course: { oppositionEditionId: sim.editionId },
+      },
+      select: { id: true },
+    });
+    // Mismo mensaje que si no existiera: no se confirma que haya un simulacro
+    // detrás de ese identificador.
+    if (!matricula) avisar("Ese simulacro no está disponible.");
+  }
+
   const ahora = Date.now();
   if (sim.availableFrom && sim.availableFrom.getTime() > ahora) {
     avisar(`Este simulacro se abre el ${sim.availableFrom.toLocaleDateString("es-ES")}.`);

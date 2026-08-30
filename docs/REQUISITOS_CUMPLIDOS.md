@@ -150,7 +150,7 @@ Recorrido de los 136 puntos del encargo. Tres estados:
 | 66-67 | Decidir y avanzar, documentando | Hecho: 39 decisiones registradas |
 | 86 | Nada de datos falsos en producción | Hecho: todo sale de la base de datos |
 | 87 | Observabilidad | Hecho: panel de salud en la consola de plataforma, con latencia, uso, tareas programadas y —lo importante— comprobación en caliente de que las protecciones siguen puestas (ADR-0050) |
-| 88 | Backups | Pendiente: decisión de despliegue |
+| 88 | Backups | Hecho: `npm run copia` (completa y por academia) y `npm run copia:restaurar`, con la pauta de comprobación en `docs/DESPLIEGUE.md` |
 | 89 | Portabilidad | Hecho: exportación completa |
 | 90 | Producto real, no demo | Hecho |
 
@@ -161,7 +161,7 @@ Recorrido de los 136 puntos del encargo. Tres estados:
 | 91-93 | Espacio privado por academia, aislado también en la IA | Hecho y probado |
 | 94 | Jerarquía flexible | Hecho: árbol libre |
 | 95-97 | Tipos de oposición y configurador | Hecho: tipos editables, secciones que nombra la academia |
-| 98-100 | Subida masiva y asistente de temario | Parcial: subida hecha; troceado automático hecho; asistente guiado pendiente |
+| 98-100 | Subida masiva y asistente de temario | Hecho: asistente guiado en `/gestion/contenido/[edicion]/asistente` — lee el número y el título del nombre de cada archivo, avisa de repetidos y huecos, deja editar cada etiqueta antes de crear nada y se deshace la tanda entera en un clic (ADR-0054) |
 | 101-103 | Importación de preguntas | Hecho: asistente propio, detección de repetidas, simulación y reversión (ADR-0034 a 0036) |
 | 104-105 | Fuentes activables | Hecho: banderas por rama, heredables |
 | 106 | Matriz de permisos de contenido | Hecho |
@@ -169,7 +169,7 @@ Recorrido de los 136 puntos del encargo. Tres estados:
 | 112 | Pipeline seguro de RAG | Hecho, filtro antes de buscar |
 | 113-114 | Descarga y visor protegido | Hecho |
 | 115 | Marca de agua | Hecho |
-| 116 | Protección frente a compartición | Parcial: sesiones revocables; límite de dispositivos pendiente |
+| 116 | Protección frente a compartición | Hecho: sesiones revocables y límite de dispositivos por academia, que expulsa la sesión más antigua |
 
 ## IA avanzada y examen (117-123, 129-136)
 

@@ -16,6 +16,7 @@ import { getEffectiveFlags, grantsCover } from "@/lib/access/content-access";
 import { loadChildren, loadGrants, loadNodeForStudent } from "@/server/campus/queries";
 import { markProgressAction } from "@/server/campus/actions";
 import { DocumentViewer } from "@/components/campus/document-viewer";
+import { GuardarTema } from "@/components/campus/guardar-tema";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, EmptyState } from "@/components/ui/primitives";
 import { sanitizeHtml } from "@/lib/sanitize";
@@ -94,12 +95,36 @@ export default async function NodoPage({
       ) : null}
 
       {nodo.resource?.type === "PDF" && nodo.resource.fileId ? (
-        <DocumentViewer
-          fileId={nodo.resource.fileId}
-          fileName={nodo.label}
-          puedeDescargar={puedeDescargar}
-          marcaDeAgua={marcaDeAgua}
-        />
+        <>
+          <DocumentViewer
+            fileId={nodo.resource.fileId}
+            fileName={nodo.label}
+            puedeDescargar={puedeDescargar}
+            marcaDeAgua={marcaDeAgua}
+          />
+
+          {/*
+            Guardar para leer sin conexión exige lo mismo que descargar, más una
+            cosa: que la rama no lleve marca de agua. Un archivo servido desde el
+            dispositivo iría sin ella, y una marca de agua es precisamente la
+            academia diciendo «quiero saber de quién es cada copia que circula».
+            Antes que servirlo sin marca, no se ofrece.
+          */}
+          {puedeDescargar && !marcaDeAgua && nodo.resource.file ? (
+            <GuardarTema
+              tema={{
+                nodeId: nodo.id,
+                label: nodo.label,
+                fileId: nodo.resource.fileId,
+                fileName: nodo.resource.file.originalName,
+                sizeBytes: nodo.resource.file.sizeBytes,
+                version: (
+                  nodo.resource.updatedAt ?? new Date()
+                ).toISOString(),
+              }}
+            />
+          ) : null}
+        </>
       ) : null}
 
       {nodo.resource?.externalUrl ? (

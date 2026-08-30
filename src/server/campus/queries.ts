@@ -162,6 +162,12 @@ export async function loadNodeForStudent(
           richText: true,
           durationSeconds: true,
           pageCount: true,
+          // Para poder ofrecer «guardar en el dispositivo» desde la propia
+          // pantalla del tema: hace falta el tamaño (para avisar de lo que
+          // ocupa) y la fecha del recurso (para saber si lo guardado caducó
+          // porque la academia subió una versión nueva).
+          updatedAt: true,
+          file: { select: { originalName: true, sizeBytes: true } },
         },
       },
     },
