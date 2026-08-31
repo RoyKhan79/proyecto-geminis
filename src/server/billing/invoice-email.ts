@@ -1,6 +1,7 @@
 import { sendEmail } from "@/lib/email";
 import { prismaBase } from "@/lib/db/client";
 import { formatDate } from "@/lib/utils";
+import { env } from "@/lib/env";
 
 /**
  * LA FACTURA QUE LE LLEGA AL ALUMNO
@@ -16,6 +17,11 @@ import { formatDate } from "@/lib/utils";
  * la factura formal se imprime desde la ficha, que es lo que se hace cuando
  * alguien la pide en papel.
  */
+
+/** El enlace público donde el alumno paga su recibo con tarjeta. */
+export function enlaceDePago(paymentId: string): string {
+  return `${(env.APP_URL ?? "http://localhost:3000").replace(/\/$/, "")}/pagar/${paymentId}`;
+}
 
 const euros = (centimos: number) =>
   new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(
@@ -44,6 +50,9 @@ export function instruccionesDePago(datos: {
   ibanDeLaAcademia?: string | null;
   referencia: string | null;
   nombreAcademia: string;
+  /// Enlace para pagar con tarjeta, si la academia tiene el cobro montado. Sin
+  /// él, se le dice que pase por la academia.
+  enlaceDePago?: string | null;
 }): { titulo: string; cuerpo: string } {
   const cuenta = ibanCorto(datos.ibanDelAlumno);
 
@@ -83,7 +92,9 @@ export function instruccionesDePago(datos: {
     case "CARD":
       return {
         titulo: "Con tarjeta",
-        cuerpo: `Puedes pagarlo con tarjeta en ${datos.nombreAcademia}, o llamarnos y lo hacemos por teléfono.`,
+        cuerpo: datos.enlaceDePago
+          ? `Puedes pagarlo ahora mismo desde aquí: ${datos.enlaceDePago}`
+          : `Puedes pagarlo con tarjeta en ${datos.nombreAcademia}, o llamarnos y lo hacemos por teléfono.`,
       };
 
     default:
@@ -214,6 +225,7 @@ export async function enviarFacturaAlCliente(
       issuerName: true,
       issuerEmail: true,
       studentId: true,
+      paymentId: true,
       lines: {
         orderBy: { position: "asc" },
         select: { description: true, totalCents: true },
@@ -247,6 +259,7 @@ export async function enviarFacturaAlCliente(
     ibanDeLaAcademia: factura.academy.billingIban,
     referencia: factura.reference,
     nombreAcademia: factura.academy.legalName ?? factura.academy.name,
+    enlaceDePago: factura.paymentId ? enlaceDePago(factura.paymentId) : null,
   });
 
   const correo = componerCorreoDeFactura(factura, pago);

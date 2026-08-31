@@ -111,6 +111,19 @@ model Academy {
   /// la academia prefiere decidirlo a mano, caso por caso.
   dunningSuspendDays Int @default(30)
 
+  // ── Cobro con tarjeta (Redsys) ─────────────────────────────────────────────
+  /// Cada academia cobra en SU comercio: esto se vende a academias distintas y
+  /// el dinero va a la cuenta de cada una. Por eso vive aquí y no en una
+  /// variable de entorno del servidor.
+  redsysMerchantCode String?
+  redsysTerminal     String? @default("001")
+  /// Clave secreta del comercio, CIFRADA en columna como el IBAN. Con ella se
+  /// firma cualquier cobro: en claro sería una llave de la caja.
+  redsysSecretKey String?
+  /// Falso = entorno de pruebas de Redsys, que no mueve dinero. Se empieza ahí
+  /// siempre, y se pasa a real cuando el banco confirma el alta.
+  redsysLive Boolean @default(false)
+
   /// Ajustes de producto por academia (marcas de agua, descargas por defecto,
   /// política de IA…). JSON porque son banderas heterogéneas y cambiantes.
   settings Json @default("{}")

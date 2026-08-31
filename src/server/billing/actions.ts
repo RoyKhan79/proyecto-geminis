@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { recordAudit } from "@/lib/audit";
+import { claveDeComercioValida } from "@/lib/billing/redsys";
 import { requirePermission } from "@/lib/auth/context";
 import { normalizarIban, validarIban } from "@/lib/billing/iban";
 import { cifrar, descifrar } from "@/lib/crypto/field";
@@ -356,6 +357,86 @@ export async function saveDunningAction(
       cada: data.dunningEveryDays,
       suspenderA: data.dunningSuspendDays,
     },
+  });
+
+  revalidatePath("/gestion/pagos/remesas");
+  return { ok: true };
+}
+
+const tpvSchema = z.object({
+  redsysMerchantCode: z.string().trim().max(20).optional(),
+  redsysTerminal: z.string().trim().max(6).optional(),
+  redsysSecretKey: z.string().trim().optional(),
+  redsysLive: z.string().optional(),
+});
+
+/**
+ * El TPV virtual de la academia, para cobrar con tarjeta.
+ *
+ * Las credenciales son de la academia y no de la plataforma: cada una cobra en
+ * su comercio y el dinero cae en su cuenta. La clave se guarda cifrada, como el
+ * IBAN, porque con ella se firma cualquier cobro.
+ *
+ * Mientras no haya credenciales se usa el comercio de pruebas de Redsys, que es
+ * público y no mueve dinero. Así el cobro se puede ver funcionando entero antes
+ * de haberle pedido el TPV al banco, que tarda semanas.
+ */
+export async function saveTpvAction(
+  _prev: BillingState,
+  formData: FormData,
+): Promise<BillingState> {
+  const ctx = await requirePermission("settings.write");
+  const parsed = tpvSchema.safeParse(Object.fromEntries(formData.entries()));
+
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Revisa los datos." };
+  }
+  const data = parsed.data;
+  const enReal = data.redsysLive === "1";
+
+  const comercio = data.redsysMerchantCode?.trim() || null;
+  const clave = data.redsysSecretKey?.trim() || null;
+
+  if (clave && !claveDeComercioValida(clave)) {
+    return {
+      error:
+        "Esa clave no tiene el formato que da el banco. Cópiala entera del panel de tu TPV, sin espacios.",
+    };
+  }
+
+  const actual = await ctx.db.academy.findUnique({
+    where: { id: ctx.academy.id },
+    select: { redsysSecretKey: true },
+  });
+
+  if (enReal && !comercio) {
+    return { error: "Falta el código de comercio (FUC) que te ha dado el banco." };
+  }
+  if (enReal && !clave && !actual?.redsysSecretKey) {
+    return { error: "Falta la clave secreta del comercio." };
+  }
+
+  await ctx.db.academy.update({
+    where: { id: ctx.academy.id },
+    data: {
+      redsysMerchantCode: comercio,
+      redsysTerminal: data.redsysTerminal?.trim() || "001",
+      // Vacío = se deja la que había: la clave no se reenvía al navegador, así
+      // que un formulario en blanco significa «no la cambies», no «bórrala».
+      ...(clave ? { redsysSecretKey: cifrar(clave) } : {}),
+      redsysLive: enReal,
+    },
+  });
+
+  await recordAudit({
+    academyId: ctx.academy.id,
+    actorId: ctx.user.id,
+    impersonatorId: ctx.impersonatedById,
+    action: "billing.tpv",
+    entityType: "Academy",
+    entityId: ctx.academy.id,
+    // La clave NO se registra, ni siquiera para decir que cambió su valor.
+    changes: { comercio: comercio ?? "", enReal, claveCambiada: Boolean(clave) },
   });
 
   revalidatePath("/gestion/pagos/remesas");

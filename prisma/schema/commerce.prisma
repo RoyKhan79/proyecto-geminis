@@ -228,6 +228,11 @@ model Payment {
   /// Cuándo se le recordó por última vez y cuántas veces. Sin esto, la tarea
   /// diaria mandaría un correo cada día al mismo moroso, que es la forma más
   /// rápida de que marque la academia como spam.
+  /// Número de pedido con el que viaja este recibo a la pasarela. Es lo que
+  /// permite reconocerlo cuando el banco contesta por detrás, minutos después y
+  /// desde otra petición.
+  gatewayOrder String? @unique
+
   lastReminderAt DateTime?
   reminderCount  Int       @default(0)
   /// Cuándo se le cortó el acceso por este recibo, si se llegó a cortar.

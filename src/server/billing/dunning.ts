@@ -2,7 +2,7 @@ import { prismaBase } from "@/lib/db/client";
 import { tenantDb } from "@/lib/db/tenant";
 import { sendEmail } from "@/lib/email";
 import { formatDate } from "@/lib/utils";
-import { instruccionesDePago } from "./invoice-email";
+import { enlaceDePago, instruccionesDePago } from "./invoice-email";
 
 /**
  * AVISOS DE IMPAGO
@@ -268,6 +268,8 @@ export async function ejecutarAvisosDeImpago(
             ibanDeLaAcademia: academia.billingIban,
             referencia: recibo.concept,
             nombreAcademia: academia.legalName ?? academia.name,
+            // Reclamar sin poner el botón de pagar delante es media reclamación.
+            enlaceDePago: enlaceDePago(recibo.id),
           }),
         });
 

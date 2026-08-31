@@ -31,6 +31,7 @@ import { formatCents, formatDate } from "@/lib/utils";
 import { GenerarRemesa } from "./generar";
 import { DatosAcreedorForm } from "./acreedor";
 import { AvisosDeImpago } from "./avisos";
+import { DatosDelTpv } from "./tpv";
 
 export const metadata: Metadata = { title: "Remesas" };
 
@@ -91,6 +92,10 @@ export default async function RemesasPage({
         dunningFirstDays: true,
         dunningEveryDays: true,
         dunningSuspendDays: true,
+        redsysMerchantCode: true,
+        redsysTerminal: true,
+        redsysSecretKey: true,
+        redsysLive: true,
       },
     }),
     ctx.db.directDebitRun.findMany({
@@ -171,6 +176,18 @@ export default async function RemesasPage({
             mandatePrefix: academia?.mandatePrefix ?? "",
           }}
           avisos={avisos}
+        />
+      ) : null}
+
+      {puedeEscribir && academia ? (
+        <DatosDelTpv
+          datos={{
+            redsysMerchantCode: academia.redsysMerchantCode ?? "",
+            redsysTerminal: academia.redsysTerminal ?? "001",
+            // La clave NUNCA viaja al navegador: solo si la hay o no.
+            tieneClave: Boolean(academia.redsysSecretKey),
+            redsysLive: academia.redsysLive,
+          }}
         />
       ) : null}
 
