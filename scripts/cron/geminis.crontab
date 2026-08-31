@@ -1,0 +1,25 @@
+# Geminis · tareas programadas del servidor
+# ------------------------------------------
+# Se instala con:  ./scripts/cron/instalar.sh
+#
+# Las rutas se sustituyen al instalar: RUTA_PROYECTO es la raíz del repo en el
+# servidor y RUTA_NPM el npm del sistema (cron no hereda tu PATH, y esa es la
+# causa habitual de que «el cron no va» cuando a mano sí funciona).
+#
+# Sobre los horarios: el BOE publica de madrugada, así que a las 8:30 el
+# boletín del día ya está entero. Se deja margen por si algún día se retrasa;
+# el radar es idempotente y volver a pasarlo no duplica nada.
+
+SHELL=/bin/bash
+PATH=/usr/local/bin:/usr/bin:/bin
+
+# Radar del BOE: convocatorias nuevas de las ramas que vigila cada academia.
+# Solo actúa sobre las que tienen contratado el módulo «Normativa».
+30 8 * * *  cd RUTA_PROYECTO && RUTA_NPM run radar >> /var/log/geminis-radar.log 2>&1
+
+# Por si el servidor estuvo caído: los domingos recupera la última semana.
+# Sin esto, un corte de un día se convierte en una convocatoria que nadie vio.
+15 9 * * 0  cd RUTA_PROYECTO && RUTA_NPM run radar -- --dias 7 >> /var/log/geminis-radar.log 2>&1
+
+# Mantenimiento: sesiones caducadas, tokens usados y ficheros huérfanos.
+40 4 * * *  cd RUTA_PROYECTO && RUTA_NPM run mantenimiento >> /var/log/geminis-mantenimiento.log 2>&1

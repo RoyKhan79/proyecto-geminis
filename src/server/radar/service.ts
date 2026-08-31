@@ -92,10 +92,23 @@ export async function ejecutarRadarBoe(fecha: Date): Promise<ResultadoRadar> {
     };
   }
 
+  /*
+   * Solo las academias que pagan el radar.
+   *
+   * «Normativa y radar del BOE» es un módulo de pago, y esta tarea corre en el
+   * servidor sin pasar por `requireAcademy`, que es quien comprueba los módulos
+   * en el resto de la aplicación. Sin este filtro, una academia que dejara de
+   * pagarlo seguiría recibiendo los avisos por correo cada mañana: el módulo
+   * desaparecería de su menú y seguiría funcionando por detrás.
+   */
   const vigilancias = await prismaBase.oppositionWatch.findMany({
     where: {
       isActive: true,
-      academy: { deletedAt: null, status: { in: ["ACTIVE", "TRIAL"] } },
+      academy: {
+        deletedAt: null,
+        status: { in: ["ACTIVE", "TRIAL"] },
+        modules: { some: { module: "NORMATIVA", active: true } },
+      },
     },
     select: {
       id: true,

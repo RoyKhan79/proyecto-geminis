@@ -159,13 +159,29 @@ RESTORE_TESTED_CONFIRMED=1
 
 ## 5 · Tareas programadas
 
+No se copian a mano. Están versionadas en `scripts/cron/geminis.crontab` y se
+instalan con:
+
 ```bash
-30 8 * * *  cd /ruta/geminis && npm run radar         >> /var/log/geminis-radar.log 2>&1
-0  4 * * *  cd /ruta/geminis && npm run mantenimiento >> /var/log/geminis-mant.log  2>&1
+./scripts/cron/instalar.sh --ver    # enseña lo que pondría, sin tocar nada
+./scripts/cron/instalar.sh          # lo instala en tu crontab
+./scripts/cron/instalar.sh --quitar # lo retira sin tocar tus otras tareas
 ```
 
-El radar revisa el BOE cada mañana. El mantenimiento borra sesiones caducadas,
-enlaces de recuperación vencidos y contadores del limitador.
+El instalador sustituye la ruta del proyecto y la de `npm` por las de este
+servidor. Eso es justo lo que se hacía mal al copiar y pegar: cron no hereda tu
+PATH, así que un `npm` a secas funciona al probarlo en la terminal y falla en
+silencio a las ocho y media de la mañana.
+
+Qué queda programado:
+
+| Cuándo | Qué |
+|---|---|
+| Cada día a las 8:30 | **Radar del BOE.** Busca convocatorias nuevas de las ramas que vigila cada academia. Solo actúa sobre las que tienen contratado el módulo «Normativa». |
+| Domingos a las 9:15 | **Recuperación de una semana.** Por si el servidor estuvo caído: sin esto, un corte de un día se convierte en una convocatoria que nadie vio. |
+| Cada día a las 4:40 | **Mantenimiento.** Sesiones caducadas, enlaces de recuperación vencidos y contadores del limitador. |
+
+El radar es idempotente: repetir un día no duplica nada.
 
 ```bash
 MAINTENANCE_CRON_CONFIRMED=1
