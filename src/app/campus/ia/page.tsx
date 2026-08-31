@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Sparkles } from "lucide-react";
 import { requireAcademy } from "@/lib/auth/context";
 import { loadGrants } from "@/server/campus/queries";
-import { studentNodeWhere } from "@/lib/access/content-access";
+import { studentNodeWhere, tieneCapacidad } from "@/lib/access/content-access";
 import { Card, CardContent, EmptyState } from "@/components/ui/primitives";
 import { AskBox } from "./ask-box";
 import { CampusTitulo } from "@/components/campus/titulo";
@@ -38,9 +38,27 @@ export default async function IaCampusPage({
 
   const grants = await loadGrants(ctx.academy.id, ctx.membershipId);
 
+  /*
+   * Que la academia tenga el módulo no significa que ESTE alumno lo tenga: la
+   * academia reparte «Geminis IA» alumno a alumno desde su ficha. Sin esa
+   * herramienta no se entra, por muy contratado que lo tenga la academia.
+   */
+  if (!tieneCapacidad(grants, "USE_AI_TUTOR")) {
+    return (
+      <Card>
+        <EmptyState
+          icon={<Sparkles className="size-5" />}
+          title="No tienes el asistente incluido"
+          description="Tu academia decide quién puede usarlo. Pregúntale si te interesa tenerlo."
+        />
+      </Card>
+    );
+  }
+
   // Temas sobre los que puede preguntar: exactamente los que puede estudiar.
   const temas = await ctx.db.contentNode.findMany({
-    where: { kind: "TOPIC", ...studentNodeWhere(grants) },
+    // Los temas que se le ofrecen al tutor son los que este alumno puede leer.
+    where: { kind: "TOPIC", ...studentNodeWhere(grants, "VIEW_CONTENT") },
     orderBy: [{ path: "asc" }, { position: "asc" }],
     select: { id: true, label: true },
   });

@@ -192,7 +192,7 @@ export async function startAttemptAction(formData: FormData) {
 
   // Temas accesibles: es el filtro que impide examinarse de lo no contratado.
   const accesibles = await ctx.db.contentNode.findMany({
-    where: { kind: "TOPIC", ...studentNodeWhere(grants) },
+    where: { kind: "TOPIC", ...studentNodeWhere(grants, "TAKE_TESTS") },
     select: { id: true },
   });
   let nodeIds = accesibles.map((n) => n.id);

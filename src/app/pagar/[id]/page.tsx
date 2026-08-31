@@ -111,8 +111,9 @@ export default async function PagarPage({
         </p>
       ) : cobro.enPruebas ? (
         <p className="rounded-[var(--radius-control)] bg-caution-soft px-3 py-2 text-xs leading-relaxed text-caution">
-          <strong>Entorno de pruebas.</strong> El TPV está configurado pero no
-          en modo real todavía: no se mueve dinero.
+          <strong>Entorno de pruebas.</strong> El TPV está configurado pero
+          todavía no en modo real: no se mueve dinero y el recibo seguirá
+          pendiente.
         </p>
       ) : null}
 

@@ -95,14 +95,23 @@ export async function POST(request: Request) {
    * ella, un alumno puede leer su propio número de pedido en la página de pago,
    * firmarse una notificación que diga «pagado» y mandarla aquí.
    *
-   * Así que en ese modo no se da nada por cobrado. La demostración sirve para
-   * ver el circuito, no para saldar recibos de verdad.
+   * Y lo mismo con el entorno de pruebas de Redsys aunque la academia SÍ tenga
+   * sus credenciales: allí se paga con las tarjetas de prueba que Redsys
+   * publica, y la notificación llega firmada con la clave buena, así que
+   * validaría. Un alumno cuya academia todavía no ha pasado a real podría
+   * saldar su deuda y recuperar el acceso con una tarjeta de juguete.
+   *
+   * Así que no se da nada por cobrado hasta que el TPV está en modo real. Las
+   * dos situaciones sirven para ver el circuito, no para saldar recibos.
    */
-  if (sinConfigurar) {
+  if (sinConfigurar || !config.live) {
     console.warn(
-      "[tarjeta] notificación en modo demostración para el pedido",
+      "[tarjeta] notificación de un cobro que no mueve dinero · pedido",
       orden,
-      "· no se salda el recibo: la academia no tiene TPV configurado",
+      sinConfigurar
+        ? "· la academia no tiene TPV configurado"
+        : "· el TPV está en modo de pruebas",
+      "· el recibo se queda pendiente",
     );
     return new NextResponse("OK", { status: 200 });
   }

@@ -123,7 +123,8 @@ export async function construirMochila(
       // `studentNodeWhere` ya aplica el ritmo del temario dentro. No se vuelve
       // a esparcir `releaseWhere` encima: pisaría su clave `AND` y es la forma
       // exacta del fallo H-07, aunque el resultado saliera igual.
-      ...studentNodeWhere(grants),
+      // La mochila es para llevarse el temario: eso es descargarlo.
+      ...studentNodeWhere(grants, "DOWNLOAD_CONTENT"),
       resource: { type: "PDF", fileId: { not: null } },
     },
     select: {

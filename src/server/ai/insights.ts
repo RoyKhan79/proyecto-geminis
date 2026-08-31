@@ -168,7 +168,7 @@ export async function proponerPlanDelDia(params: {
         id: { in: recienAbiertos.map((r) => r.nodeId) },
         // La hora de referencia va como argumento, no en un segundo `spread`
         // que pisaba la clave `AND` del primero (ver H-07).
-        ...studentNodeWhere(grants, ahora),
+        ...studentNodeWhere(grants, "VIEW_CONTENT", ahora),
       },
       select: { id: true, label: true },
     });

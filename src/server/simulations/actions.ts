@@ -5,7 +5,11 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { recordAudit } from "@/lib/audit";
 import { requireAcademy, requirePermission } from "@/lib/auth/context";
-import { loadStudentGrants, studentNodeWhere } from "@/lib/access/content-access";
+import {
+  loadStudentGrants,
+  studentNodeWhere,
+  tieneCapacidad,
+} from "@/lib/access/content-access";
 
 /**
  * SIMULACROS
@@ -220,6 +224,17 @@ export async function startSimulationAction(formData: FormData) {
 
   const simulationId = String(formData.get("simulationId") ?? "");
 
+  /*
+   * Los simulacros se venden aparte de los tests: son la herramienta
+   * «Simulacros» de la ficha del alumno, y hasta ahora no la comprobaba nadie.
+   */
+  const derechos = await loadStudentGrants(ctx.academy.id, ctx.membershipId);
+  if (!tieneCapacidad(derechos, "TAKE_SIMULATIONS")) {
+    redirect(
+      `/campus/tests?aviso=${encodeURIComponent("No tienes los simulacros incluidos. Consúltalo con tu academia.")}`,
+    );
+  }
+
   const avisar = (mensaje: string): never =>
     redirect(`/campus/tests?aviso=${encodeURIComponent(mensaje)}`);
 
@@ -290,7 +305,7 @@ export async function startSimulationAction(formData: FormData) {
       // esparcir `releaseWhere` encima y la segunda pisaba la clave `AND` de la
       // primera: salía lo mismo de casualidad, pero es la forma exacta del fallo
       // H-07 y no se deja escrita así.
-      ...studentNodeWhere(grants),
+      ...studentNodeWhere(grants, "TAKE_SIMULATIONS"),
     },
     select: { id: true },
   });

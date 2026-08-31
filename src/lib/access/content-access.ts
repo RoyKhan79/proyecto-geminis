@@ -276,26 +276,79 @@ export function studentCanAccessNode(
  * el alumno puede ver. Se aplica en la propia consulta, no filtrando después:
  * así no se pagina sobre datos que luego hay que descartar.
  */
-export function studentNodeWhere(grants: StudentGrants, now: Date = new Date()) {
-  const branchFilters = grants.prefixes.map((grant) => ({
-    OR: [{ id: grant.nodeId }, { path: { startsWith: grant.prefix } }],
-  }));
+/**
+ * ¿Tiene este alumno esta herramienta en alguna parte?
+ *
+ * Es la comprobación de ENTRADA, la que decide si se le deja abrir el tutor o
+ * empezar un simulacro. `studentNodeWhere` contesta a otra pregunta —sobre QUÉ
+ * contenido— y confundirlas es lo que dejaba las cinco capacidades que no son
+ * de lectura sin comprobar en ningún sitio: la academia las marcaba en la ficha
+ * y no servían para nada.
+ */
+export function tieneCapacidad(
+  grants: StudentGrants,
+  capability: Capability,
+): boolean {
+  for (const grant of grants.prefixes) {
+    if (grant.capabilities.has(capability)) return true;
+  }
+  for (const capacidades of grants.editionCapabilities.values()) {
+    if (capacidades.has(capability)) return true;
+  }
+  return false;
+}
+
+export function studentNodeWhere(
+  grants: StudentGrants,
+  capability: Capability = "VIEW_CONTENT",
+  now: Date = new Date(),
+) {
+  /*
+   * ── EL FILTRO MIRA LA CAPACIDAD, NO SOLO LA CONVOCATORIA ────────────────────
+   *
+   * Antes se construía con `editionIds`, que es ciego a la capacidad: bastaba
+   * UN derecho cualquiera sobre una convocatoria —«clases en directo», por
+   * ejemplo— para que todos sus temas entraran en la consulta.
+   *
+   * Las pantallas que después vuelven a comprobar con `studentCanAccessNode`
+   * quedaban a salvo, pero la IA, los tests y los simulacros usan este filtro
+   * SOLO. Así que a quien se le abrían las clases se le abría también el
+   * temario entero a través del tutor, que es exactamente la puerta trasera que
+   * el §111 dice que no puede existir.
+   */
+  const branchFilters = grants.prefixes
+    .filter((grant) => grant.capabilities.has(capability))
+    .map((grant) => ({
+      OR: [{ id: grant.nodeId }, { path: { startsWith: grant.prefix } }],
+    }));
+
+  const ediciones = [...grants.editionCapabilities.entries()]
+    .filter(([, capacidades]) => capacidades.has(capability))
+    .map(([editionId]) => editionId);
 
   const editionFilter =
-    grants.editionIds.size > 0
-      ? [{ editionId: { in: [...grants.editionIds] } }]
-      : [];
+    ediciones.length > 0 ? [{ editionId: { in: ediciones } }] : [];
+
+  // Lo libre solo es libre para leerlo. Descargarlo o hacer tests con ello
+  // sigue necesitando su derecho, igual que en `studentCanAccessNode`.
+  const libre = capability === "VIEW_CONTENT" ? [{ isFree: true }] : [];
 
   return {
     status: "PUBLISHED" as const,
     visibleToStudents: true,
     deletedAt: null,
-    OR: [{ isFree: true }, ...branchFilters, ...editionFilter],
+    OR: [...libre, ...branchFilters, ...editionFilter],
     // El ritmo se aplica en la misma consulta: lo que el profesor todavía no ha
     // abierto no llega ni a salir de la base de datos.
     ...releaseWhere(grants.groupIds, now),
   };
 }
+
+/*
+ * Si no tiene ningún derecho con esa capacidad, el `OR` queda vacío y Prisma no
+ * devuelve nada. Es el comportamiento correcto —sin derecho no hay contenido— y
+ * está aquí escrito para que nadie lo "arregle" añadiéndole un `undefined`.
+ */
 
 /**
  * ¿Está abierto este nodo para el alumno, según el ritmo del profesor?

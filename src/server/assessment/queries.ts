@@ -127,7 +127,7 @@ export async function loadStudentTestTopics(
   grants: StudentGrants,
 ) {
   const accesibles = await db.contentNode.findMany({
-    where: { kind: "TOPIC", ...studentNodeWhere(grants) },
+    where: { kind: "TOPIC", ...studentNodeWhere(grants, "TAKE_TESTS") },
     orderBy: [{ path: "asc" }, { position: "asc" }],
     select: {
       id: true,

@@ -4,6 +4,7 @@ import { createAcademyWithRoles, addMemberToAcademy } from "@/server/academies/p
 import {
   grantsCover,
   loadStudentGrants,
+  studentNodeWhere,
   type NodeForAccess,
 } from "@/lib/access/content-access";
 import { CAPACIDADES, capacidadesDisponibles } from "@/lib/access/capacidades";
@@ -160,6 +161,59 @@ describe("el motor respeta lo que concede la ficha del alumno", () => {
     });
     const grants = await loadStudentGrants(academia.id, alumno.id);
     expect(grantsCover(grants, nodo(), "VIEW_CONTENT")).toBe(false);
+  });
+});
+
+describe("el filtro de la consulta respeta la capacidad, no solo la convocatoria", () => {
+  /*
+   * La otra mitad del motor. `grantsCover` se usa cuando ya se tiene el nodo
+   * delante; `studentNodeWhere` es el filtro que va a la base de datos, y la
+   * IA, los tests y los simulacros usan SOLO ese.
+   *
+   * Mientras fue ciego a la capacidad, conceder «clases en directo» sobre una
+   * convocatoria le abría al alumno el temario entero a través del tutor.
+   */
+  const ediciones = (where: ReturnType<typeof studentNodeWhere>) =>
+    (where.OR ?? []).flatMap((c: Record<string, unknown>) =>
+      "editionId" in c ? [(c.editionId as { in: string[] }).in] : [],
+    ).flat();
+
+  it("con «clases en directo» la IA no alcanza NADA del temario", async () => {
+    await concederAMano(["ATTEND_CLASSES"]);
+    const grants = await loadStudentGrants(academia.id, alumno.id);
+
+    expect(ediciones(studentNodeWhere(grants, "ATTEND_CLASSES"))).toContain(edicionId);
+    // Lo que importa: por aquí entraba el temario de pago.
+    expect(ediciones(studentNodeWhere(grants, "USE_AI_TUTOR"))).toHaveLength(0);
+    expect(ediciones(studentNodeWhere(grants, "VIEW_CONTENT"))).toHaveLength(0);
+    expect(ediciones(studentNodeWhere(grants, "TAKE_TESTS"))).toHaveLength(0);
+  });
+
+  it("con «hacer tests» puede hacer tests pero no descargarse el temario", async () => {
+    await concederAMano(["TAKE_TESTS"]);
+    const grants = await loadStudentGrants(academia.id, alumno.id);
+
+    expect(ediciones(studentNodeWhere(grants, "TAKE_TESTS"))).toContain(edicionId);
+    expect(ediciones(studentNodeWhere(grants, "DOWNLOAD_CONTENT"))).toHaveLength(0);
+    expect(ediciones(studentNodeWhere(grants, "TAKE_SIMULATIONS"))).toHaveLength(0);
+  });
+
+  it("sin ningún derecho el filtro no deja pasar nada", async () => {
+    await prismaBase.entitlement.deleteMany({ where: { studentId: alumno.id } });
+    const grants = await loadStudentGrants(academia.id, alumno.id);
+    const where = studentNodeWhere(grants, "USE_AI_TUTOR");
+    // Ni siquiera lo marcado como libre: gratis es gratis para LEERLO.
+    expect(where.OR).toHaveLength(0);
+  });
+
+  it("lo libre se lee, pero no se descarga ni se testea", async () => {
+    await prismaBase.entitlement.deleteMany({ where: { studentId: alumno.id } });
+    const grants = await loadStudentGrants(academia.id, alumno.id);
+
+    expect(studentNodeWhere(grants, "VIEW_CONTENT").OR).toContainEqual({
+      isFree: true,
+    });
+    expect(studentNodeWhere(grants, "DOWNLOAD_CONTENT").OR).toHaveLength(0);
   });
 });
 

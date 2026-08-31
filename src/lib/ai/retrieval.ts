@@ -78,7 +78,16 @@ export async function recuperarFragmentos(params: {
         academyId: params.academyId,
         // `studentNodeWhere` ya trae el ritmo del temario dentro. Repetirlo en
         // un segundo `spread` pisaba su clave `AND`; justo el patrón de H-07.
-        ...studentNodeWhere(grants),
+        /*
+         * El tutor solo puede citar lo que este alumno podría leer por su
+         * cuenta. Son dos permisos distintos y conviene no confundirlos: si
+         * PUEDE usar el tutor lo decide «Geminis IA», y se comprueba a la
+         * entrada; QUÉ puede citarle se decide aquí, y es exactamente su
+         * derecho de lectura. Citar algo que ya puede abrir no es una fuga;
+         * citar lo que no ha pagado sí, y por eso esto no puede ser el filtro
+         * ciego a la capacidad que era antes.
+         */
+        ...studentNodeWhere(grants, "VIEW_CONTENT"),
       },
       select: { id: true },
     });

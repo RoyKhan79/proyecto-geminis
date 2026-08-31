@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { recordAudit } from "@/lib/audit";
 import { requireAcademy, requirePermission } from "@/lib/auth/context";
+import { loadStudentGrants, tieneCapacidad } from "@/lib/access/content-access";
 import { aiDisponible, askAi } from "@/lib/ai/gateway";
 import {
   explicarFallo,
@@ -66,6 +67,17 @@ export async function askStudentAction(
   const ctx = await requireAcademy();
   if (!ctx.permissions.has("ai.student")) {
     return { error: "Tu academia no tiene activado el asistente." };
+  }
+
+  /*
+   * Y que ESTE alumno lo tenga. La comprobación de arriba es de la academia;
+   * esta es de la persona, porque la academia reparte el tutor alumno a alumno
+   * desde su ficha. Va aquí y no solo en la pantalla: esconder un formulario no
+   * autoriza nada, y esta acción se puede llamar directamente.
+   */
+  const derechos = await loadStudentGrants(ctx.academy.id, ctx.membershipId);
+  if (!tieneCapacidad(derechos, "USE_AI_TUTOR")) {
+    return { error: "No tienes el asistente incluido. Consúltalo con tu academia." };
   }
 
   const parsed = preguntaSchema.safeParse(Object.fromEntries(formData.entries()));
