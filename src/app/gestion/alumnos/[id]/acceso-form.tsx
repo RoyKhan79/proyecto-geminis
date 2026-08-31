@@ -104,13 +104,18 @@ export function AccesoForm({
       </Field>
 
       {/*
-        La `key` es lo que reinicia las casillas al cambiar de convocatoria.
-        Es la forma que recomienda React para volver a sembrar estado desde las
-        propiedades: remontar la pieza. Sincronizarlo con un efecto pintaría un
-        fotograma con los datos de la convocatoria anterior.
+        La `key` lleva dentro lo que dice el servidor, y no solo la
+        convocatoria elegida.
+        
+        Con la convocatoria sola, guardar volvía a montar esta pieza mientras
+        las propiedades eran todavía las de ANTES de guardar, así que las
+        casillas revertían a lo que había y parecía que no se hubiera guardado
+        nada. Incluyendo los datos en la clave, la pieza se vuelve a sembrar
+        solo cuando llegan de verdad datos nuevos: mientras tanto manda lo que
+        haya marcado quien está delante.
       */}
       <CamposDeAcceso
-        key={editionId}
+        key={`${editionId}|${claveDelServidor(concedido[editionId])}`}
         capacidades={capacidades}
         inicial={concedido[editionId]}
       />
@@ -122,6 +127,16 @@ export function AccesoForm({
   );
 }
 
+/** Lo que el servidor dice de una convocatoria, como texto comparable. */
+function claveDelServidor(acceso?: AccesoConcedido) {
+  if (!acceso) return "sin-acceso";
+  return [
+    [...acceso.capacidades].sort().join(","),
+    acceso.endsAt ?? "",
+    acceso.note ?? "",
+  ].join("|");
+}
+
 /** Las casillas y los dos campos que las acompañan, para una convocatoria. */
 function CamposDeAcceso({
   capacidades,
@@ -130,19 +145,31 @@ function CamposDeAcceso({
   capacidades: Capacidad[];
   inicial?: AccesoConcedido;
 }) {
-  const [marcadas, setMarcadas] = useState<string[]>(inicial?.capacidades ?? []);
+  /*
+   * Las casillas van sin controlar: el estado lo tiene el DOM.
+   *
+   * Una copia en React de lo que ya vive en el formulario es una copia que se
+   * puede perder en cualquier repintado, y aquí lo que se pierde es lo que
+   * alguien acababa de marcar. `cuantas` existe solo para el aviso de abajo;
+   * si se desincronizara, lo peor que pasa es que sobre o falte una frase.
+   */
+  const [cuantas, setCuantas] = useState(inicial?.capacidades.length ?? 0);
 
-  function alternar(codigo: string) {
-    setMarcadas((previas) =>
-      previas.includes(codigo)
-        ? previas.filter((c) => c !== codigo)
-        : [...previas, codigo],
+  function recontar(formulario: HTMLFieldSetElement | null) {
+    if (!formulario) return;
+    setCuantas(
+      formulario.querySelectorAll<HTMLInputElement>(
+        'input[name="capacidades"]:checked',
+      ).length,
     );
   }
 
   return (
     <>
-      <fieldset className="space-y-2">
+      <fieldset
+        className="space-y-2"
+        onChange={(e) => recontar(e.currentTarget)}
+      >
         <legend className="pb-1.5 text-sm font-medium text-ink">
           Herramientas
         </legend>
@@ -155,8 +182,7 @@ function CamposDeAcceso({
               type="checkbox"
               name="capacidades"
               value={capacidad.codigo}
-              checked={marcadas.includes(capacidad.codigo)}
-              onChange={() => alternar(capacidad.codigo)}
+              defaultChecked={inicial?.capacidades.includes(capacidad.codigo)}
               className="mt-0.5 size-4 shrink-0 accent-[var(--accent)]"
             />
             <span className="min-w-0">
@@ -192,7 +218,7 @@ function CamposDeAcceso({
         />
       </Field>
 
-      {marcadas.length === 0 ? (
+      {cuantas === 0 ? (
         <p className="text-xs leading-relaxed text-ink-muted">
           Sin ninguna marcada se le retira el acceso que le hubieras dado a mano
           en esta convocatoria. Lo que venga de una matrícula no se toca.
