@@ -5,7 +5,7 @@ import { z } from "zod";
 import { recordAudit } from "@/lib/audit";
 import { enviarFacturaAlCliente } from "./invoice-email";
 import { requirePermission } from "@/lib/auth/context";
-import { transaccionDeAcademia } from "@/lib/db/tenant";
+import { transaccionDeAcademia, type TenantClient } from "@/lib/db/tenant";
 import {
   aCentimos,
   calcularFactura,
@@ -564,6 +564,155 @@ const mensualSchema = z.object({
  *
  * No factura dos veces el mismo recibo: la factura queda enlazada a él.
  */
+type ReciboAFacturar = {
+  id: string;
+  concept: string;
+  amountCents: number;
+  dueDate: Date | null;
+  student: {
+    id: string;
+    user: { firstName: string; lastName: string | null; email: string };
+    studentProfile: {
+      nationalId: string | null;
+      address: string | null;
+      city: string | null;
+      postalCode: string | null;
+      province: string | null;
+    } | null;
+  };
+};
+
+type DatosDelEmisor = {
+  name: string;
+  legalName: string | null;
+  taxId: string | null;
+  email: string | null;
+};
+
+/**
+ * Convierte UN recibo en una factura emitida.
+ *
+ * Vive aparte porque la usan los dos caminos —facturar el mes entero y
+ * facturar un recibo suelto— y son cosas que no pueden divergir: si el mensual
+ * saca la base del IVA hacia atrás y el suelto no, el mismo alumno recibe dos
+ * facturas con importes distintos según por dónde se le facturó.
+ */
+async function facturarRecibo(
+  ctx: { academy: { id: string }; membershipId: string; db: TenantClient },
+  recibo: ReciboAFacturar,
+  opciones: {
+    seriesId: string;
+    taxRate: number;
+    exencion: string | null;
+    academia: DatosDelEmisor;
+    direccionAcademia: string;
+  },
+): Promise<{ id: string } | { error: string }> {
+  // El importe del recibo es lo que paga el alumno, impuestos incluidos. Si hay
+  // IVA, hay que sacar la base hacia atrás: facturar el importe como base le
+  // cobraría al alumno más de lo pactado.
+  const tipo = opciones.taxRate;
+  const baseUnitaria =
+    tipo === 0
+      ? recibo.amountCents
+      : Math.round((recibo.amountCents * 100) / (100 + tipo));
+
+  const totales = calcularFactura(
+    [
+      {
+        description: recibo.concept,
+        quantity: 1,
+        unitCents: baseUnitaria,
+        taxRate: tipo,
+      },
+    ],
+    0,
+  );
+
+  const numeracion = await reservarNumero(ctx.academy.id, opciones.seriesId);
+  if (!numeracion) return { error: "Esa serie de facturación no existe." };
+
+  const alumno = recibo.student;
+  const factura = await ctx.db.invoice.create({
+    data: {
+      seriesId: opciones.seriesId,
+      studentId: alumno.id,
+      paymentId: recibo.id,
+      number: numeracion.numero,
+      reference: referenciaFactura(numeracion.code, numeracion.year, numeracion.numero),
+      status: "ISSUED",
+      issuedOn: recibo.dueDate ?? new Date(),
+
+      issuerName: opciones.academia.legalName ?? opciones.academia.name,
+      issuerTaxId: opciones.academia.taxId,
+      issuerAddress: opciones.direccionAcademia || null,
+      issuerEmail: opciones.academia.email,
+
+      customerName: `${alumno.user.firstName} ${alumno.user.lastName ?? ""}`.trim(),
+      customerTaxId: alumno.studentProfile?.nationalId ?? null,
+      customerAddress:
+        [
+          alumno.studentProfile?.address,
+          alumno.studentProfile?.postalCode,
+          alumno.studentProfile?.city,
+          alumno.studentProfile?.province,
+        ]
+          .filter(Boolean)
+          .join(", ") || null,
+      customerEmail: alumno.user.email,
+
+      subtotalCents: totales.subtotalCents,
+      discountCents: 0,
+      taxableCents: totales.taxableCents,
+      taxCents: totales.taxCents,
+      totalCents: totales.totalCents,
+
+      exemptionNote: opciones.exencion,
+      createdById: ctx.membershipId,
+    },
+    select: { id: true },
+  });
+
+  await ctx.db.invoiceLine.createMany({
+    data: totales.lineas.map((linea, position) => ({
+      invoiceId: factura.id,
+      position,
+      description: linea.description,
+      quantity: linea.quantity,
+      unitCents: linea.unitCents,
+      taxRate: linea.taxRate,
+      baseCents: linea.baseCents,
+      taxCents: linea.taxCents,
+      totalCents: linea.totalCents,
+    })),
+  });
+
+  return { id: factura.id };
+}
+
+/** Lo que hace falta seleccionar de un recibo para poder facturarlo. */
+const SELECT_RECIBO = {
+  id: true,
+  concept: true,
+  amountCents: true,
+  dueDate: true,
+  student: {
+    select: {
+      id: true,
+      user: { select: { firstName: true, lastName: true, email: true } },
+      studentProfile: {
+        select: {
+          nationalId: true,
+          address: true,
+          city: true,
+          postalCode: true,
+          province: true,
+        },
+      },
+    },
+  },
+} as const;
+
 export async function issueMonthlyInvoicesAction(
   _prev: InvoiceState,
   formData: FormData,
@@ -625,27 +774,7 @@ export async function issueMonthlyInvoicesAction(
        */
       invoices: { none: { status: { not: "RECTIFIED" } } },
     },
-    select: {
-      id: true,
-      concept: true,
-      amountCents: true,
-      dueDate: true,
-      student: {
-        select: {
-          id: true,
-          user: { select: { firstName: true, lastName: true, email: true } },
-          studentProfile: {
-            select: {
-              nationalId: true,
-              address: true,
-              city: true,
-              postalCode: true,
-              province: true,
-            },
-          },
-        },
-      },
-    },
+    select: SELECT_RECIBO,
   });
 
   if (recibos.length === 0) {
@@ -662,86 +791,16 @@ export async function issueMonthlyInvoicesAction(
   const emitidasIds: string[] = [];
 
   for (const recibo of recibos) {
-    // El importe del recibo es lo que paga el alumno, impuestos incluidos. Si
-    // hay IVA, hay que sacar la base hacia atrás: facturar el importe como base
-    // le cobraría al alumno más de lo pactado.
-    const tipo = parsed.data.taxRate;
-    const baseUnitaria =
-      tipo === 0
-        ? recibo.amountCents
-        : Math.round((recibo.amountCents * 100) / (100 + tipo));
-
-    const totales = calcularFactura(
-      [
-        {
-          description: recibo.concept,
-          quantity: 1,
-          unitCents: baseUnitaria,
-          taxRate: tipo,
-        },
-      ],
-      0,
-    );
-
-    const numeracion = await reservarNumero(ctx.academy.id, parsed.data.seriesId);
-    if (!numeracion) return { error: "Esa serie de facturación no existe." };
-
-    const alumno = recibo.student;
-    const factura = await ctx.db.invoice.create({
-      data: {
-        seriesId: parsed.data.seriesId,
-        studentId: alumno.id,
-        paymentId: recibo.id,
-        number: numeracion.numero,
-        reference: referenciaFactura(numeracion.code, numeracion.year, numeracion.numero),
-        status: "ISSUED",
-        issuedOn: recibo.dueDate ?? new Date(),
-
-        issuerName: academia.legalName ?? academia.name,
-        issuerTaxId: academia.taxId,
-        issuerAddress: direccionAcademia || null,
-        issuerEmail: academia.email,
-
-        customerName: `${alumno.user.firstName} ${alumno.user.lastName ?? ""}`.trim(),
-        customerTaxId: alumno.studentProfile?.nationalId ?? null,
-        customerAddress:
-          [
-            alumno.studentProfile?.address,
-            alumno.studentProfile?.postalCode,
-            alumno.studentProfile?.city,
-            alumno.studentProfile?.province,
-          ]
-            .filter(Boolean)
-            .join(", ") || null,
-        customerEmail: alumno.user.email,
-
-        subtotalCents: totales.subtotalCents,
-        discountCents: 0,
-        taxableCents: totales.taxableCents,
-        taxCents: totales.taxCents,
-        totalCents: totales.totalCents,
-
-        exemptionNote: exencion?.texto ?? null,
-        createdById: ctx.membershipId,
-      },
-      select: { id: true },
+    const factura = await facturarRecibo(ctx, recibo, {
+      seriesId: parsed.data.seriesId,
+      taxRate: parsed.data.taxRate,
+      exencion: exencion?.texto ?? null,
+      academia,
+      direccionAcademia,
     });
+    if ("error" in factura) return factura;
+
     emitidasIds.push(factura.id);
-
-    await ctx.db.invoiceLine.createMany({
-      data: totales.lineas.map((linea, position) => ({
-        invoiceId: factura.id,
-        position,
-        description: linea.description,
-        quantity: linea.quantity,
-        unitCents: linea.unitCents,
-        taxRate: linea.taxRate,
-        baseCents: linea.baseCents,
-        taxCents: linea.taxCents,
-        totalCents: linea.totalCents,
-      })),
-    });
-
     emitidas += 1;
   }
 
@@ -787,6 +846,110 @@ export async function issueMonthlyInvoicesAction(
         }`;
 
   return { ok: true, mensaje: resumen };
+}
+
+const unSoloSchema = z.object({
+  paymentId: z.string().min(1),
+  seriesId: z.string().min(1, "Elige una serie."),
+  taxRate: z.coerce.number().min(0).max(21),
+  exemption: z.string().trim().optional(),
+});
+
+/**
+ * Facturar un recibo suelto, sin esperar al cierre del mes.
+ *
+ * Es el «cliente a cliente»: alguien pide su factura hoy, o entra un cobro
+ * fuera de la mensualidad y hay que facturarlo aparte. Usa exactamente el mismo
+ * camino que el botón mensual —misma numeración, mismo cálculo del IVA hacia
+ * atrás, mismo correo— para que la factura salga igual se emita por donde se
+ * emita.
+ */
+export async function issueInvoiceForPaymentAction(
+  _prev: InvoiceState,
+  formData: FormData,
+): Promise<InvoiceState> {
+  const ctx = await requirePermission("payments.write");
+  const parsed = unSoloSchema.safeParse(Object.fromEntries(formData.entries()));
+
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Revisa los datos." };
+  }
+
+  const exencion = MENCIONES_EXENCION.find((m) => m.valor === parsed.data.exemption);
+  if (parsed.data.taxRate === 0 && !exencion) {
+    return {
+      error:
+        "Vas a facturar al 0 % de IVA. Elige la mención de exención: una factura exenta tiene que decir por qué lo está.",
+    };
+  }
+
+  const academia = await ctx.db.academy.findUnique({
+    where: { id: ctx.academy.id },
+    select: {
+      name: true,
+      legalName: true,
+      taxId: true,
+      address: true,
+      city: true,
+      province: true,
+      email: true,
+    },
+  });
+  if (!academia?.taxId) {
+    return {
+      error:
+        "Falta el NIF de la academia. Complétalo en Pagos → Remesas antes de facturar.",
+    };
+  }
+
+  const recibo = await ctx.db.payment.findFirst({
+    where: {
+      id: parsed.data.paymentId,
+      deletedAt: null,
+      // La misma regla que el mensual: una factura rectificada está anulada y
+      // no cuenta, así que el recibo se puede volver a facturar.
+      invoices: { none: { status: { not: "RECTIFIED" } } },
+    },
+    select: SELECT_RECIBO,
+  });
+  if (!recibo) {
+    return { error: "Ese recibo no existe o ya tiene una factura en vigor." };
+  }
+
+  const factura = await facturarRecibo(ctx, recibo, {
+    seriesId: parsed.data.seriesId,
+    taxRate: parsed.data.taxRate,
+    exencion: exencion?.texto ?? null,
+    academia,
+    direccionAcademia: [academia.address, academia.city, academia.province]
+      .filter(Boolean)
+      .join(", "),
+  });
+  if ("error" in factura) return factura;
+
+  const envio = await enviarFacturaAlCliente(ctx.academy.id, factura.id);
+
+  await recordAudit({
+    academyId: ctx.academy.id,
+    actorId: ctx.user.id,
+    impersonatorId: ctx.impersonatedById,
+    action: "invoice.issue",
+    entityType: "Invoice",
+    entityId: factura.id,
+    changes: { paymentId: parsed.data.paymentId, enviada: envio.enviada },
+  });
+
+  revalidatePath("/gestion/pagos");
+  revalidatePath("/gestion/facturas");
+  revalidatePath(`/gestion/alumnos/${recibo.student.id}`);
+
+  return {
+    ok: true,
+    id: factura.id,
+    mensaje: envio.enviada
+      ? `Factura emitida y enviada a ${envio.destino}.`
+      : `Factura emitida, pero no se ha enviado: ${envio.motivo ?? "error de correo"}`,
+  };
 }
 
 /**

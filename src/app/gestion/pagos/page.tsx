@@ -18,6 +18,7 @@ import {
 import { formatCents, formatDate } from "@/lib/utils";
 import type { PaymentStatus } from "@/generated/prisma/enums";
 import { PaymentForm } from "./payment-form";
+import { FacturarRecibo } from "./facturar-recibo";
 
 export const metadata: Metadata = { title: "Pagos" };
 
@@ -75,6 +76,13 @@ export default async function PagosPage({
         dueDate: true,
         paidAt: true,
         receiptNo: true,
+        // Solo cuentan las que siguen en vigor: una rectificada está anulada y
+        // el recibo vuelve a estar pendiente de facturar.
+        invoices: {
+          where: { status: { not: "RECTIFIED" } },
+          select: { id: true, reference: true },
+          take: 1,
+        },
         student: {
           select: {
             id: true,
@@ -107,6 +115,17 @@ export default async function PagosPage({
     resumen.find((r) => r.status === "FAILED")?._sum.amountCents ?? 0;
 
   const puedeEscribir = ctx.permissions.has("payments.write");
+
+  // Las series de facturación, para poder facturar un recibo sin salir de aquí.
+  const series = puedeEscribir
+    ? (
+        await ctx.db.invoiceSeries.findMany({
+          where: { isRectifying: false },
+          orderBy: [{ year: "desc" }, { code: "asc" }],
+          select: { id: true, code: true, year: true },
+        })
+      ).map((serie) => ({ id: serie.id, etiqueta: `${serie.code} · ${serie.year}` }))
+    : [];
 
   return (
     <>
@@ -231,6 +250,22 @@ export default async function PagosPage({
                               </Button>
                             </form>
                           ) : null}
+                          {/*
+                            Facturar sin esperar al cierre del mes. Si ya tiene
+                            factura en vigor, se enseña cuál en lugar del botón:
+                            la pregunta que trae a alguien a esta fila suele ser
+                            «¿esto está facturado?».
+                          */}
+                          {pago.invoices.length > 0 ? (
+                            <Link
+                              href={`/gestion/facturas/${pago.invoices[0].id}`}
+                              className="self-center text-xs font-medium text-accent hover:underline"
+                            >
+                              {pago.invoices[0].reference ?? "Ver factura"}
+                            </Link>
+                          ) : (
+                            <FacturarRecibo paymentId={pago.id} series={series} />
+                          )}
                         </div>
                       </Td>
                     ) : null}
