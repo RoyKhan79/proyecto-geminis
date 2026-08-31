@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { QuickLinks } from "@/components/campus/quick-links";
 import { PlanDelDia } from "@/components/campus/plan-del-dia";
 import { proponerPlanDelDia } from "@/server/ai/insights";
-import { Card, CardContent, EmptyState } from "@/components/ui/primitives";
+import { Card, CardContent, EmptyState, IconTile } from "@/components/ui/primitives";
 import { formatDateTime } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Inicio" };
@@ -135,9 +135,9 @@ export default async function CampusHomePage() {
               <Card>
                 <CardContent className="space-y-3 p-4 pt-4">
                   <div className="flex items-start gap-3">
-                    <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-full bg-accent-soft text-accent">
-                      <CalendarClock className="size-4" aria-hidden />
-                    </span>
+                    <IconTile tone="rose" size="sm" className="mt-0.5 size-9">
+                      <CalendarClock />
+                    </IconTile>
                     <div className="min-w-0">
                       <p className="font-medium text-ink">{proxima.title}</p>
                       <p className="text-sm text-ink-muted">
@@ -174,7 +174,9 @@ export default async function CampusHomePage() {
 
           <Card className="border-dashed">
             <CardContent className="flex items-center gap-3 p-4 pt-4">
-              <Sparkles className="size-4 shrink-0 text-accent" aria-hidden />
+              <IconTile tone="violet" size="sm">
+                <Sparkles />
+              </IconTile>
               <p className="text-sm text-ink-muted">
                 La IA de Proyecto Geminis llegará en una próxima fase y responderá con el
                 material de tu academia, citando siempre de dónde sale cada dato.

@@ -8,7 +8,8 @@ import {
   MessageSquare,
   Video,
 } from "lucide-react";
-import { Card } from "@/components/ui/primitives";
+import { Card, IconTile } from "@/components/ui/primitives";
+import { resolveSectionIcon } from "@/components/ui/section-icons";
 
 /**
  * Accesos rápidos del Campus.
@@ -42,9 +43,17 @@ export function QuickLinks() {
             <Link
               key={enlace.href}
               href={enlace.href}
-              className="flex flex-col items-center gap-1.5 bg-surface px-1 py-3 text-center transition-colors hover:bg-surface-muted"
+              className="group flex flex-col items-center gap-1.5 bg-surface px-1 py-3 text-center transition-colors hover:bg-surface-muted"
             >
-              <Icon className="size-5 text-accent" aria-hidden />
+              {/*
+                Cada acceso con el color de su sección, el mismo que tendrá
+                dentro. Siete iconos del mismo azul se leen como una fila de
+                siete cosas iguales; con su color, cada uno se busca por lo que
+                es y el pulgar acierta a la primera.
+              */}
+              <IconTile tone={resolveSectionIcon(enlace.href)?.tone} size="md">
+                <Icon />
+              </IconTile>
               <span className="text-[0.6875rem] font-medium text-ink">
                 {enlace.label}
               </span>

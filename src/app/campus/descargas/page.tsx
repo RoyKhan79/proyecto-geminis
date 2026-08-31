@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { requireAcademy } from "@/lib/auth/context";
 import { construirMochila } from "@/server/campus/mochila";
 import { MochilaPanel } from "./mochila-panel";
+import { CampusTitulo } from "@/components/campus/titulo";
 
 export const metadata: Metadata = { title: "Descargas" };
 
@@ -24,7 +25,7 @@ export default async function DescargasPage() {
   return (
     <>
       <div className="space-y-1">
-        <h1 className="text-xl font-semibold tracking-tight text-ink">Descargas</h1>
+        <CampusTitulo>Descargas</CampusTitulo>
         <p className="text-sm text-ink-muted">
           Guarda los temas en este dispositivo y estudia aunque te quedes sin
           cobertura. Se actualizan solos cuando tu academia publica una versión

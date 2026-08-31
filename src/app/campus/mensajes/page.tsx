@@ -7,6 +7,7 @@ import { Badge, Card, EmptyState } from "@/components/ui/primitives";
 import { NewThread } from "@/components/messaging/new-thread";
 import { ThreadView } from "@/components/messaging/thread-view";
 import { formatDateTime } from "@/lib/utils";
+import { CampusTitulo } from "@/components/campus/titulo";
 
 export const metadata: Metadata = { title: "Mensajes" };
 
@@ -56,7 +57,7 @@ export default async function MensajesCampusPage({
   return (
     <>
       <div className="flex items-center justify-between gap-3">
-        <h1 className="text-xl font-semibold tracking-tight text-ink">Mensajes</h1>
+        <CampusTitulo>Mensajes</CampusTitulo>
         <NewThread
           profesores={profesores.map((p) => ({
             id: p.id,

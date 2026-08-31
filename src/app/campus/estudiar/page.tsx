@@ -8,6 +8,7 @@ import {
   loadStudentEditions,
 } from "@/server/campus/queries";
 import { Card, CardContent, EmptyState } from "@/components/ui/primitives";
+import { CampusTitulo } from "@/components/campus/titulo";
 
 export const metadata: Metadata = { title: "Estudiar" };
 
@@ -50,7 +51,7 @@ export default async function EstudiarPage() {
 
   return (
     <>
-      <h1 className="text-xl font-semibold tracking-tight text-ink">Estudiar</h1>
+      <CampusTitulo>Estudiar</CampusTitulo>
 
       {bloques.map(({ edicion, secciones }) => (
         <section key={edicion.id} className="space-y-2">

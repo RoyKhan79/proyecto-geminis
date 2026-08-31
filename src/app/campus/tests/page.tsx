@@ -27,9 +27,11 @@ import {
   Card,
   CardContent,
   EmptyState,
+  IconTile,
   Select,
 } from "@/components/ui/primitives";
 import { formatDateTime } from "@/lib/utils";
+import { CampusTitulo } from "@/components/campus/titulo";
 
 export const metadata: Metadata = { title: "Tests" };
 
@@ -74,7 +76,7 @@ export default async function CampusTestsPage({
 
   return (
     <>
-      <h1 className="text-xl font-semibold tracking-tight text-ink">Tests</h1>
+      <CampusTitulo>Tests</CampusTitulo>
 
       {aviso ? (
         <div
@@ -99,7 +101,9 @@ export default async function CampusTestsPage({
             <Card className="border-accent">
               <CardContent className="space-y-3 p-4 pt-4">
                 <div className="flex items-center gap-2">
-                  <BrainCircuit className="size-4 text-accent" aria-hidden />
+                  <IconTile tone="violet" size="sm">
+                    <BrainCircuit />
+                  </IconTile>
                   <p className="text-sm font-medium text-ink">
                     Repaso de hoy · {pendientesRepaso}{" "}
                     {pendientesRepaso === 1 ? "pregunta" : "preguntas"}
@@ -128,7 +132,9 @@ export default async function CampusTestsPage({
           <Card>
             <CardContent className="space-y-4 p-4 pt-4">
               <div className="flex items-center gap-2">
-                <Target className="size-4 text-accent" aria-hidden />
+                <IconTile tone="sky" size="sm">
+                  <Target />
+                </IconTile>
                 <p className="text-sm font-medium text-ink">Test por tema</p>
               </div>
 
@@ -160,7 +166,9 @@ export default async function CampusTestsPage({
             <Card>
               <CardContent className="space-y-3 p-4 pt-4">
                 <div className="flex items-center gap-2">
-                  <Shuffle className="size-4 text-accent" aria-hidden />
+                  <IconTile tone="teal" size="sm">
+                    <Shuffle />
+                  </IconTile>
                   <p className="text-sm font-medium text-ink">Test aleatorio</p>
                 </div>
                 <p className="text-xs text-ink-muted">
@@ -179,7 +187,9 @@ export default async function CampusTestsPage({
             <Card className={falladas > 0 ? "border-caution" : undefined}>
               <CardContent className="space-y-3 p-4 pt-4">
                 <div className="flex items-center gap-2">
-                  <AlertTriangle className="size-4 text-caution" aria-hidden />
+                  <IconTile tone="amber" size="sm">
+                    <AlertTriangle />
+                  </IconTile>
                   <p className="text-sm font-medium text-ink">Test de mis errores</p>
                 </div>
                 <p className="text-xs text-ink-muted">

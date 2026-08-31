@@ -6,6 +6,7 @@ import { loadStudentExams } from "@/server/exams/queries";
 import { Badge, Card, CardContent, EmptyState } from "@/components/ui/primitives";
 import { Button } from "@/components/ui/button";
 import { formatDateTime } from "@/lib/utils";
+import { CampusTitulo } from "@/components/campus/titulo";
 
 export const metadata: Metadata = { title: "Exámenes" };
 
@@ -23,7 +24,7 @@ export default async function ExamenesCampusPage() {
   if (examenes.length === 0) {
     return (
       <>
-        <h1 className="text-xl font-semibold tracking-tight text-ink">Exámenes</h1>
+        <CampusTitulo>Exámenes</CampusTitulo>
         <Card>
           <EmptyState
             icon={<FileSignature className="size-5" />}
@@ -37,7 +38,7 @@ export default async function ExamenesCampusPage() {
 
   return (
     <>
-      <h1 className="text-xl font-semibold tracking-tight text-ink">Exámenes</h1>
+      <CampusTitulo>Exámenes</CampusTitulo>
 
       {examenes.map((examen) => {
         const { estado } = examen;

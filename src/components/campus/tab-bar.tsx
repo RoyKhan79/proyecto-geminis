@@ -4,18 +4,49 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { BookOpen, Home, ListChecks, Megaphone, UserRound } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { iconToneText, type IconTone } from "@/components/ui/primitives";
 
 /**
  * Barra inferior del Campus (§44).
  * Cinco destinos como máximo, iconos grandes y área táctil cómoda. Lo que aún
  * no existe se marca como "Pronto" en lugar de llevar a una pantalla vacía.
  */
-const TABS = [
-  { label: "Inicio", href: "/campus", icon: Home, ready: true },
-  { label: "Estudiar", href: "/campus/estudiar", icon: BookOpen, ready: true },
-  { label: "Tests", href: "/campus/tests", icon: ListChecks, ready: true },
-  { label: "Muro", href: "/campus/muro", icon: Megaphone, ready: true },
-  { label: "Perfil", href: "/campus/perfil", icon: UserRound, ready: true },
+const TABS: {
+  label: string;
+  href: string;
+  icon: typeof Home;
+  tone: IconTone;
+  ready: boolean;
+}[] = [
+  { label: "Inicio", href: "/campus", icon: Home, tone: "brand", ready: true },
+  {
+    label: "Estudiar",
+    href: "/campus/estudiar",
+    icon: BookOpen,
+    tone: "sky",
+    ready: true,
+  },
+  {
+    label: "Tests",
+    href: "/campus/tests",
+    icon: ListChecks,
+    tone: "emerald",
+    ready: true,
+  },
+  {
+    label: "Muro",
+    href: "/campus/muro",
+    icon: Megaphone,
+    tone: "amber",
+    ready: true,
+  },
+  {
+    label: "Perfil",
+    href: "/campus/perfil",
+    icon: UserRound,
+    tone: "violet",
+    ready: true,
+  },
 ];
 
 /**
@@ -62,13 +93,22 @@ export function CampusTabBar() {
                   // barra de cinco destinos, un cambio de color solo no basta
                   // para saber dónde estás de un vistazo y con prisa.
                   "touch-target flex flex-col items-center justify-center gap-1 py-2 transition-colors",
-                  active ? "text-accent" : "text-ink-muted hover:text-ink",
+                  active
+                    ? iconToneText[tab.tone]
+                    : "text-ink-muted hover:text-ink",
                 )}
               >
+                {/*
+                  Cada destino tiene su color y solo lo enciende cuando estás
+                  en él. Cinco pastillas de colores encendidas a la vez no
+                  dicen dónde estás; una sí.
+                */}
                 <span
+                  data-tone={tab.tone}
+                  data-shape="round"
                   className={cn(
                     "flex h-7 w-11 items-center justify-center rounded-full transition-colors",
-                    active && "bg-accent-soft",
+                    active && "icon-chip",
                   )}
                 >
                   <Icon

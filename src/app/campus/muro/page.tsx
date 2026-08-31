@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { requireAcademy } from "@/lib/auth/context";
 import { loadWall } from "@/server/wall/actions";
 import { Wall, type PublicacionMuro } from "@/components/wall/wall";
+import { CampusTitulo } from "@/components/campus/titulo";
 
 export const metadata: Metadata = { title: "Muro" };
 
@@ -34,7 +35,7 @@ export default async function MuroCampusPage() {
 
   return (
     <>
-      <h1 className="text-xl font-semibold tracking-tight text-ink">Muro</h1>
+      <CampusTitulo>Muro</CampusTitulo>
       <Wall
         publicaciones={datos}
         grupos={ambitos.grupos}

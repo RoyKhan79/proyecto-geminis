@@ -4,6 +4,7 @@ import { requireAcademy } from "@/lib/auth/context";
 import { loadStudentEditions } from "@/server/campus/queries";
 import { Card, CardContent, EmptyState } from "@/components/ui/primitives";
 import { formatDate } from "@/lib/utils";
+import { CampusTitulo } from "@/components/campus/titulo";
 
 export const metadata: Metadata = { title: "Calendario" };
 
@@ -65,7 +66,7 @@ export default async function CalendarioPage() {
 
   return (
     <>
-      <h1 className="text-xl font-semibold tracking-tight text-ink">Calendario</h1>
+      <CampusTitulo>Calendario</CampusTitulo>
 
       {clases.length === 0 ? (
         <Card>

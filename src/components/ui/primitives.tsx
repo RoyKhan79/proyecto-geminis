@@ -1,6 +1,7 @@
 import * as React from "react";
 import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
+import { SectionIcon, SectionTile } from "./section-icon";
 
 /**
  * Piezas básicas de la interfaz: tarjeta, campo, etiqueta, distintivo, tabla y
@@ -22,10 +23,12 @@ export function Card({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       className={cn(
-        // Sin `border`: el borde lo pone el anillo de la sombra, que es de un
-        // píxel y del color de la marca en lugar de gris. Un borde de verdad
-        // más una sombra dan dos líneas donde debería haber una.
-        "edge-light rounded-[var(--radius-card)] bg-surface",
+        // El borde va transparente: la línea que se ve la pone el anillo de la
+        // sombra, que es de un píxel y del color de la marca en lugar de gris.
+        // Pero la caja sigue reservando ese píxel, para que una tarjeta que
+        // necesite señalar algo —`border-caution` en un lote sin ejecutar,
+        // `border-dashed` en un vacío— solo tenga que cambiarle el color.
+        "edge-light rounded-[var(--radius-card)] border border-transparent bg-surface",
         className,
       )}
       {...props}
@@ -124,11 +127,11 @@ export function Label({
  * sólido de uno que tiembla.
  */
 const fieldStyles =
-  "w-full rounded-[var(--radius-control)] border border-line bg-surface px-3.5 py-2 text-sm text-ink shadow-[inset_0_1px_2px_0_oklch(0.27_0.05_265/0.04)] transition-[box-shadow,border-color] placeholder:text-ink-muted focus:border-accent/40 focus:outline-none focus:ring-[3px] focus:ring-accent/15 disabled:cursor-not-allowed disabled:opacity-60 aria-[invalid=true]:border-critical aria-[invalid=true]:focus:ring-critical/15";
+  "w-full rounded-[var(--radius-control)] border border-line bg-surface px-3.5 py-2 text-sm text-ink shadow-[inset_0_1px_2px_0_oklch(0.27_0.05_265/0.04)] transition-[box-shadow,border-color] placeholder:text-ink-muted focus:border-accent/40 focus:ring-[3px] focus:ring-accent/15 disabled:cursor-not-allowed disabled:opacity-60 aria-[invalid=true]:border-critical aria-[invalid=true]:focus:ring-critical/15";
 
 /** Campo de texto, con los estados de foco y error del sistema de diseño. */
 export function Input({ className, ...props }: React.ComponentProps<"input">) {
-  return <input className={cn(fieldStyles, "h-11", className)} {...props} />;
+  return <input className={cn(fieldStyles, "h-10", className)} {...props} />;
 }
 
 /** Campo de texto largo. Se puede estirar en vertical, no en horizontal. */
@@ -144,7 +147,7 @@ export function Textarea({
 /** Desplegable nativo. Nativo a propósito: en el móvil es mucho mejor que uno hecho a mano. */
 export function Select({ className, ...props }: React.ComponentProps<"select">) {
   return (
-    <select className={cn(fieldStyles, "h-11 pr-8", className)} {...props} />
+    <select className={cn(fieldStyles, "h-10 pr-8", className)} {...props} />
   );
 }
 
@@ -265,6 +268,83 @@ export function Td({ className, ...props }: React.ComponentProps<"td">) {
   );
 }
 
+
+// ── Icono con color ──────────────────────────────────────────────────────────
+
+/**
+ * Las familias de color de los iconos.
+ *
+ * No son estados —para eso están `positive`, `caution` y `critical`— sino
+ * identidad: cada área de la aplicación tiene su tinte y se reconoce de un
+ * vistazo, que es lo que hace navegable una barra lateral de treinta destinos.
+ * El dorado sigue reservado a lo conseguido.
+ */
+export const ICON_TONES = [
+  "brand",
+  "indigo",
+  "violet",
+  "rose",
+  "amber",
+  "emerald",
+  "teal",
+  "sky",
+  "gold",
+] as const;
+
+export type IconTone = (typeof ICON_TONES)[number];
+
+/** El tinte aplicado al trazo del icono, sin pastilla debajo. */
+export const iconToneText: Record<IconTone, string> = {
+  brand: "text-icon-brand",
+  indigo: "text-icon-indigo",
+  violet: "text-icon-violet",
+  rose: "text-icon-rose",
+  amber: "text-icon-amber",
+  emerald: "text-icon-emerald",
+  teal: "text-icon-teal",
+  sky: "text-icon-sky",
+  gold: "text-gold",
+};
+
+const tileSizes = {
+  sm: "size-8 [&_svg]:size-4",
+  md: "size-10 [&_svg]:size-[1.15rem]",
+  lg: "size-12 [&_svg]:size-[1.35rem]",
+  xl: "size-14 [&_svg]:size-6",
+} as const;
+
+/**
+ * El icono dentro de su pastilla de color.
+ *
+ * `fill="solid"` es la versión de portada —tinte lleno y luz propia debajo—,
+ * para el icono que encabeza una pantalla o corona una tarjeta destacada. En
+ * una lista de diez elementos satura; ahí va la suave.
+ */
+export function IconTile({
+  tone,
+  fill,
+  size = "md",
+  className,
+  children,
+  ...props
+}: React.ComponentProps<"span"> & {
+  tone?: IconTone;
+  fill?: "soft" | "solid";
+  size?: keyof typeof tileSizes;
+}) {
+  return (
+    <span
+      aria-hidden
+      data-tone={tone}
+      data-fill={fill === "solid" ? "solid" : undefined}
+      className={cn("icon-chip", tileSizes[size], className)}
+      {...props}
+    >
+      {children}
+    </span>
+  );
+}
+
 // ── Estados ──────────────────────────────────────────────────────────────────
 
 /**
@@ -275,11 +355,18 @@ export function Td({ className, ...props }: React.ComponentProps<"td">) {
  */
 export function EmptyState({
   icon,
+  tone,
   title,
   description,
   action,
 }: {
   icon?: React.ReactNode;
+  /**
+   * El color de la pastilla. Sin él lo pone la sección en la que está la
+   * pantalla, que es lo que se quiere casi siempre: el vacío de «Tests» se ve
+   * verde como el resto de Tests sin que esta pantalla tenga que decirlo.
+   */
+  tone?: IconTone;
   title: string;
   description?: string;
   action?: React.ReactNode;
@@ -287,7 +374,13 @@ export function EmptyState({
   return (
     <div className="flex flex-col items-center justify-center gap-4 px-6 py-16 text-center">
       {icon ? (
-        <div className="icon-chip size-14 [&_svg]:size-[1.35rem]">{icon}</div>
+        tone ? (
+          <IconTile tone={tone} size="xl">
+            {icon}
+          </IconTile>
+        ) : (
+          <SectionTile className="size-14 [&_svg]:size-6">{icon}</SectionTile>
+        )
       ) : null}
       <div className="space-y-1.5">
         <p className="font-display text-[1.0625rem] font-semibold tracking-[-0.01em] text-ink">
@@ -320,16 +413,32 @@ export function PageHeader({
   description,
   actions,
   breadcrumb,
+  icon,
+  tone,
 }: {
   title: string;
   description?: string;
   actions?: React.ReactNode;
   breadcrumb?: React.ReactNode;
+  /**
+   * El icono de la cabecera. Por defecto lo pone la propia sección —sale de
+   * `section-icons`, el mismo sitio del que sale el de la barra lateral—, así
+   * que solo hay que pasarlo aquí para una pantalla que no está en el menú.
+   */
+  icon?: React.ReactNode;
+  tone?: IconTone;
 }) {
   return (
     <header className="flex flex-col gap-4 pb-1 sm:flex-row sm:items-end sm:justify-between">
       <div className="min-w-0 space-y-2">
         {breadcrumb}
+        {icon ? (
+          <IconTile tone={tone} fill="solid" size="lg" data-block="true" className="mb-0.5">
+            {icon}
+          </IconTile>
+        ) : (
+          <SectionIcon className="mb-0.5" />
+        )}
         {/*
           El titular va en la serif de la marca y con el interletrado cerrado.
           A este tamaño, una sans a espaciado normal se lee como el texto de un

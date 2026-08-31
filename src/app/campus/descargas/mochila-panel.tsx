@@ -26,7 +26,7 @@ import {
   type TemaDescargable,
 } from "@/lib/campus/mochila-cliente";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, EmptyState } from "@/components/ui/primitives";
+import { Card, CardContent, EmptyState, IconTile } from "@/components/ui/primitives";
 
 /**
  * LA MOCHILA
@@ -188,9 +188,9 @@ export function MochilaPanel({
     <div className="space-y-4">
       <Card>
         <CardContent className="flex flex-wrap items-center gap-3 p-4 pt-4">
-          <div className="icon-chip size-10 [&_svg]:size-4">
-            <HardDrive aria-hidden />
-          </div>
+          <IconTile tone="teal" size="md">
+            <HardDrive />
+          </IconTile>
           <div className="flex-1">
             <p className="text-sm font-medium text-ink">
               {guardados.size === 0

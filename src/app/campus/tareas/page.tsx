@@ -5,6 +5,7 @@ import { Badge, Card, CardContent, EmptyState } from "@/components/ui/primitives
 import { loadStudentTasks } from "@/server/tasks/queries";
 import { formatDate } from "@/lib/utils";
 import { SubmitForm } from "./submit-form";
+import { CampusTitulo } from "@/components/campus/titulo";
 
 export const metadata: Metadata = { title: "Tareas" };
 
@@ -27,7 +28,7 @@ export default async function TareasCampusPage() {
 
   return (
     <>
-      <h1 className="text-xl font-semibold tracking-tight text-ink">Tareas</h1>
+      <CampusTitulo>Tareas</CampusTitulo>
 
       {visibles.length === 0 ? (
         <Card>

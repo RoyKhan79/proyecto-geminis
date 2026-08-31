@@ -136,6 +136,33 @@
 
   --ring: var(--color-brand-500);
 
+  /* ── FAMILIAS DE ICONO ───────────────────────────────────────────────────
+   * Ocho tintes para los iconos de navegación y de las pastillas. No son
+   * estados —eso lo dicen `positive`, `caution`, `critical`— sino identidad:
+   * cada área de la aplicación tiene su color y se reconoce de un vistazo en
+   * una barra lateral de treinta destinos.
+   *
+   * Todos comparten claridad y croma y solo cambian de tono, así que conviven
+   * sin que ninguno grite más que los demás. Se usan por su nombre desde
+   * `.icon-chip[data-tone]`; ninguna pantalla escribe un color a mano (§79).
+   */
+  --icon-brand: oklch(0.52 0.155 265);
+  --icon-brand-soft: oklch(0.965 0.035 265);
+  --icon-indigo: oklch(0.52 0.155 288);
+  --icon-indigo-soft: oklch(0.965 0.035 288);
+  --icon-violet: oklch(0.52 0.155 312);
+  --icon-violet-soft: oklch(0.965 0.035 312);
+  --icon-rose: oklch(0.52 0.155 12);
+  --icon-rose-soft: oklch(0.965 0.035 12);
+  --icon-amber: oklch(0.52 0.155 70);
+  --icon-amber-soft: oklch(0.965 0.035 70);
+  --icon-emerald: oklch(0.52 0.155 150);
+  --icon-emerald-soft: oklch(0.965 0.035 150);
+  --icon-teal: oklch(0.52 0.155 195);
+  --icon-teal-soft: oklch(0.965 0.035 195);
+  --icon-sky: oklch(0.52 0.155 235);
+  --icon-sky-soft: oklch(0.965 0.035 235);
+
   /* Fondo de las carcasas: un degradado larguísimo y de muy poca saturación.
    * No debe leerse como "un degradado"; debe leerse como papel. */
   --shell-wash: radial-gradient(
@@ -172,6 +199,25 @@
 
     --gold: var(--color-gold-300);
     --gold-soft: oklch(0.32 0.05 80);
+
+    /* En oscuro los tintes suben de claridad y bajan de croma: un color
+     * saturado sobre fondo oscuro vibra y cansa a las dos horas. */
+    --icon-brand: oklch(0.8 0.115 265);
+    --icon-brand-soft: oklch(0.305 0.055 265);
+    --icon-indigo: oklch(0.8 0.115 288);
+    --icon-indigo-soft: oklch(0.305 0.055 288);
+    --icon-violet: oklch(0.8 0.115 312);
+    --icon-violet-soft: oklch(0.305 0.055 312);
+    --icon-rose: oklch(0.8 0.115 12);
+    --icon-rose-soft: oklch(0.305 0.055 12);
+    --icon-amber: oklch(0.8 0.115 70);
+    --icon-amber-soft: oklch(0.305 0.055 70);
+    --icon-emerald: oklch(0.8 0.115 150);
+    --icon-emerald-soft: oklch(0.305 0.055 150);
+    --icon-teal: oklch(0.8 0.115 195);
+    --icon-teal-soft: oklch(0.305 0.055 195);
+    --icon-sky: oklch(0.8 0.115 235);
+    --icon-sky-soft: oklch(0.305 0.055 235);
 
     /* En oscuro la profundidad no la da la sombra —sobre un fondo oscuro
      * apenas se ve— sino el anillo y el brillo superior. Se invierte el peso:
@@ -218,6 +264,23 @@
   --gold: var(--color-gold-300);
   --gold-soft: oklch(0.32 0.05 80);
 
+  --icon-brand: oklch(0.8 0.115 265);
+  --icon-brand-soft: oklch(0.305 0.055 265);
+  --icon-indigo: oklch(0.8 0.115 288);
+  --icon-indigo-soft: oklch(0.305 0.055 288);
+  --icon-violet: oklch(0.8 0.115 312);
+  --icon-violet-soft: oklch(0.305 0.055 312);
+  --icon-rose: oklch(0.8 0.115 12);
+  --icon-rose-soft: oklch(0.305 0.055 12);
+  --icon-amber: oklch(0.8 0.115 70);
+  --icon-amber-soft: oklch(0.305 0.055 70);
+  --icon-emerald: oklch(0.8 0.115 150);
+  --icon-emerald-soft: oklch(0.305 0.055 150);
+  --icon-teal: oklch(0.8 0.115 195);
+  --icon-teal-soft: oklch(0.305 0.055 195);
+  --icon-sky: oklch(0.8 0.115 235);
+  --icon-sky-soft: oklch(0.305 0.055 235);
+
   /* En oscuro la profundidad no la da la sombra —sobre un fondo oscuro
    * apenas se ve— sino el anillo y el brillo superior. Se invierte el peso:
    * más anillo, menos difusión. */
@@ -263,6 +326,22 @@
   --color-gold: var(--gold);
   --color-gold-soft: var(--gold-soft);
   --color-ring: var(--ring);
+  --color-icon-brand: var(--icon-brand);
+  --color-icon-brand-soft: var(--icon-brand-soft);
+  --color-icon-indigo: var(--icon-indigo);
+  --color-icon-indigo-soft: var(--icon-indigo-soft);
+  --color-icon-violet: var(--icon-violet);
+  --color-icon-violet-soft: var(--icon-violet-soft);
+  --color-icon-rose: var(--icon-rose);
+  --color-icon-rose-soft: var(--icon-rose-soft);
+  --color-icon-amber: var(--icon-amber);
+  --color-icon-amber-soft: var(--icon-amber-soft);
+  --color-icon-emerald: var(--icon-emerald);
+  --color-icon-emerald-soft: var(--icon-emerald-soft);
+  --color-icon-teal: var(--icon-teal);
+  --color-icon-teal-soft: var(--icon-teal-soft);
+  --color-icon-sky: var(--icon-sky);
+  --color-icon-sky-soft: var(--icon-sky-soft);
 }
 
 @layer base {
@@ -339,21 +418,138 @@
     background-attachment: fixed;
   }
 
-  /* Chip de icono: el icono dentro de una pastilla suave. Da jerarquía sin
-   * necesidad de más color ni más peso tipográfico. */
+  /* ── Chip de icono ───────────────────────────────────────────────────────
+   *
+   * El icono dentro de una pastilla de color. Da jerarquía sin subir el peso
+   * tipográfico ni añadir más texto.
+   *
+   * El tinte se elige con `data-tone` y por defecto es el acento de la
+   * academia, así que un chip sin tono sigue siendo white-label. Dentro no hay
+   * un color plano: hay un degradado corto, un anillo interior del propio
+   * tinte y una línea de luz arriba. Es lo que separa una pastilla impresa de
+   * una pastilla con volumen.
+   */
   .icon-chip {
+    --chip: var(--accent);
+    --chip-soft: var(--accent-soft);
+
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    flex: none;
     border-radius: var(--radius-inner);
     background: linear-gradient(
       to bottom,
-      color-mix(in oklab, var(--accent-soft) 92%, white),
-      var(--accent-soft)
+      color-mix(in oklab, var(--chip-soft) 88%, white),
+      var(--chip-soft)
     );
-    color: var(--accent);
+    color: var(--chip);
     box-shadow:
-      inset 0 0 0 1px color-mix(in oklab, var(--accent) 14%, transparent),
+      inset 0 0 0 1px color-mix(in oklab, var(--chip) 16%, transparent),
+      inset 0 1px 0 0 oklch(1 0 0 / 0.5);
+  }
+
+  /* En oscuro el degradado se aclara hacia arriba con el propio tinte, no con
+   * blanco: mezclar blanco sobre un fondo oscuro lo deja lechoso. */
+  @media (prefers-color-scheme: dark) {
+    :where(:root:not([data-theme="light"])) .icon-chip {
+      background: linear-gradient(
+        to bottom,
+        color-mix(in oklab, var(--chip-soft) 86%, var(--chip)),
+        var(--chip-soft)
+      );
+      box-shadow:
+        inset 0 0 0 1px color-mix(in oklab, var(--chip) 26%, transparent),
+        inset 0 1px 0 0 oklch(1 0 0 / 0.07);
+    }
+  }
+  :where(:root[data-theme="dark"]) .icon-chip {
+    background: linear-gradient(
+      to bottom,
+      color-mix(in oklab, var(--chip-soft) 86%, var(--chip)),
+      var(--chip-soft)
+    );
+    box-shadow:
+      inset 0 0 0 1px color-mix(in oklab, var(--chip) 26%, transparent),
+      inset 0 1px 0 0 oklch(1 0 0 / 0.07);
+  }
+
+  /* Las ocho familias. Un solo sitio: si una academia cambia su paleta, cambia
+   * aquí y no en treinta pantallas. */
+  .icon-chip[data-tone="brand"] {
+    --chip: var(--icon-brand);
+    --chip-soft: var(--icon-brand-soft);
+  }
+  .icon-chip[data-tone="indigo"] {
+    --chip: var(--icon-indigo);
+    --chip-soft: var(--icon-indigo-soft);
+  }
+  .icon-chip[data-tone="violet"] {
+    --chip: var(--icon-violet);
+    --chip-soft: var(--icon-violet-soft);
+  }
+  .icon-chip[data-tone="rose"] {
+    --chip: var(--icon-rose);
+    --chip-soft: var(--icon-rose-soft);
+  }
+  .icon-chip[data-tone="amber"] {
+    --chip: var(--icon-amber);
+    --chip-soft: var(--icon-amber-soft);
+  }
+  .icon-chip[data-tone="emerald"] {
+    --chip: var(--icon-emerald);
+    --chip-soft: var(--icon-emerald-soft);
+  }
+  .icon-chip[data-tone="teal"] {
+    --chip: var(--icon-teal);
+    --chip-soft: var(--icon-teal-soft);
+  }
+  .icon-chip[data-tone="sky"] {
+    --chip: var(--icon-sky);
+    --chip-soft: var(--icon-sky-soft);
+  }
+  /* En una cabecera la pastilla ocupa su propia línea. Por defecto es de
+   * línea, y al lado de unas migas —que también lo son— se sienta junto a
+   * ellas en vez de colocarse encima del titular. Va por atributo para ganarle
+   * en especificidad a cualquier utilidad de display que llegue después. */
+  .icon-chip[data-block="true"] {
+    display: flex;
+  }
+
+  /* Redonda del todo. Para la barra inferior del Campus, donde la pastilla
+   * hace de indicador de destino y una cápsula se lee mejor que un cuadrado
+   * redondeado a ese tamaño. */
+  .icon-chip[data-shape="round"] {
+    border-radius: 9999px;
+  }
+
+  /* Reservado a lo conseguido, como el distintivo dorado. */
+  .icon-chip[data-tone="gold"] {
+    --chip: var(--gold);
+    --chip-soft: var(--gold-soft);
+  }
+
+  /* La versión de portada: el tinte lleno, con su propia luz debajo. Para el
+   * chip que encabeza una pantalla o corona una tarjeta destacada; en una
+   * lista de diez, satura. */
+  .icon-chip[data-fill="solid"] {
+    background: linear-gradient(
+      145deg,
+      color-mix(in oklab, var(--chip) 82%, white),
+      var(--chip)
+    );
+    color: var(--accent-contrast);
+    box-shadow:
+      inset 0 1px 0 0 oklch(1 0 0 / 0.3),
+      0 1px 2px -1px color-mix(in oklab, var(--chip) 40%, transparent),
+      0 8px 18px -6px color-mix(in oklab, var(--chip) 45%, transparent);
+  }
+
+  /* Un chip que forma parte de algo pulsable se enciende con la fila entera,
+   * no por su cuenta: el objetivo del ratón es la fila. */
+  .group:hover .icon-chip:not([data-fill="solid"]) {
+    box-shadow:
+      inset 0 0 0 1px color-mix(in oklab, var(--chip) 28%, transparent),
       inset 0 1px 0 0 oklch(1 0 0 / 0.5);
   }
 

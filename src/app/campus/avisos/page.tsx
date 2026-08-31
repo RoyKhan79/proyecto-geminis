@@ -5,6 +5,7 @@ import { markNotificationReadAction } from "@/server/communications/actions";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, EmptyState } from "@/components/ui/primitives";
 import { formatDateTime } from "@/lib/utils";
+import { CampusTitulo } from "@/components/campus/titulo";
 
 export const metadata: Metadata = { title: "Avisos" };
 
@@ -37,7 +38,7 @@ export default async function AvisosPage() {
   return (
     <>
       <div className="flex items-baseline justify-between">
-        <h1 className="text-xl font-semibold tracking-tight text-ink">Avisos</h1>
+        <CampusTitulo>Avisos</CampusTitulo>
         {sinLeer > 0 ? (
           <span className="text-sm text-ink-muted">{sinLeer} sin leer</span>
         ) : null}

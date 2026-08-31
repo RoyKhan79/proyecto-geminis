@@ -14,6 +14,7 @@ import { BotonSalir } from "@/components/campus/salir";
 import { SesionesAbiertas } from "@/components/campus/sesiones";
 import { sesionesActivas } from "@/lib/auth/session";
 import { formatDate, initials } from "@/lib/utils";
+import { CampusTitulo } from "@/components/campus/titulo";
 
 export const metadata: Metadata = { title: "Perfil" };
 
@@ -48,7 +49,7 @@ export default async function PerfilPage() {
 
   return (
     <>
-      <h1 className="text-xl font-semibold tracking-tight text-ink">Perfil</h1>
+      <CampusTitulo>Perfil</CampusTitulo>
 
       {ctx.user.emailVerifiedAt ? null : <VerifyBanner />}
 

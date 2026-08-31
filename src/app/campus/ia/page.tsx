@@ -5,6 +5,7 @@ import { loadGrants } from "@/server/campus/queries";
 import { studentNodeWhere } from "@/lib/access/content-access";
 import { Card, CardContent, EmptyState } from "@/components/ui/primitives";
 import { AskBox } from "./ask-box";
+import { CampusTitulo } from "@/components/campus/titulo";
 
 export const metadata: Metadata = { title: "Geminis IA" };
 
@@ -49,10 +50,7 @@ export default async function IaCampusPage({
   return (
     <>
       <div className="space-y-1">
-        <h1 className="flex items-center gap-2 text-xl font-semibold tracking-tight text-ink">
-          <Sparkles className="size-5 text-accent" aria-hidden />
-          Pregunta a Geminis
-        </h1>
+        <CampusTitulo>Pregunta a Geminis</CampusTitulo>
         <p className="text-sm text-ink-muted">
           Responde con el material de tu academia y te dice de dónde lo saca.
         </p>

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { MANAGER_NAV, type NavSection } from "./nav-config";
 import { BRAND } from "@/lib/brand";
+import { IconTile } from "@/components/ui/primitives";
 import { cn } from "@/lib/utils";
 
 /**
@@ -62,9 +63,11 @@ export function ManagerSidebar({
                     key={item.href}
                     aria-disabled
                     title={`Disponible en ${item.phase ?? "una próxima fase"}`}
-                    className="flex cursor-not-allowed items-center gap-2.5 rounded-[var(--radius-control)] px-2.5 py-2 text-sm text-ink-muted opacity-55"
+                    className="flex cursor-not-allowed items-center gap-2.5 rounded-[var(--radius-control)] px-2 py-1.5 text-sm text-ink-muted opacity-50 grayscale"
                   >
-                    <Icon className="size-[1.05rem] shrink-0" aria-hidden />
+                    <IconTile tone={item.tone} size="sm">
+                      <Icon />
+                    </IconTile>
                     <span className="truncate">{item.label}</span>
                     <span className="ml-auto rounded-full bg-surface-muted px-1.5 py-0.5 text-[0.625rem] font-medium">
                       Pronto
@@ -82,23 +85,33 @@ export function ManagerSidebar({
                     // La marca de la izquierda señala dónde estás sin repintar
                     // media barra: se lee de un vistazo y no compite con el
                     // contenido.
-                    "relative flex items-center gap-3 rounded-[var(--radius-control)] px-2.5 py-[0.5rem] text-[0.875rem] transition-all duration-150",
+                    "group relative flex items-center gap-2.5 rounded-[var(--radius-control)] px-2 py-1.5 text-[0.875rem] transition-all duration-150",
                     "before:absolute before:left-0 before:top-1/2 before:h-[1.15rem] before:w-[3px] before:-translate-y-1/2 before:rounded-r-full before:bg-accent before:transition-opacity",
                     active
                       ? // Lo activo va sobre su propia superficie, con anillo y
                         // filo de luz: se lee como una pieza levantada, no como
                         // un rectángulo de color.
-                        "bg-surface font-semibold text-accent shadow-[var(--highlight),var(--shadow-soft)] before:opacity-100"
+                        "bg-surface font-semibold text-ink shadow-[var(--highlight),var(--shadow-soft)] before:opacity-100"
                       : "text-ink-soft before:opacity-0 hover:bg-surface-muted/70 hover:text-ink",
                   )}
                 >
-                  <Icon
+                  {/*
+                    El icono lleva el color de su área y el destino en el que
+                    estás lo lleva lleno. Con la barra entera a la vista, el
+                    color es lo que se busca primero; el relleno es lo que
+                    contesta «estás aquí» sin repintar media columna.
+                  */}
+                  <IconTile
+                    tone={item.tone}
+                    fill={active ? "solid" : "soft"}
+                    size="sm"
                     className={cn(
-                      "size-[1.05rem] shrink-0 transition-colors",
-                      active ? "stroke-[2.2]" : "text-ink-muted",
+                      "transition-shadow",
+                      !active && "opacity-90 group-hover:opacity-100",
                     )}
-                    aria-hidden
-                  />
+                  >
+                    <Icon className={cn(active && "stroke-[2.2]")} />
+                  </IconTile>
                   <span className="truncate">{item.label}</span>
                 </Link>
               );

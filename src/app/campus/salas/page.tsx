@@ -3,6 +3,7 @@ import { Video } from "lucide-react";
 import { requireAcademy } from "@/lib/auth/context";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, EmptyState } from "@/components/ui/primitives";
+import { CampusTitulo } from "@/components/campus/titulo";
 
 export const metadata: Metadata = { title: "Salas" };
 
@@ -47,7 +48,7 @@ export default async function SalasCampusPage() {
 
   return (
     <>
-      <h1 className="text-xl font-semibold tracking-tight text-ink">Salas online</h1>
+      <CampusTitulo>Salas online</CampusTitulo>
 
       {salas.length === 0 ? (
         <Card>

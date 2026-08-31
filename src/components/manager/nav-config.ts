@@ -23,6 +23,7 @@ import {
   Users,
 } from "lucide-react";
 import type { Permission } from "@/lib/auth/permissions";
+import type { IconTone } from "@/components/ui/primitives";
 
 /**
  * Navegación de Geminis Manager.
@@ -35,6 +36,12 @@ export type NavItem = {
   label: string;
   href: string;
   icon: LucideIcon;
+  /**
+   * La familia de color del icono. Es identidad de área, no estado: quien usa
+   * Manager ocho horas al día acaba yendo al color antes que al texto, y con
+   * treinta destinos en la barra eso es la diferencia entre buscar y ver.
+   */
+  tone: IconTone;
   permission: Permission;
   status: "ready" | "soon";
   phase?: string;
@@ -59,6 +66,7 @@ export const MANAGER_NAV: NavSection[] = [
       {
         label: "Inicio",
         href: "/gestion",
+        tone: "brand",
         icon: LayoutDashboard,
         permission: "manager.access",
         status: "ready",
@@ -71,6 +79,7 @@ export const MANAGER_NAV: NavSection[] = [
       {
         label: "Alumnos",
         href: "/gestion/alumnos",
+        tone: "indigo",
         icon: Users,
         permission: "students.read",
         status: "ready",
@@ -78,6 +87,7 @@ export const MANAGER_NAV: NavSection[] = [
       {
         label: "Profesores",
         href: "/gestion/profesores",
+        tone: "violet",
         icon: UserRound,
         permission: "teachers.read",
         status: "ready",
@@ -85,6 +95,7 @@ export const MANAGER_NAV: NavSection[] = [
       {
         label: "Importar",
         href: "/gestion/importar",
+        tone: "teal",
         icon: ArrowDownToLine,
         permission: "imports.run",
         status: "ready",
@@ -97,6 +108,7 @@ export const MANAGER_NAV: NavSection[] = [
       {
         label: "Oposiciones",
         href: "/gestion/oposiciones",
+        tone: "amber",
         icon: GraduationCap,
         permission: "oppositions.read",
         status: "ready",
@@ -104,6 +116,7 @@ export const MANAGER_NAV: NavSection[] = [
       {
         label: "Cursos y grupos",
         href: "/gestion/cursos",
+        tone: "brand",
         icon: BookOpen,
         permission: "courses.read",
         status: "ready",
@@ -111,6 +124,7 @@ export const MANAGER_NAV: NavSection[] = [
       {
         label: "Matrículas",
         href: "/gestion/matriculas",
+        tone: "indigo",
         icon: ListChecks,
         permission: "enrollments.read",
         status: "ready",
@@ -118,6 +132,7 @@ export const MANAGER_NAV: NavSection[] = [
       {
         label: "Contenido",
         href: "/gestion/contenido",
+        tone: "sky",
         icon: FileText,
         permission: "content.read",
         status: "ready",
@@ -125,6 +140,7 @@ export const MANAGER_NAV: NavSection[] = [
       {
         label: "Agenda",
         href: "/gestion/agenda",
+        tone: "rose",
         icon: CalendarDays,
         permission: "classes.read",
         status: "ready",
@@ -132,6 +148,7 @@ export const MANAGER_NAV: NavSection[] = [
       {
         label: "Clases",
         href: "/gestion/clases",
+        tone: "rose",
         icon: CalendarDays,
         permission: "classes.read",
         status: "ready",
@@ -139,6 +156,7 @@ export const MANAGER_NAV: NavSection[] = [
       {
         label: "Tareas",
         href: "/gestion/tareas",
+        tone: "teal",
         icon: ClipboardList,
         permission: "classes.read",
         status: "ready",
@@ -146,6 +164,7 @@ export const MANAGER_NAV: NavSection[] = [
       {
         label: "Exámenes",
         href: "/gestion/examenes",
+        tone: "violet",
         icon: FileSignature,
         permission: "classes.read",
         status: "ready",
@@ -153,6 +172,7 @@ export const MANAGER_NAV: NavSection[] = [
       {
         label: "Salas online",
         href: "/gestion/salas",
+        tone: "sky",
         icon: Video,
         permission: "classes.read",
         status: "ready",
@@ -160,6 +180,7 @@ export const MANAGER_NAV: NavSection[] = [
       {
         label: "Tests",
         href: "/gestion/tests",
+        tone: "emerald",
         icon: ListChecks,
         permission: "questions.read",
         status: "ready",
@@ -167,6 +188,7 @@ export const MANAGER_NAV: NavSection[] = [
       {
         label: "Simulacros",
         href: "/gestion/simulacros",
+        tone: "amber",
         icon: Timer,
         permission: "tests.read",
         status: "ready",
@@ -174,6 +196,7 @@ export const MANAGER_NAV: NavSection[] = [
       {
         label: "Convocatorias",
         href: "/gestion/convocatorias",
+        tone: "rose",
         icon: Radar,
         permission: "oppositions.read",
         status: "ready",
@@ -181,6 +204,7 @@ export const MANAGER_NAV: NavSection[] = [
       {
         label: "Normativa",
         href: "/gestion/normativa",
+        tone: "indigo",
         icon: Scale,
         permission: "legislation.read",
         status: "ready",
@@ -193,6 +217,7 @@ export const MANAGER_NAV: NavSection[] = [
       {
         label: "Geminis IA",
         href: "/gestion/ia",
+        tone: "violet",
         icon: Sparkles,
         permission: "ai.copilot",
         status: "ready",
@@ -200,6 +225,7 @@ export const MANAGER_NAV: NavSection[] = [
       {
         label: "Analítica",
         href: "/gestion/analitica",
+        tone: "sky",
         icon: BarChart3,
         permission: "analytics.read",
         status: "ready",
@@ -207,6 +233,7 @@ export const MANAGER_NAV: NavSection[] = [
       {
         label: "Muro de clase",
         href: "/gestion/muro",
+        tone: "amber",
         icon: Megaphone,
         permission: "classes.read",
         status: "ready",
@@ -214,6 +241,7 @@ export const MANAGER_NAV: NavSection[] = [
       {
         label: "Mensajes",
         href: "/gestion/mensajes",
+        tone: "teal",
         icon: MessageSquare,
         permission: "students.read",
         status: "ready",
@@ -221,6 +249,7 @@ export const MANAGER_NAV: NavSection[] = [
       {
         label: "Comunicaciones",
         href: "/gestion/comunicaciones",
+        tone: "teal",
         icon: MessageSquare,
         permission: "communications.send",
         status: "ready",
@@ -228,6 +257,7 @@ export const MANAGER_NAV: NavSection[] = [
       {
         label: "Pagos",
         href: "/gestion/pagos",
+        tone: "emerald",
         icon: CreditCard,
         permission: "payments.read",
         status: "ready",
@@ -235,6 +265,7 @@ export const MANAGER_NAV: NavSection[] = [
       {
         label: "Facturas",
         href: "/gestion/facturas",
+        tone: "emerald",
         icon: FileText,
         permission: "payments.read",
         status: "ready",
@@ -242,6 +273,7 @@ export const MANAGER_NAV: NavSection[] = [
       {
         label: "Manual",
         href: "/manual",
+        tone: "brand",
         icon: BookOpen,
         permission: "manager.access",
         status: "ready",
@@ -249,6 +281,7 @@ export const MANAGER_NAV: NavSection[] = [
       {
         label: "Configuración",
         href: "/gestion/configuracion",
+        tone: "indigo",
         icon: Settings,
         permission: "settings.read",
         status: "ready",

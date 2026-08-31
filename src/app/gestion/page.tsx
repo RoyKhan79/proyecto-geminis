@@ -3,7 +3,13 @@ import Link from "next/link";
 import { ArrowUpRight, GraduationCap, ListChecks, UserRound, Users } from "lucide-react";
 import { requireAcademy } from "@/lib/auth/context";
 import { loadAcademyOverview } from "@/server/dashboard/queries";
-import { Card, CardContent, PageHeader } from "@/components/ui/primitives";
+import {
+  Card,
+  CardContent,
+  IconTile,
+  PageHeader,
+  type IconTone,
+} from "@/components/ui/primitives";
 import { formatDate } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Inicio" };
@@ -20,21 +26,57 @@ export default async function ManagerHomePage() {
 
   const resumen = await loadAcademyOverview(db);
 
-  const metricas = [
-    { label: "Alumnos activos", value: resumen.alumnosActivos, icon: Users, href: "/gestion/alumnos" },
-    { label: "Altas (30 días)", value: resumen.altasUltimos30, icon: ArrowUpRight, href: "/gestion/alumnos" },
-    { label: "Profesores", value: resumen.profesores, icon: UserRound, href: "/gestion/profesores" },
+  /*
+   * Cada cifra lleva el color de la sección a la que lleva, el mismo que tiene
+   * en la barra lateral. En cinco pastillas seguidas el color es lo que
+   * distingue una de otra antes de leer la etiqueta, y al hacerlo también
+   * enseña dónde hay que pulsar para ver el detalle.
+   *
+   * «Altas» va en verde y no en el violeta de Alumnos aunque lleve allí: es
+   * crecimiento, y ese es el único sitio del panel donde el color dice algo
+   * más que a dónde vas.
+   */
+  const metricas: {
+    label: string;
+    value: number;
+    icon: typeof Users;
+    href: string;
+    tone: IconTone;
+  }[] = [
+    {
+      label: "Alumnos activos",
+      value: resumen.alumnosActivos,
+      icon: Users,
+      href: "/gestion/alumnos",
+      tone: "indigo",
+    },
+    {
+      label: "Altas (30 días)",
+      value: resumen.altasUltimos30,
+      icon: ArrowUpRight,
+      href: "/gestion/alumnos",
+      tone: "emerald",
+    },
+    {
+      label: "Profesores",
+      value: resumen.profesores,
+      icon: UserRound,
+      href: "/gestion/profesores",
+      tone: "violet",
+    },
     {
       label: "Matrículas activas",
       value: resumen.matriculasActivas,
       icon: ListChecks,
       href: "/gestion/matriculas",
+      tone: "teal",
     },
     {
       label: "Oposiciones",
       value: resumen.oposiciones,
       icon: GraduationCap,
       href: "/gestion/oposiciones",
+      tone: "amber",
     },
   ];
 
@@ -55,7 +97,7 @@ export default async function ManagerHomePage() {
             <Link
               key={metrica.label}
               href={metrica.href}
-              className="card-interactive rounded-[var(--radius-card)] bg-surface p-5"
+              className="card-interactive group rounded-[var(--radius-card)] bg-surface p-5"
             >
               {/*
                 El icono en su pastilla arriba y la cifra grande debajo, en la
@@ -64,9 +106,9 @@ export default async function ManagerHomePage() {
                 36 px, con la serif y las cifras tabulares, se lee desde el otro
                 lado de la mesa, que es para lo que existe un panel.
               */}
-              <span className="icon-chip size-9 [&_svg]:size-4">
-                <Icon aria-hidden />
-              </span>
+              <IconTile tone={metrica.tone} size="sm" className="size-9">
+                <Icon />
+              </IconTile>
               <p className="mt-3.5 text-[0.8125rem] font-medium leading-snug text-ink-muted">
                 {metrica.label}
               </p>
