@@ -122,16 +122,35 @@ export async function setPaymentStatusAction(formData: FormData) {
     },
   });
 
-  // Al cobrar, se reactiva lo que se hubiera suspendido por impago.
+  /*
+   * Al cobrar se recupera el acceso, pero solo si no queda nada más pendiente.
+   *
+   * Sin esta comprobación, alguien que debe tres recibos paga uno y recupera
+   * todo: y como la tarea de avisos no vuelve a suspender un recibo que ya
+   * suspendió una vez, se quedaría dentro debiendo dos meses. Se recupera el
+   * acceso cuando se está al día, que es lo que significa estar al día.
+   */
   if (status === "PAID") {
-    await ctx.db.entitlement.updateMany({
-      where: { studentId: pago.studentId, status: "PAST_DUE" },
-      data: { status: "ACTIVE" },
+    const pendientes = await ctx.db.payment.count({
+      where: {
+        studentId: pago.studentId,
+        deletedAt: null,
+        id: { not: paymentId },
+        status: { in: ["PENDING", "FAILED"] },
+        dueDate: { lt: new Date() },
+      },
     });
-    await ctx.db.enrollment.updateMany({
-      where: { studentId: pago.studentId, status: "PAST_DUE" },
-      data: { status: "ACTIVE" },
-    });
+
+    if (pendientes === 0) {
+      await ctx.db.entitlement.updateMany({
+        where: { studentId: pago.studentId, status: "PAST_DUE" },
+        data: { status: "ACTIVE" },
+      });
+      await ctx.db.enrollment.updateMany({
+        where: { studentId: pago.studentId, status: "PAST_DUE" },
+        data: { status: "ACTIVE" },
+      });
+    }
   }
 
   // Suspender es una decisión de la academia, nunca automática: hay impagos que

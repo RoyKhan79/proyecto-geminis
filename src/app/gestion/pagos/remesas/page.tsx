@@ -30,6 +30,7 @@ import {
 import { formatCents, formatDate } from "@/lib/utils";
 import { GenerarRemesa } from "./generar";
 import { DatosAcreedorForm } from "./acreedor";
+import { AvisosDeImpago } from "./avisos";
 
 export const metadata: Metadata = { title: "Remesas" };
 
@@ -86,6 +87,10 @@ export default async function RemesasPage({
         billingIban: true,
         creditorId: true,
         mandatePrefix: true,
+        dunningEnabled: true,
+        dunningFirstDays: true,
+        dunningEveryDays: true,
+        dunningSuspendDays: true,
       },
     }),
     ctx.db.directDebitRun.findMany({
@@ -166,6 +171,17 @@ export default async function RemesasPage({
             mandatePrefix: academia?.mandatePrefix ?? "",
           }}
           avisos={avisos}
+        />
+      ) : null}
+
+      {puedeEscribir && academia ? (
+        <AvisosDeImpago
+          inicial={{
+            dunningEnabled: academia.dunningEnabled,
+            dunningFirstDays: academia.dunningFirstDays,
+            dunningEveryDays: academia.dunningEveryDays,
+            dunningSuspendDays: academia.dunningSuspendDays,
+          }}
         />
       ) : null}
 

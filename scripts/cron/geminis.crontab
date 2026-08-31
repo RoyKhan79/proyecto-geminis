@@ -21,5 +21,10 @@ PATH=/usr/local/bin:/usr/bin:/bin
 # Sin esto, un corte de un día se convierte en una convocatoria que nadie vio.
 15 9 * * 0  cd RUTA_PROYECTO && RUTA_NPM run radar -- --dias 7 >> /var/log/geminis-radar.log 2>&1
 
+# Avisos de impago: reclama los recibos vencidos y, pasado el plazo que haya
+# puesto cada academia, pausa el acceso. Después del radar y antes de que abra
+# la academia, para que si alguien llama ya se sepa qué se le ha mandado.
+0 9 * * *  cd RUTA_PROYECTO && RUTA_NPM run avisos >> /var/log/geminis-avisos.log 2>&1
+
 # Mantenimiento: sesiones caducadas, tokens usados y ficheros huérfanos.
 40 4 * * *  cd RUTA_PROYECTO && RUTA_NPM run mantenimiento >> /var/log/geminis-mantenimiento.log 2>&1

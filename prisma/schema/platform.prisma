@@ -97,6 +97,20 @@ model Academy {
   /// Prefijo para las referencias de mandato. Debe ser estable en el tiempo.
   mandatePrefix String?
 
+  // ── Avisos de impago ───────────────────────────────────────────────────────
+  /// Si la academia quiere que el sistema reclame sola. Apagado, no se manda
+  /// nada y no se suspende a nadie: hay academias pequeñas que prefieren
+  /// llamar por teléfono.
+  dunningEnabled Boolean @default(true)
+  /// Días tras el vencimiento antes del primer aviso. Un margen corto evita que
+  /// el primer correo llegue el mismo día que el banco todavía está procesando.
+  dunningFirstDays Int @default(3)
+  /// Cada cuántos días se insiste, mientras siga sin pagarse.
+  dunningEveryDays Int @default(7)
+  /// A los cuántos días del vencimiento se le corta el acceso. Cero = nunca:
+  /// la academia prefiere decidirlo a mano, caso por caso.
+  dunningSuspendDays Int @default(30)
+
   /// Ajustes de producto por academia (marcas de agua, descargas por defecto,
   /// política de IA…). JSON porque son banderas heterogéneas y cambiantes.
   settings Json @default("{}")

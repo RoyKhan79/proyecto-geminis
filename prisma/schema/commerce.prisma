@@ -224,6 +224,14 @@ model Payment {
   /// Referencia del proveedor de pago o número de recibo interno.
   externalRef String?
   receiptNo   String?
+
+  /// Cuándo se le recordó por última vez y cuántas veces. Sin esto, la tarea
+  /// diaria mandaría un correo cada día al mismo moroso, que es la forma más
+  /// rápida de que marque la academia como spam.
+  lastReminderAt DateTime?
+  reminderCount  Int       @default(0)
+  /// Cuándo se le cortó el acceso por este recibo, si se llegó a cortar.
+  suspendedAt DateTime?
   notes       String?
 
   createdAt DateTime  @default(now())

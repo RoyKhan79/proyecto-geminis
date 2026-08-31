@@ -299,6 +299,69 @@ const acreedorSchema = z.object({
  * @returns Confirmación, o el motivo. El identificador de acreedor **no es el
  *   CIF**: lo asigna el banco, y sin él la remesa entera se rechaza.
  */
+const avisosSchema = z.object({
+  dunningEnabled: z.string().optional(),
+  dunningFirstDays: z.coerce.number().int().min(0).max(90),
+  dunningEveryDays: z.coerce.number().int().min(1).max(90),
+  dunningSuspendDays: z.coerce.number().int().min(0).max(365),
+});
+
+/**
+ * Los plazos con los que la academia reclama un recibo y corta el acceso.
+ *
+ * No hay valores «correctos»: una academia de treinta euros al mes y otra de
+ * trescientos no esperan lo mismo. Lo único que se impide es una combinación
+ * que no tiene sentido —cortar antes de haber avisado— porque eso no es una
+ * política, es un alumno perdido sin enterarse de por qué.
+ */
+export async function saveDunningAction(
+  _prev: BillingState,
+  formData: FormData,
+): Promise<BillingState> {
+  const ctx = await requirePermission("settings.write");
+  const parsed = avisosSchema.safeParse(Object.fromEntries(formData.entries()));
+
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Revisa los datos." };
+  }
+  const data = parsed.data;
+
+  if (data.dunningSuspendDays > 0 && data.dunningSuspendDays < data.dunningFirstDays) {
+    return {
+      error:
+        "Estarías cortando el acceso antes de mandar el primer aviso. Sube los días para suspender, o baja los del primer aviso.",
+    };
+  }
+
+  await ctx.db.academy.update({
+    where: { id: ctx.academy.id },
+    data: {
+      dunningEnabled: data.dunningEnabled === "1",
+      dunningFirstDays: data.dunningFirstDays,
+      dunningEveryDays: data.dunningEveryDays,
+      dunningSuspendDays: data.dunningSuspendDays,
+    },
+  });
+
+  await recordAudit({
+    academyId: ctx.academy.id,
+    actorId: ctx.user.id,
+    impersonatorId: ctx.impersonatedById,
+    action: "billing.dunning",
+    entityType: "Academy",
+    entityId: ctx.academy.id,
+    changes: {
+      activo: data.dunningEnabled === "1",
+      primerAviso: data.dunningFirstDays,
+      cada: data.dunningEveryDays,
+      suspenderA: data.dunningSuspendDays,
+    },
+  });
+
+  revalidatePath("/gestion/pagos/remesas");
+  return { ok: true };
+}
+
 export async function saveCreditorAction(
   _prev: BillingState,
   formData: FormData,

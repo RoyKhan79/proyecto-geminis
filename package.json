@@ -24,6 +24,7 @@
     "demo:preguntas": "node --env-file=.env --import tsx scripts/demo-questions.ts",
     "demo:todo": "npm run db:seed && npm run demo:contenido && npm run demo:preguntas && npm run demo:normativa",
     "radar": "node --env-file=.env --import tsx scripts/radar.ts",
+    "avisos": "node --env-file=.env --import tsx scripts/avisos-impago.ts",
     "demo:normativa": "node --env-file=.env --import tsx scripts/demo-legislation.ts",
     "ia:probar": "node --env-file=.env --import tsx scripts/probar-ia.ts",
     "indexar": "node --env-file=.env --import tsx scripts/indexar.ts",
