@@ -52,18 +52,25 @@ export default async function ManagerHomePage() {
         {metricas.map((metrica) => {
           const Icon = metrica.icon;
           return (
-            <Link key={metrica.label} href={metrica.href} className="group">
-              <Card className="h-full transition-shadow group-hover:shadow-[var(--shadow-raised)]">
-                <CardContent className="space-y-2 p-4 pt-4">
-                  <div className="flex items-center gap-2 text-ink-muted">
-                    <Icon className="size-4" aria-hidden />
-                    <span className="text-xs font-medium">{metrica.label}</span>
-                  </div>
-                  <p className="text-2xl font-semibold tabular-nums text-ink">
-                    {metrica.value}
-                  </p>
-                </CardContent>
-              </Card>
+            <Link
+              key={metrica.label}
+              href={metrica.href}
+              className="card-interactive rounded-[var(--radius-card)] bg-surface p-5"
+            >
+              {/*
+                El icono en su pastilla arriba y la cifra grande debajo, en la
+                serif de la marca. Un número a 24 px en la misma tipografía que
+                su etiqueta no destaca: parece un dato más de un formulario. A
+                36 px, con la serif y las cifras tabulares, se lee desde el otro
+                lado de la mesa, que es para lo que existe un panel.
+              */}
+              <span className="icon-chip size-9 [&_svg]:size-4">
+                <Icon aria-hidden />
+              </span>
+              <p className="mt-3.5 text-[0.8125rem] font-medium leading-snug text-ink-muted">
+                {metrica.label}
+              </p>
+              <p className="cifra mt-1.5 text-[2.25rem] text-ink">{metrica.value}</p>
             </Link>
           );
         })}
@@ -71,8 +78,10 @@ export default async function ManagerHomePage() {
 
       <Card>
         <CardContent className="p-0">
-          <div className="flex items-center justify-between border-b border-line px-5 py-3.5">
-            <h2 className="text-sm font-semibold text-ink">Últimas altas</h2>
+          <div className="flex items-center justify-between border-b border-line/70 px-6 py-4">
+            <h2 className="font-display text-[1.0625rem] font-semibold tracking-[-0.015em] text-ink">
+              Últimas altas
+            </h2>
             <Link
               href="/gestion/alumnos"
               className="text-xs font-medium text-accent hover:underline"

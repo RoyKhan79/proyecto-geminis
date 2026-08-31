@@ -682,3 +682,33 @@ precio.
 **Las academias que ya existían se quedaron con todo.** Es lo único honesto:
 nadie contrató módulos porque no existían, y quitarles funciones que ya usaban
 por una migración sería cambiarles el trato sin avisar.
+
+### ADR-0060 · Lo premium se hace en el sistema, no pantalla a pantalla
+**Decisión.** La subida de nivel visual se hizo en los tokens y en las piezas
+compartidas —`Card`, `PageHeader`, `Badge`, `Input`, `EmptyState`, la barra
+lateral— y no retocando cincuenta pantallas. Cada módulo mejora a la vez y sin
+que se separen entre sí.
+
+**Profundidad en tres capas.** Una sombra sola se ve como una mancha gris
+debajo de la caja. Tres se leen como un objeto apoyado y ninguna se ve por
+separado: un anillo de un píxel que hace de borde, una sombra de contacto muy
+corta que ancla, y una difusión larga que da el aire. Todas tiradas hacia el
+azul de la marca en lugar de al gris neutro, que es la diferencia entre una
+sombra que parece luz y una que parece suciedad.
+
+**Las tarjetas ya no llevan `border`.** El borde lo pone el anillo de la
+sombra. Un borde de verdad más una sombra dan dos líneas donde debería haber
+una, y eso es lo que hace que una interfaz parezca maquetada.
+
+**En oscuro se invierte el peso.** Sobre un fondo oscuro la sombra apenas se
+ve, así que la profundidad la dan el anillo y el filo de luz superior: más
+anillo, menos difusión.
+
+**El foco es un anillo, no un borde que cambia de color.** Cambiar el borde
+mueve un píxel el contenido y el campo «salta» al entrar en él. El anillo se
+dibuja fuera, no ocupa sitio y se ve sobre cualquier fondo.
+
+**Las cifras, en la serif de la marca y a 36 px.** Un número a 24 px en la
+misma tipografía que su etiqueta no destaca: parece un dato más de un
+formulario. Con la serif, cifras tabulares y ese tamaño se lee desde el otro
+lado de la mesa, que es para lo que existe un panel.

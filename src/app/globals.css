@@ -71,17 +71,41 @@
     "Segoe UI", sans-serif;
   --font-mono: var(--font-jetbrains), ui-monospace, "SF Mono", monospace;
 
-  --radius-card: 1rem;
+  --radius-card: 1.1rem;
   --radius-control: 0.7rem;
+  /* Para lo que se apoya sobre una tarjeta: un chip, un avatar, un contador. */
+  --radius-inner: 0.55rem;
 
-  /* Sombras en dos capas: una de contacto, muy corta, y otra de difusión. Es
-   * lo que separa una tarjeta que parece apoyada de una que parece pegada. */
-  --shadow-soft: 0 1px 1px 0 oklch(0.27 0.05 265 / 0.04),
-    0 2px 6px -1px oklch(0.27 0.05 265 / 0.06);
-  --shadow-raised: 0 1px 2px 0 oklch(0.27 0.05 265 / 0.05),
-    0 8px 20px -6px oklch(0.27 0.05 265 / 0.1);
-  --shadow-overlay: 0 2px 4px 0 oklch(0.27 0.05 265 / 0.06),
-    0 28px 56px -16px oklch(0.27 0.05 265 / 0.28);
+  /* ── PROFUNDIDAD ─────────────────────────────────────────────────────────
+   *
+   * Tres capas, no una. Una sombra sola se ve como una mancha gris debajo de
+   * la caja; tres se leen como un objeto apoyado y ninguna se ve por separado:
+   *
+   *   1. un anillo finísimo, que hace de borde sin necesitar `border`,
+   *   2. una sombra de contacto muy corta, la que ancla el objeto al papel,
+   *   3. una de difusión larga y suave, la que da el aire.
+   *
+   * Todas tiradas hacia el azul de la marca en lugar de al gris neutro. Es la
+   * diferencia entre una sombra que parece suciedad y una que parece luz.
+   */
+  --shadow-soft:
+    0 0 0 1px oklch(0.27 0.05 265 / 0.035),
+    0 1px 2px -1px oklch(0.27 0.05 265 / 0.06),
+    0 4px 10px -3px oklch(0.27 0.05 265 / 0.05);
+
+  --shadow-raised:
+    0 0 0 1px oklch(0.27 0.05 265 / 0.04),
+    0 2px 4px -2px oklch(0.27 0.05 265 / 0.07),
+    0 12px 26px -8px oklch(0.27 0.05 265 / 0.11);
+
+  --shadow-overlay:
+    0 0 0 1px oklch(0.27 0.05 265 / 0.06),
+    0 4px 8px -3px oklch(0.27 0.05 265 / 0.09),
+    0 32px 64px -20px oklch(0.27 0.05 265 / 0.3);
+
+  /* El brillo de arriba. Una línea de luz de un píxel en el borde superior es
+   * lo que separa una superficie con volumen de un rectángulo pintado. */
+  --highlight: inset 0 1px 0 0 oklch(1 0 0 / 0.7);
 }
 
 /* Tokens semánticos: claro por defecto. */
@@ -149,6 +173,20 @@
     --gold: var(--color-gold-300);
     --gold-soft: oklch(0.32 0.05 80);
 
+    /* En oscuro la profundidad no la da la sombra —sobre un fondo oscuro
+     * apenas se ve— sino el anillo y el brillo superior. Se invierte el peso:
+     * más anillo, menos difusión. */
+    --shadow-soft:
+      0 0 0 1px oklch(1 0 0 / 0.06),
+      0 1px 2px -1px oklch(0 0 0 / 0.4);
+    --shadow-raised:
+      0 0 0 1px oklch(1 0 0 / 0.07),
+      0 8px 20px -8px oklch(0 0 0 / 0.55);
+    --shadow-overlay:
+      0 0 0 1px oklch(1 0 0 / 0.09),
+      0 32px 64px -20px oklch(0 0 0 / 0.7);
+    --highlight: inset 0 1px 0 0 oklch(1 0 0 / 0.06);
+
     --shell-wash: radial-gradient(
         120% 90% at 12% -10%,
         oklch(0.33 0.06 265 / 0.5) 0%,
@@ -179,6 +217,21 @@
   --accent-contrast: oklch(0.18 0.02 265);
   --gold: var(--color-gold-300);
   --gold-soft: oklch(0.32 0.05 80);
+
+  /* En oscuro la profundidad no la da la sombra —sobre un fondo oscuro
+   * apenas se ve— sino el anillo y el brillo superior. Se invierte el peso:
+   * más anillo, menos difusión. */
+  --shadow-soft:
+    0 0 0 1px oklch(1 0 0 / 0.06),
+    0 1px 2px -1px oklch(0 0 0 / 0.4);
+  --shadow-raised:
+    0 0 0 1px oklch(1 0 0 / 0.07),
+    0 8px 20px -8px oklch(0 0 0 / 0.55);
+  --shadow-overlay:
+    0 0 0 1px oklch(1 0 0 / 0.09),
+    0 32px 64px -20px oklch(0 0 0 / 0.7);
+  --highlight: inset 0 1px 0 0 oklch(1 0 0 / 0.06);
+
   --shell-wash: radial-gradient(
       120% 90% at 12% -10%,
       oklch(0.33 0.06 265 / 0.5) 0%,
@@ -292,10 +345,16 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    border-radius: 0.7rem;
-    background: var(--accent-soft);
+    border-radius: var(--radius-inner);
+    background: linear-gradient(
+      to bottom,
+      color-mix(in oklab, var(--accent-soft) 92%, white),
+      var(--accent-soft)
+    );
     color: var(--accent);
-    box-shadow: inset 0 0 0 1px oklch(0.5 0.15 264 / 0.1);
+    box-shadow:
+      inset 0 0 0 1px color-mix(in oklab, var(--accent) 14%, transparent),
+      inset 0 1px 0 0 oklch(1 0 0 / 0.5);
   }
 
   /* Texto con el degradado de marca. Solo para cifras grandes y titulares de
@@ -314,8 +373,56 @@
 
   /* Borde con brillo: un filo de luz arriba, como el de una tarjeta física. */
   .edge-light {
-    box-shadow:
-      inset 0 1px 0 0 oklch(1 0 0 / 0.5),
-      var(--shadow-soft);
+    box-shadow: var(--highlight), var(--shadow-soft);
+  }
+
+  /* Una tarjeta que se puede pulsar: se levanta un poco al pasar por encima y
+   * se hunde al pulsar. Dos píxeles de movimiento, no más: lo que se busca es
+   * que el dedo confirme que ha pasado algo, no una animación. */
+  .card-interactive {
+    box-shadow: var(--highlight), var(--shadow-soft);
+    transition:
+      box-shadow 160ms ease,
+      transform 160ms ease;
+  }
+  .card-interactive:hover {
+    box-shadow: var(--highlight), var(--shadow-raised);
+    transform: translateY(-1px);
+  }
+  .card-interactive:active {
+    transform: translateY(0);
+  }
+
+  /* Un número que se lee de lejos: la cifra de un panel, un total, una nota.
+   * Cifras tabulares para que no bailen al actualizarse. */
+  .cifra {
+    font-family: var(--font-display);
+    font-variant-numeric: tabular-nums;
+    font-weight: 600;
+    letter-spacing: -0.02em;
+    line-height: 1;
+  }
+
+  /* Etiqueta pequeña en versales. Ordena una pantalla sin gastar color ni
+   * tamaño, que es lo que hace que una interfaz densa siga leyéndose. */
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    letter-spacing: 0.11em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  /* Separador que se desvanece por los extremos, en lugar de cortar de golpe
+   * contra el borde de la tarjeta. */
+  .rule-fade {
+    height: 1px;
+    background: linear-gradient(
+      to right,
+      transparent,
+      var(--border-subtle) 12%,
+      var(--border-subtle) 88%,
+      transparent
+    );
   }
 }

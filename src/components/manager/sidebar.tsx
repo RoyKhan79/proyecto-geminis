@@ -29,7 +29,7 @@ export function ManagerSidebar({
   return (
     <nav
       aria-label="Navegación principal"
-      className="flex h-full w-64 shrink-0 flex-col gap-6 overflow-y-auto border-r border-line bg-surface/80 px-3 py-5 backdrop-blur-xl"
+      className="flex h-full w-[16.5rem] shrink-0 flex-col gap-7 overflow-y-auto border-r border-line/70 bg-surface/70 px-3.5 py-6 backdrop-blur-2xl"
     >
       <div className="flex items-center gap-3 px-2">
         <span className="flex size-9 items-center justify-center rounded-xl bg-linear-to-br from-accent to-accent-hover text-sm font-bold text-accent-contrast shadow-[inset_0_1px_0_0_oklch(1_0_0/0.25),var(--shadow-soft)]">
@@ -39,9 +39,7 @@ export function ManagerSidebar({
           <p className="line-clamp-2 font-display text-[0.9375rem] font-semibold leading-tight text-ink">
             {academyName}
           </p>
-          <p className="text-[0.6875rem] font-semibold uppercase tracking-[0.08em] text-ink-muted">
-            {BRAND.manager}
-          </p>
+          <p className="eyebrow">{BRAND.manager}</p>
         </div>
       </div>
 
@@ -49,9 +47,7 @@ export function ManagerSidebar({
         {sections.map((section, index) => (
           <div key={section.title ?? index} className="space-y-1">
             {section.title ? (
-              <p className="px-2 pb-1 text-[0.6875rem] font-bold uppercase tracking-[0.09em] text-ink-muted">
-                {section.title}
-              </p>
+              <p className="eyebrow px-2.5 pb-1.5">{section.title}</p>
             ) : null}
             {section.items.map((item) => {
               const Icon = item.icon;
@@ -86,14 +82,23 @@ export function ManagerSidebar({
                     // La marca de la izquierda señala dónde estás sin repintar
                     // media barra: se lee de un vistazo y no compite con el
                     // contenido.
-                    "relative flex items-center gap-2.5 rounded-[var(--radius-control)] px-2.5 py-2 text-sm transition-colors",
-                    "before:absolute before:left-0 before:top-1/2 before:h-4 before:w-[3px] before:-translate-y-1/2 before:rounded-r-full before:bg-accent before:transition-opacity",
+                    "relative flex items-center gap-3 rounded-[var(--radius-control)] px-2.5 py-[0.5rem] text-[0.875rem] transition-all duration-150",
+                    "before:absolute before:left-0 before:top-1/2 before:h-[1.15rem] before:w-[3px] before:-translate-y-1/2 before:rounded-r-full before:bg-accent before:transition-opacity",
                     active
-                      ? "bg-accent-soft font-semibold text-accent before:opacity-100"
-                      : "text-ink-soft before:opacity-0 hover:bg-surface-muted hover:text-ink",
+                      ? // Lo activo va sobre su propia superficie, con anillo y
+                        // filo de luz: se lee como una pieza levantada, no como
+                        // un rectángulo de color.
+                        "bg-surface font-semibold text-accent shadow-[var(--highlight),var(--shadow-soft)] before:opacity-100"
+                      : "text-ink-soft before:opacity-0 hover:bg-surface-muted/70 hover:text-ink",
                   )}
                 >
-                  <Icon className="size-[1.05rem] shrink-0" aria-hidden />
+                  <Icon
+                    className={cn(
+                      "size-[1.05rem] shrink-0 transition-colors",
+                      active ? "stroke-[2.2]" : "text-ink-muted",
+                    )}
+                    aria-hidden
+                  />
                   <span className="truncate">{item.label}</span>
                 </Link>
               );

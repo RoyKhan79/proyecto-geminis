@@ -22,7 +22,10 @@ export function Card({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       className={cn(
-        "edge-light rounded-[var(--radius-card)] border border-line bg-surface",
+        // Sin `border`: el borde lo pone el anillo de la sombra, que es de un
+        // píxel y del color de la marca en lugar de gris. Un borde de verdad
+        // más una sombra dan dos líneas donde debería haber una.
+        "edge-light rounded-[var(--radius-card)] bg-surface",
         className,
       )}
       {...props}
@@ -34,7 +37,7 @@ export function Card({ className, ...props }: React.ComponentProps<"div">) {
 export function CardHeader({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
-      className={cn("flex items-start justify-between gap-4 p-5 pb-3", className)}
+      className={cn("flex items-start justify-between gap-4 p-6 pb-3.5", className)}
       {...props}
     />
   );
@@ -45,7 +48,7 @@ export function CardTitle({ className, ...props }: React.ComponentProps<"h3">) {
   return (
     <h3
       className={cn(
-        "font-display text-base font-semibold tracking-[-0.01em] text-ink",
+        "font-display text-[1.0625rem] font-semibold leading-snug tracking-[-0.015em] text-ink",
         className,
       )}
       {...props}
@@ -58,12 +61,17 @@ export function CardDescription({
   className,
   ...props
 }: React.ComponentProps<"p">) {
-  return <p className={cn("text-sm text-ink-muted", className)} {...props} />;
+  return (
+    <p
+      className={cn("mt-1 text-sm leading-relaxed text-ink-muted", className)}
+      {...props}
+    />
+  );
 }
 
 /** El cuerpo de una tarjeta. */
 export function CardContent({ className, ...props }: React.ComponentProps<"div">) {
-  return <div className={cn("p-5 pt-0", className)} {...props} />;
+  return <div className={cn("p-6 pt-0", className)} {...props} />;
 }
 
 /** El pie de una tarjeta, normalmente con los botones. */
@@ -71,7 +79,7 @@ export function CardFooter({ className, ...props }: React.ComponentProps<"div">)
   return (
     <div
       className={cn(
-        "flex items-center gap-3 border-t border-line px-5 py-3.5",
+        "flex items-center gap-3 border-t border-line/70 px-6 py-4",
         className,
       )}
       {...props}
@@ -107,12 +115,20 @@ export function Label({
   );
 }
 
+/*
+ * El estado de foco es un anillo, no un borde que cambia de color.
+ *
+ * Cambiar el borde mueve un píxel el contenido y hace que el campo «salte» al
+ * entrar en él. El anillo se dibuja por fuera, no ocupa sitio, y además se ve
+ * sobre cualquier fondo. Es el detalle que separa un formulario que se siente
+ * sólido de uno que tiembla.
+ */
 const fieldStyles =
-  "w-full rounded-[var(--radius-control)] border border-line bg-surface px-3 py-2 text-sm text-ink placeholder:text-ink-muted transition-colors focus:border-accent disabled:cursor-not-allowed disabled:opacity-60 aria-[invalid=true]:border-critical";
+  "w-full rounded-[var(--radius-control)] border border-line bg-surface px-3.5 py-2 text-sm text-ink shadow-[inset_0_1px_2px_0_oklch(0.27_0.05_265/0.04)] transition-[box-shadow,border-color] placeholder:text-ink-muted focus:border-accent/40 focus:outline-none focus:ring-[3px] focus:ring-accent/15 disabled:cursor-not-allowed disabled:opacity-60 aria-[invalid=true]:border-critical aria-[invalid=true]:focus:ring-critical/15";
 
 /** Campo de texto, con los estados de foco y error del sistema de diseño. */
 export function Input({ className, ...props }: React.ComponentProps<"input">) {
-  return <input className={cn(fieldStyles, "h-10", className)} {...props} />;
+  return <input className={cn(fieldStyles, "h-11", className)} {...props} />;
 }
 
 /** Campo de texto largo. Se puede estirar en vertical, no en horizontal. */
@@ -128,7 +144,7 @@ export function Textarea({
 /** Desplegable nativo. Nativo a propósito: en el móvil es mucho mejor que uno hecho a mano. */
 export function Select({ className, ...props }: React.ComponentProps<"select">) {
   return (
-    <select className={cn(fieldStyles, "h-10 pr-8", className)} {...props} />
+    <select className={cn(fieldStyles, "h-11 pr-8", className)} {...props} />
   );
 }
 
@@ -182,7 +198,7 @@ export function Field({
 // ── Badge ────────────────────────────────────────────────────────────────────
 
 const badgeVariants = cva(
-  "inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold tracking-[0.005em] ring-1 ring-inset",
+  "inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[0.7rem] font-semibold uppercase tracking-[0.045em] ring-1 ring-inset",
   {
     variants: {
       tone: {
@@ -269,14 +285,18 @@ export function EmptyState({
   action?: React.ReactNode;
 }) {
   return (
-    <div className="flex flex-col items-center justify-center gap-3 px-6 py-14 text-center">
+    <div className="flex flex-col items-center justify-center gap-4 px-6 py-16 text-center">
       {icon ? (
-        <div className="icon-chip size-12 [&_svg]:size-5">{icon}</div>
+        <div className="icon-chip size-14 [&_svg]:size-[1.35rem]">{icon}</div>
       ) : null}
-      <div className="space-y-1">
-        <p className="font-medium text-ink">{title}</p>
+      <div className="space-y-1.5">
+        <p className="font-display text-[1.0625rem] font-semibold tracking-[-0.01em] text-ink">
+          {title}
+        </p>
         {description ? (
-          <p className="mx-auto max-w-sm text-sm text-ink-muted">{description}</p>
+          <p className="mx-auto max-w-sm text-sm leading-relaxed text-ink-muted">
+            {description}
+          </p>
         ) : null}
       </div>
       {action}
@@ -307,20 +327,25 @@ export function PageHeader({
   breadcrumb?: React.ReactNode;
 }) {
   return (
-    <header className="flex flex-col gap-3 border-b border-line pb-5 sm:flex-row sm:items-end sm:justify-between">
-      <div className="space-y-1.5">
+    <header className="flex flex-col gap-4 pb-1 sm:flex-row sm:items-end sm:justify-between">
+      <div className="min-w-0 space-y-2">
         {breadcrumb}
-        <h1 className="text-[1.6rem] font-semibold leading-tight text-ink">
+        {/*
+          El titular va en la serif de la marca y con el interletrado cerrado.
+          A este tamaño, una sans a espaciado normal se lee como el texto de un
+          formulario; la serif ajustada se lee como el nombre de una sección.
+        */}
+        <h1 className="font-display text-[1.75rem] font-semibold leading-[1.15] tracking-[-0.025em] text-ink text-balance sm:text-[1.9rem]">
           {title}
         </h1>
         {description ? (
-          <p className="max-w-2xl text-sm leading-relaxed text-ink-soft">
+          <p className="max-w-2xl text-[0.9375rem] leading-relaxed text-ink-soft">
             {description}
           </p>
         ) : null}
       </div>
       {actions ? (
-        <div className="flex shrink-0 items-center gap-2">{actions}</div>
+        <div className="flex shrink-0 flex-wrap items-center gap-2">{actions}</div>
       ) : null}
     </header>
   );
