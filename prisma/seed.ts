@@ -24,6 +24,7 @@ import {
   createAcademyWithRoles,
 } from "../src/server/academies/provision";
 import { createContentNode } from "../src/server/content/tree";
+import { PACKS, resolverDependencias } from "../src/lib/modules/catalogo";
 
 const DEMO_SLUG = "geminis-demo";
 const DEMO_PASSWORD = "Geminis2026!";
@@ -60,6 +61,8 @@ async function main() {
   });
   const db = tenantDb(academy.id);
   console.log(`  · Academia creada: ${academy.name}`);
+
+  await seedModulos(academy.id);
 
   await seedSuperadmin();
   const { admin, profesores } = await seedEquipo(academy.id);
@@ -135,6 +138,34 @@ async function seedSuperadmin() {
       emailVerifiedAt: new Date(),
     },
   });
+}
+
+/**
+ * Los módulos que tiene contratados la academia de demostración.
+ *
+ * Sin esto la demo nace muerta: desde que el ERP se vende por módulos, lo que
+ * no está contratado no funciona, y una academia recién sembrada sin ninguna
+ * línea aquí manda al alumnado a «sin módulo» nada más entrar al Campus.
+ *
+ * Va el pack «Completo» a propósito, porque la semilla siembra datos de todo
+ * —temario, tests, cobros, normativa, IA— y una demo donde media aplicación
+ * está apagada no enseña lo que se está vendiendo. Se toma del catálogo en vez
+ * de escribir la lista aquí: cuando se añada un módulo nuevo, la demo lo tendrá
+ * sin que nadie se acuerde de volver a este archivo.
+ */
+async function seedModulos(academyId: string) {
+  const pack = PACKS.find((p) => p.codigo === "completo");
+  if (!pack) throw new Error("Falta el pack «completo» en el catálogo");
+
+  const modulos = resolverDependencias(pack.modulos);
+  for (const codigo of modulos) {
+    await prismaBase.academyModule.upsert({
+      where: { academyId_module: { academyId, module: codigo } },
+      create: { academyId, module: codigo, active: true },
+      update: { active: true, deactivatedAt: null },
+    });
+  }
+  console.log(`  · Módulos contratados: ${modulos.length} (pack «${pack.nombre}»)`);
 }
 
 async function seedEquipo(academyId: string) {

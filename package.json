@@ -107,5 +107,19 @@
   },
   "overrides": {
     "typescript-eslint": "8.66.0"
+  },
+  "allowScripts": {
+    "@prisma/engines@7.9.1": true,
+    "esbuild@0.28.2": true,
+    "prisma@7.9.1": true,
+    "unrs-resolver@1.12.2": true,
+    "@embedded-postgres/darwin-arm64@18.4.0-beta.17": true,
+    "@embedded-postgres/darwin-x64@18.4.0-beta.17": true,
+    "@embedded-postgres/linux-arm64@18.4.0-beta.17": true,
+    "@embedded-postgres/linux-arm@18.4.0-beta.17": true,
+    "@embedded-postgres/linux-ia32@18.4.0-beta.17": true,
+    "@embedded-postgres/linux-ppc64@18.4.0-beta.17": true,
+    "@embedded-postgres/linux-x64@18.4.0-beta.17": true,
+    "@embedded-postgres/windows-x64@18.4.0-beta.17": true
   }
 }
