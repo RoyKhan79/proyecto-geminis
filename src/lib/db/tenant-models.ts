@@ -8,6 +8,11 @@
  * imposible sin que se entere el conjunto de pruebas.
  */
 export const TENANT_MODELS = new Set<string>([
+  // Los módulos que tiene contratados una academia. Los escribe solo el
+  // superadministrador, con el cliente sin guardia; está aquí para que la
+  // academia pueda LEER los suyos —enseñarle qué tiene contratado— sin poder
+  // ver los de otra ni, mucho menos, activarse ninguno.
+  "academyModule",
   "Membership",
   "Role",
   "OppositionType",

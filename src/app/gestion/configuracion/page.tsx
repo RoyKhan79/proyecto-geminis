@@ -5,12 +5,15 @@ import {
   Badge,
   Card,
   CardContent,
+  CardDescription,
   CardHeader,
   CardTitle,
   PageHeader,
 } from "@/components/ui/primitives";
 import { BrandingForm } from "./branding-form";
-import { formatDate } from "@/lib/utils";
+import { Check, Minus } from "lucide-react";
+import { CATALOGO } from "@/lib/modules/catalogo";
+import { cn, formatDate } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Configuración" };
 
@@ -142,6 +145,64 @@ export default async function ConfiguracionPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/*
+        Qué tiene contratado la academia.
+        Se le enseña porque es su dinero: quien paga tiene derecho a ver por qué
+        cosas paga sin llamar por teléfono. Los precios no salen aquí —eso es
+        cosa de su contrato, no de una pantalla— pero sí qué está activo y qué
+        no, para que sepa que existe lo que le falta.
+      */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Tu plan de módulos</CardTitle>
+          <CardDescription>
+            Lo que tu academia tiene contratado. Para añadir o quitar algo, habla
+            con quien lleva tu cuenta.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ul className="divide-y divide-[var(--border-subtle)]">
+            {CATALOGO.map((modulo) => {
+              const activo = ctx.modulos.has(modulo.codigo);
+              return (
+                <li
+                  key={modulo.codigo}
+                  className="flex items-start gap-3 py-2.5 first:pt-0 last:pb-0"
+                >
+                  <span
+                    className={cn(
+                      "mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-md",
+                      activo
+                        ? "bg-positive-soft text-positive"
+                        : "bg-surface-muted text-ink-muted",
+                    )}
+                  >
+                    {activo ? (
+                      <Check className="size-3.5" aria-hidden />
+                    ) : (
+                      <Minus className="size-3.5" aria-hidden />
+                    )}
+                  </span>
+                  <span className="min-w-0">
+                    <span
+                      className={cn(
+                        "block text-sm font-medium",
+                        activo ? "text-ink" : "text-ink-muted",
+                      )}
+                    >
+                      {modulo.nombre}
+                    </span>
+                    <span className="block text-sm leading-relaxed text-ink-muted">
+                      {modulo.resumen}
+                    </span>
+                  </span>
+                </li>
+              );
+            })}
+          </ul>
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>

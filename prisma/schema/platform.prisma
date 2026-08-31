@@ -162,7 +162,70 @@ model Academy {
   submissionFiles   SubmissionFile[]
   liveRooms         LiveRoom[]
   sessions          Session[]
+  modules           AcademyModule[]
 
   @@index([status])
   @@map("academies")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// MÓDULOS CONTRATADOS
+//
+// Una academia no compra «Geminis»: compra las partes que necesita. La que solo
+// da clases presenciales no quiere pagar por la app del alumnado; la que ya
+// tiene gestoría no necesita la facturación.
+//
+// El catálogo con los precios de referencia vive en `src/lib/modules/catalogo.ts`,
+// versionado. Aquí se guarda lo que cada academia tiene contratado **y a qué
+// precio**, que no tiene por qué ser el de catálogo: los precios se negocian, y
+// un sistema que no lo admita obliga a mentir en algún sitio.
+//
+// Decisión: no hay tabla de catálogo en la base. El catálogo es código porque
+// cambia con el producto —un módulo nuevo llega con las pantallas que lo
+// justifican— y tenerlo en dos sitios acabaría con los dos discrepando.
+// ─────────────────────────────────────────────────────────────────────────────
+
+enum ModuleCode {
+  NUCLEO
+  CONTENIDO
+  EVALUACION
+  TAREAS
+  AGENDA
+  COBROS
+  FACTURACION
+  COMUNICACION
+  CAMPUS
+  IA
+  ANALITICA
+  NORMATIVA
+}
+
+model AcademyModule {
+  id        String  @id @default(uuid(7))
+  academyId String
+  academy   Academy @relation(fields: [academyId], references: [id], onDelete: Cascade)
+
+  module ModuleCode
+
+  /// Está activo ahora mismo. Se desactiva en lugar de borrarse: qué tuvo
+  /// contratado una academia y hasta cuándo es justo lo que hay que poder
+  /// consultar cuando alguien discute una factura.
+  active Boolean @default(true)
+
+  /// Lo que paga ESTA academia al mes por este módulo, en céntimos. Si es null,
+  /// se cobra el precio de catálogo.
+  priceCents Int?
+
+  activatedAt   DateTime  @default(now())
+  deactivatedAt DateTime?
+
+  /// Por qué se pactó ese precio, o por qué se quitó. Lo escribe quien lo hace.
+  notes String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([academyId, module])
+  @@index([academyId, active])
+  @@map("academy_modules")
 }

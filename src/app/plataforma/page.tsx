@@ -84,7 +84,12 @@ export default async function PlataformaPage() {
             {academias.map((academia) => (
               <tr key={academia.id}>
                 <Td>
-                  <span className="block font-medium text-ink">{academia.name}</span>
+                  <Link
+                    href={`/plataforma/academias/${academia.id}`}
+                    className="block font-medium text-ink hover:text-accent"
+                  >
+                    {academia.name}
+                  </Link>
                   <span className="text-xs text-ink-muted">/{academia.slug}</span>
                 </Td>
                 <Td className="text-ink-soft">{academia.plan?.name ?? "—"}</Td>

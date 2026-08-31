@@ -4,6 +4,12 @@ import { prismaBase } from "@/lib/db/client";
 import { tenantDb, type TenantClient } from "@/lib/db/tenant";
 import { readSessionCookie, validateSessionToken } from "./session";
 import type { Permission } from "./permissions";
+import {
+  MODULOS,
+  MODULOS_NUCLEO,
+  moduloDelPermiso,
+  type CodigoModulo,
+} from "@/lib/modules/catalogo";
 
 /**
  * Contexto de autenticación de la petición.
@@ -50,6 +56,14 @@ export type AuthContext = {
   permissions: Set<Permission>;
   /// Academias a las que pertenece el usuario (para el selector de academia).
   memberships: { academyId: string; academyName: string; academySlug: string }[];
+  /**
+   * Módulos que esta academia tiene contratados.
+   *
+   * Va en el contexto y no se consulta en cada pantalla para que la
+   * comprobación sea igual de barata que la de un permiso: si costara una
+   * consulta, alguien acabaría saltándosela «solo en esta pantalla».
+   */
+  modulos: Set<CodigoModulo>;
 };
 
 /**
@@ -102,6 +116,18 @@ export const getAuthContext = cache(async (): Promise<AuthContext | null> => {
     usable.find((m) => m.academyId === session.activeAcademyId) ??
     (usable.length === 1 ? usable[0] : undefined);
 
+  // Los módulos contratados. Se leen con el cliente sin guardia porque esta
+  // consulta ES la que decide el contexto: todavía no hay academia activa con
+  // la que acotar, y el filtro por `academyId` va explícito.
+  const modulos = new Set<CodigoModulo>(MODULOS_NUCLEO);
+  if (active) {
+    const contratados = await prismaBase.academyModule.findMany({
+      where: { academyId: active.academy.id, active: true },
+      select: { module: true },
+    });
+    for (const { module } of contratados) modulos.add(module as CodigoModulo);
+  }
+
   const permissions = new Set<Permission>();
   const roleKeys: string[] = [];
   if (active) {
@@ -125,6 +151,7 @@ export const getAuthContext = cache(async (): Promise<AuthContext | null> => {
     },
     sessionId: session.id,
     impersonatedById: session.impersonatedById,
+    modulos,
     academy: active
       ? {
           id: active.academy.id,
@@ -147,6 +174,37 @@ export const getAuthContext = cache(async (): Promise<AuthContext | null> => {
 });
 
 // ── Errores ──────────────────────────────────────────────────────────────────
+
+/**
+ * La academia no tiene contratado el módulo que hace falta.
+ *
+ * Es distinto de que falte el permiso, y por eso es otro error: aquí no hay
+ * nada que un administrador pueda arreglar dando permisos. Se dice qué módulo
+ * es para que el mensaje sirva de algo.
+ */
+export class ModuloNoContratadoError extends Error {
+  /** El módulo que faltaba. */
+  readonly modulo: CodigoModulo;
+
+  constructor(modulo: CodigoModulo) {
+    super(
+      `Tu academia no tiene contratado el módulo «${MODULOS[modulo]?.nombre ?? modulo}».`,
+    );
+    this.name = "ModuloNoContratadoError";
+    this.modulo = modulo;
+  }
+}
+
+/**
+ * ¿Tiene la academia este módulo?
+ *
+ * @param ctx Contexto de la sesión.
+ * @param modulo El módulo.
+ * @returns `true` si está contratado y activo.
+ */
+export function tieneModulo(ctx: AuthContext, modulo: CodigoModulo): boolean {
+  return ctx.modulos.has(modulo);
+}
 
 /**
  * Falta el permiso para hacer algo.
@@ -246,10 +304,20 @@ export function canAny(ctx: AuthContext, permissions: Permission[]): boolean {
  *
  * @param permission El permiso exigido.
  * @returns El contexto con academia y cliente de base de datos.
+ * @throws {ModuloNoContratadoError} Si la academia no tiene el módulo al que
+ *   pertenece ese permiso. Se comprueba **antes** que el permiso: dar permisos
+ *   no arregla un módulo sin contratar.
  * @throws {ForbiddenError} Si falta el permiso.
  */
 export async function requirePermission(permission: Permission) {
   const ctx = await requireAcademy();
+
+  // El módulo antes que el permiso. Si la academia no lo tiene contratado, dar
+  // permisos no arregla nada, y decir «no tienes permiso» mandaría a su
+  // administrador a buscar un ajuste que no existe.
+  const modulo = moduloDelPermiso(permission);
+  if (!ctx.modulos.has(modulo)) throw new ModuloNoContratadoError(modulo);
+
   if (!ctx.permissions.has(permission)) throw new ForbiddenError(permission);
   return ctx;
 }
@@ -264,10 +332,17 @@ export async function requirePermission(permission: Permission) {
  *
  * @param permission El permiso exigido.
  * @returns El contexto con academia y cliente de base de datos.
- * @remarks Si falta el permiso redirige a `/sin-acceso` y no devuelve.
+ * @remarks Si falta el módulo lleva a `/sin-modulo`, que explica qué es y qué
+ *   incluye; si falta el permiso, a `/sin-acceso`. Son pantallas distintas
+ *   porque son problemas distintos: uno lo resuelve la academia contratando y
+ *   el otro su administrador dando permisos.
  */
 export async function requirePagePermission(permission: Permission) {
   const ctx = await requireAcademy();
+
+  const modulo = moduloDelPermiso(permission);
+  if (!ctx.modulos.has(modulo)) redirect(`/sin-modulo?m=${modulo}`);
+
   if (!ctx.permissions.has(permission)) redirect("/sin-acceso");
   return ctx;
 }

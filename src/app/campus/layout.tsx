@@ -23,6 +23,14 @@ export default async function CampusLayout({
 }) {
   const ctx = await requireAcademy();
 
+  // La app del alumnado es un módulo: una academia puede no tenerlo contratado
+  // —solo da clases presenciales, por ejemplo— y entonces el Campus no existe
+  // para su gente. Se comprueba antes que el permiso porque es un problema
+  // distinto: aquí no hay ningún ajuste que su administrador pueda tocar.
+  if (!ctx.modulos.has("CAMPUS")) {
+    redirect(ctx.permissions.has("manager.access") ? "/gestion" : "/sin-modulo?m=CAMPUS");
+  }
+
   if (!ctx.permissions.has("campus.access")) {
     redirect(ctx.permissions.has("manager.access") ? "/gestion" : "/sin-acceso");
   }

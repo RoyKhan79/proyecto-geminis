@@ -638,3 +638,47 @@ que ADR-0056 con las pruebas que pasan sin probar nada.
 **Dónde vive cada cosa.** La referencia dice el **qué**; `DECISIONS.md` dice el
 **porqué**. Cuando algo del código parece raro, la respuesta suele estar aquí
 antes que en la firma de la función.
+
+### ADR-0059 · Se vende por módulos, y el módulo sin contratar no funciona ⭐
+**Decisión.** Una academia no compra «Geminis»: compra las partes que necesita.
+Doce módulos con su precio, tres packs preparados y descuento por volumen. El
+superadministrador compone el pack de cada academia y ve el total al instante.
+
+**Lo que hace que no sea decoración.** Un módulo sin contratar **no se puede
+usar**, no solo «no se ve». Cada permiso pertenece a un módulo
+(`MODULO_DE_PERMISO`) y las guardas que ya comprobaban permisos comprueban
+además el módulo. La protección entra por el mismo sitio por el que entra todo
+—`requirePermission`— así que una pantalla nueva queda protegida sin que nadie
+se acuerde de nada. Esconder el menú es cortesía; lo que protege es que la
+acción diga que no.
+
+**Un permiso sin mapear cae en el núcleo**, o sea que su función queda
+disponible. Es lo prudente —olvidarse no rompe nada— pero significa que un
+módulo nuevo puede acabar regalado sin que nadie lo note, así que hay una
+prueba que enumera los permisos del núcleo y falla cuando aparece uno nuevo sin
+clasificar.
+
+**`/sin-modulo` es una pantalla distinta de `/sin-acceso`.** Son problemas
+distintos: allí falta un permiso, que lo arregla el administrador de la
+academia; aquí falta un módulo, que se resuelve contratándolo. Mandar a alguien
+a buscar un ajuste que no existe es la peor forma de decir que no, así que en
+vez de un cartel se explica qué es ese módulo y qué incluye.
+
+**Las dependencias se enseñan, no se imponen en silencio.** La IA sin temario
+es un asistente sin nada que citar, y la facturación sin cobros son facturas que
+no se cruzan con ningún pago. Al marcar se dice qué ha entrado con ello; al
+desmarcar, qué se cae. Y se resuelven también en el servidor, porque a esa
+acción se puede llamar sin pasar por la pantalla.
+
+**Lo que se quita se desactiva, no se borra.** Cuando dentro de seis meses
+alguien discuta una factura, la pregunta será qué tenía contratado y desde
+cuándo. Esa pregunta tiene que tener respuesta.
+
+**El precio de catálogo es código; el de cada academia, base de datos.** Los
+precios se negocian, y un sistema que no lo admita obliga a mentir en algún
+sitio. El catálogo está versionado para poder ver contra qué se cambió un
+precio.
+
+**Las academias que ya existían se quedaron con todo.** Es lo único honesto:
+nadie contrató módulos porque no existían, y quitarles funciones que ya usaban
+por una migración sería cambiarles el trato sin avisar.

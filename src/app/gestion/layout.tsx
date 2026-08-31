@@ -5,6 +5,7 @@ import { signOutAction } from "@/lib/auth/actions";
 import { stopImpersonationAction } from "@/server/platform/actions";
 import { requireAcademy } from "@/lib/auth/context";
 import { MANAGER_NAV } from "@/components/manager/nav-config";
+import { moduloDelPermiso } from "@/lib/modules/catalogo";
 import { ManagerSidebar } from "@/components/manager/sidebar";
 import { Button } from "@/components/ui/button";
 import { BRAND } from "@/lib/brand";
@@ -30,8 +31,17 @@ export default async function ManagerLayout({
     redirect(ctx.permissions.has("campus.access") ? "/campus" : "/sin-acceso");
   }
 
+  // Dos filtros, y son cosas distintas: el permiso dice qué puede hacer ESTA
+  // persona, y el módulo qué ha contratado LA ACADEMIA. Enseñar un apartado que
+  // la academia no tiene sería ofrecerle una puerta cerrada; esconderlo es lo
+  // cortés. Lo que de verdad protege es que la acción responda que no, y eso lo
+  // hace `requirePermission` por su cuenta.
   const allowed = MANAGER_NAV.flatMap((section) => section.items)
-    .filter((item) => ctx.permissions.has(item.permission))
+    .filter(
+      (item) =>
+        ctx.permissions.has(item.permission) &&
+        ctx.modulos.has(moduloDelPermiso(item.permission)),
+    )
     .map((item) => item.href);
 
   return (
