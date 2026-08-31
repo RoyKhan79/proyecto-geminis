@@ -1,5 +1,5 @@
 import { prismaBase } from "@/lib/db/client";
-import { tenantDb } from "@/lib/db/tenant";
+import { tenantDb, type TenantClient } from "@/lib/db/tenant";
 import { sendEmail } from "@/lib/email";
 import { formatDate } from "@/lib/utils";
 import { enlaceDePago, instruccionesDePago } from "./invoice-email";
@@ -145,6 +145,88 @@ export function componerAvisoDeImpago(datos: {
     text,
     html,
   };
+}
+
+/**
+ * Manda el aviso de impago a UN alumno, ahora.
+ *
+ * Comparte el correo y las marcas con la tarea diaria: si esto mandara un texto
+ * distinto, el alumno recibiría dos versiones de la misma reclamación según
+ * quién la disparó.
+ */
+export async function reclamarA(
+  db: TenantClient,
+  academyId: string,
+  membershipId: string,
+  hoy: Date = new Date(),
+): Promise<number> {
+  const academia = await prismaBase.academy.findUnique({
+    where: { id: academyId },
+    select: { name: true, legalName: true, billingIban: true },
+  });
+  if (!academia) return 0;
+
+  const recibos = await db.payment.findMany({
+    where: {
+      studentId: membershipId,
+      deletedAt: null,
+      status: { in: ["PENDING", "FAILED"] },
+      dueDate: { not: null, lt: hoy },
+    },
+    select: {
+      id: true,
+      concept: true,
+      amountCents: true,
+      dueDate: true,
+      suspendedAt: true,
+      student: {
+        select: {
+          user: { select: { firstName: true, email: true } },
+          billingProfile: { select: { method: true, chargeDay: true, iban: true } },
+        },
+      },
+    },
+    orderBy: { dueDate: "asc" },
+  });
+
+  // Se avisa del más antiguo, que es el que da la cifra de días de retraso. Un
+  // correo por cada recibo vencido sería tres correos a la misma persona.
+  const recibo = recibos[0];
+  if (!recibo) return 0;
+
+  const correo = componerAvisoDeImpago({
+    nombre: recibo.student.user.firstName,
+    concepto:
+      recibos.length > 1
+        ? `${recibo.concept} (y ${recibos.length - 1} más)`
+        : recibo.concept,
+    importeCents: recibos.reduce((t, r) => t + r.amountCents, 0),
+    vencimiento: recibo.dueDate as Date,
+    diasDeRetraso: diasDesde(recibo.dueDate as Date, hoy),
+    academia: academia.legalName ?? academia.name,
+    seCorta: false,
+    yaCortado: Boolean(recibo.suspendedAt),
+    pago: instruccionesDePago({
+      metodo: recibo.student.billingProfile?.method,
+      diaDeCobro: recibo.student.billingProfile?.chargeDay,
+      ibanDelAlumno: recibo.student.billingProfile?.iban,
+      ibanDeLaAcademia: academia.billingIban,
+      referencia: recibo.concept,
+      nombreAcademia: academia.legalName ?? academia.name,
+      enlaceDePago: enlaceDePago(recibo.id),
+    }),
+  });
+
+  await sendEmail({ to: recibo.student.user.email, ...correo });
+
+  // Se marcan TODOS: si no, la tarea diaria volvería a escribirle mañana por
+  // los otros recibos y recibiría dos correos casi seguidos.
+  await db.payment.updateMany({
+    where: { id: { in: recibos.map((r) => r.id) } },
+    data: { lastReminderAt: hoy, reminderCount: { increment: 1 } },
+  });
+
+  return recibos.length;
 }
 
 export type ResultadoDunning = {

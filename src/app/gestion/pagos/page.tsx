@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { CreditCard, Landmark } from "lucide-react";
+import { CreditCard, Landmark, Users } from "lucide-react";
 import { requirePagePermission } from "@/lib/auth/context";
 import { setPaymentStatusAction } from "@/server/payments/actions";
 import { Button } from "@/components/ui/button";
@@ -135,6 +135,12 @@ export default async function PagosPage({
         actions={
           puedeEscribir ? (
             <>
+              <Button asChild variant="secondary">
+                <Link href="/gestion/pagos/morosidad">
+                  <Users aria-hidden />
+                  Quién debe
+                </Link>
+              </Button>
               <Button asChild variant="secondary">
                 <Link href="/gestion/pagos/remesas">
                   <Landmark aria-hidden />

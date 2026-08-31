@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { recordAudit } from "@/lib/audit";
 import { claveDeComercioValida } from "@/lib/billing/redsys";
+import { reclamarA } from "./dunning";
 import { requirePermission } from "@/lib/auth/context";
 import { normalizarIban, validarIban } from "@/lib/billing/iban";
 import { cifrar, descifrar } from "@/lib/crypto/field";
@@ -361,6 +362,37 @@ export async function saveDunningAction(
 
   revalidatePath("/gestion/pagos/remesas");
   return { ok: true };
+}
+
+/**
+ * Reclamarle a alguien ahora mismo, sin esperar a la tarea diaria.
+ *
+ * Existe porque el día 5 alguien mira el cuadro y quiere escribir a los cuatro
+ * que debe, no mañana a las nueve. Manda el mismo correo que mandaría la tarea
+ * —el mismo texto, la misma forma de pago, el mismo enlace— y deja la misma
+ * marca, así que la tarea no volverá a insistirle mañana.
+ *
+ * NO suspende a nadie. Cortar el acceso es una decisión con plazo, y hacerla
+ * caber en un botón que pone «reclamar» es la forma de cortarle el acceso a
+ * alguien sin querer.
+ */
+export async function reclamarAlumnoAction(formData: FormData) {
+  const ctx = await requirePermission("payments.write");
+  const membershipId = String(formData.get("membershipId") ?? "");
+
+  const enviados = await reclamarA(ctx.db, ctx.academy.id, membershipId);
+
+  await recordAudit({
+    academyId: ctx.academy.id,
+    actorId: ctx.user.id,
+    impersonatorId: ctx.impersonatedById,
+    action: "billing.remind",
+    entityType: "Membership",
+    entityId: membershipId,
+    changes: { avisos: enviados },
+  });
+
+  revalidatePath("/gestion/pagos/morosidad");
 }
 
 const tpvSchema = z.object({
