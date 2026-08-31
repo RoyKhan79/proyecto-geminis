@@ -216,3 +216,67 @@ export async function pactarPrecioAction(
       : `Precio pactado para «${MODULOS[codigo].nombre}».`,
   };
 }
+
+const descuentoSchema = z.object({
+  academyId: z.string().uuid(),
+  /** Porcentaje entero, o vacío para volver al descuento por volumen. */
+  descuento: z.string().trim(),
+  notas: z.string().trim().max(500).optional(),
+});
+
+/**
+ * Pacta un descuento distinto del que sale por volumen.
+ *
+ * @param formData `academyId`, `descuento` (0-100, o vacío) y unas notas.
+ * @returns Confirmación, o el motivo.
+ * @remarks Dejarlo vacío vuelve al automático. **El cero no es vacío**: pactar
+ *   un cero por ciento es un acuerdo real cuando los precios de línea ya se han
+ *   negociado a la baja, y tiene que poder distinguirse de «no se ha pactado
+ *   nada».
+ */
+export async function guardarDescuentoAction(
+  _prev: ModuloState,
+  formData: FormData,
+): Promise<ModuloState> {
+  const ctx = await requirePlatformAdmin();
+  const parsed = descuentoSchema.safeParse(Object.fromEntries(formData.entries()));
+  if (!parsed.success) return { error: "Revisa los datos." };
+
+  let descuento: number | null = null;
+  if (parsed.data.descuento !== "") {
+    const numero = Number(parsed.data.descuento.replace(",", "."));
+    if (!Number.isFinite(numero) || numero < 0 || numero > 100) {
+      return { error: "El descuento tiene que estar entre 0 y 100." };
+    }
+    descuento = Math.round(numero);
+  }
+
+  const academia = await prismaBase.academy.findUnique({
+    where: { id: parsed.data.academyId },
+    select: { id: true, moduleDiscountPercent: true, deletedAt: true },
+  });
+  if (!academia || academia.deletedAt) return { error: "Esa academia no existe." };
+
+  await prismaBase.academy.update({
+    where: { id: academia.id },
+    data: { moduleDiscountPercent: descuento },
+  });
+
+  await recordAudit({
+    academyId: academia.id,
+    actorId: ctx.user.id,
+    action: "academy.modules.discount",
+    entityType: "Academy",
+    entityId: academia.id,
+    changes: { antes: academia.moduleDiscountPercent, despues: descuento },
+    context: { notas: parsed.data.notas ?? null },
+  });
+
+  revalidatePath(`/plataforma/academias/${academia.id}`);
+  return {
+    ok:
+      descuento === null
+        ? "El descuento vuelve a calcularse por volumen."
+        : `Descuento pactado del ${descuento}%.`,
+  };
+}

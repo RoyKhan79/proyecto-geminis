@@ -7,9 +7,11 @@ import { archiveStudentAction, updateStudentAction } from "@/server/students/act
 import {
   getStudent,
   loadCourseOptions,
+} from "@/server/students/queries";
+import {
   STUDENT_STATUS_LABEL,
   STUDENT_STATUS_TONE,
-} from "@/server/students/queries";
+} from "@/lib/students/estados";
 import { Button } from "@/components/ui/button";
 import {
   Badge,
@@ -24,6 +26,7 @@ import {
   Th,
 } from "@/components/ui/primitives";
 import { formatCents, formatDate, formatDateTime } from "@/lib/utils";
+import { FotoDelAlumno } from "./foto";
 import { StudentForm } from "../student-form";
 import { EnrollForm } from "./enroll-form";
 import { BillingForm } from "./billing-form";
@@ -80,7 +83,7 @@ export default async function FichaAlumnoPage({
     <>
       <PageHeader
         title={`${alumno.user.firstName} ${alumno.user.lastName ?? ""}`}
-        description={alumno.user.email}
+        description={[alumno.user.email, alumno.user.phone].filter(Boolean).join(" · ")}
         breadcrumb={
           <Link
             href="/gestion/alumnos"
@@ -132,14 +135,63 @@ export default async function FichaAlumnoPage({
               <CardHeader>
                 <CardTitle>Datos</CardTitle>
               </CardHeader>
-              <CardContent className="grid gap-3 text-sm sm:grid-cols-2">
-                <Dato label="Teléfono" value={alumno.user.phone ?? "—"} />
-                <Dato label="Expediente" value={alumno.studentProfile.code ?? "—"} />
-                <Dato label="Alta" value={formatDate(alumno.joinedAt)} />
-                <Dato
-                  label="Último acceso"
-                  value={formatDateTime(alumno.user.lastLoginAt)}
+              <CardContent className="flex gap-5 pt-0">
+                <FotoDelAlumno
+                  membershipId={alumno.id}
+                  nombre={`${alumno.user.firstName} ${alumno.user.lastName ?? ""}`}
+                  url={alumno.user.avatarUrl}
+                  puedeEditar={puedeEditar}
                 />
+
+                <div className="grid flex-1 gap-3 text-sm sm:grid-cols-2">
+                  <Dato label="Teléfono" value={alumno.user.phone ?? "—"} />
+                  <Dato label="Expediente" value={alumno.studentProfile.code ?? "—"} />
+                  <Dato label="DNI / NIE" value={alumno.studentProfile.nationalId ?? "—"} />
+                  <Dato
+                    label="Fecha de nacimiento"
+                    value={formatDate(alumno.studentProfile.birthDate)}
+                  />
+                  <Dato label="Dirección" value={alumno.studentProfile.address ?? "—"} />
+                  <Dato
+                    label="Localidad"
+                    value={
+                      [
+                        alumno.studentProfile.postalCode,
+                        alumno.studentProfile.city,
+                        alumno.studentProfile.province
+                          ? `(${alumno.studentProfile.province})`
+                          : null,
+                      ]
+                        .filter(Boolean)
+                        .join(" ") || "—"
+                    }
+                  />
+                  <Dato label="Alta" value={formatDate(alumno.joinedAt)} />
+                  <Dato
+                    label="Último acceso"
+                    value={formatDateTime(alumno.user.lastLoginAt)}
+                  />
+                  <Dato
+                    label="Cómo llegó"
+                    value={alumno.studentProfile.source ?? "—"}
+                  />
+                  <Dato
+                    label="Última actividad"
+                    value={formatDate(alumno.studentProfile.lastActivityAt)}
+                  />
+
+                  {alumno.studentProfile.notes ? (
+                    <div className="sm:col-span-2">
+                      <p className="text-xs text-ink-muted">Observaciones internas</p>
+                      <p className="mt-1 whitespace-pre-line rounded-[var(--radius-control)] bg-surface-muted p-3 text-sm leading-relaxed text-ink-soft">
+                        {alumno.studentProfile.notes}
+                      </p>
+                      <p className="mt-1 text-[0.7rem] text-ink-muted">
+                        No las ve el alumno.
+                      </p>
+                    </div>
+                  ) : null}
+                </div>
               </CardContent>
             </Card>
           )}

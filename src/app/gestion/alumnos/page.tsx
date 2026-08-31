@@ -5,10 +5,13 @@ import { requireAcademy } from "@/lib/auth/context";
 import {
   listStudents,
   loadCourseOptions,
-  STUDENT_STATUS_LABEL,
-  STUDENT_STATUS_TONE,
   type StudentFilters,
 } from "@/server/students/queries";
+import { Avatar } from "@/components/ui/avatar";
+import {
+  STUDENT_STATUS_LABEL,
+  STUDENT_STATUS_TONE,
+} from "@/lib/students/estados";
 import { Button } from "@/components/ui/button";
 import {
   Badge,
@@ -17,9 +20,6 @@ import {
   Input,
   PageHeader,
   Select,
-  Table,
-  Td,
-  Th,
 } from "@/components/ui/primitives";
 import { formatDate } from "@/lib/utils";
 import type { StudentStatus } from "@/generated/prisma/enums";
@@ -143,59 +143,86 @@ export default async function AlumnosPage({
             }
           />
         ) : (
-          <Table>
-            <thead>
-              <tr>
-                <Th>Alumno</Th>
-                <Th className="hidden sm:table-cell">Expediente</Th>
-                <Th className="hidden md:table-cell">Curso · grupo</Th>
-                <Th>Estado</Th>
-                <Th className="hidden lg:table-cell">Última actividad</Th>
-              </tr>
-            </thead>
-            <tbody>
+          <div className="overflow-hidden rounded-[var(--radius-card)] border border-line bg-surface">
+            {/*
+              Lista de enlaces, no una tabla.
+
+              Era una tabla con el enlace SOLO en el nombre, y eso hacía que la
+              fila pareciera pulsable y no lo fuera: se pincha en el correo, en
+              el curso o en el estado y no pasa nada. Aquí la fila entera es un
+              enlace, que es lo que espera cualquiera, y sigue viéndose en
+              columnas alineadas.
+            */}
+            <div
+              aria-hidden
+              className="grid grid-cols-[minmax(0,2.2fr)_minmax(0,1fr)] gap-4 border-b border-line bg-surface-muted px-4 py-2.5 font-mono text-[0.65rem] uppercase tracking-wider text-ink-muted sm:grid-cols-[minmax(0,2.2fr)_minmax(0,0.8fr)_minmax(0,1fr)] md:grid-cols-[minmax(0,2.2fr)_minmax(0,0.8fr)_minmax(0,1.4fr)_minmax(0,1fr)] lg:grid-cols-[minmax(0,2.2fr)_minmax(0,0.8fr)_minmax(0,1.4fr)_minmax(0,1fr)_minmax(0,1fr)]"
+            >
+              <span>Alumno</span>
+              <span className="hidden sm:block">Expediente</span>
+              <span className="hidden md:block">Curso · grupo</span>
+              <span>Estado</span>
+              <span className="hidden lg:block">Última actividad</span>
+            </div>
+
+            <ul className="divide-y divide-[var(--border-subtle)]">
               {items.map((alumno) => {
                 const estado = alumno.studentProfile?.status ?? "ACTIVE";
                 const matricula = alumno.enrollments[0];
                 return (
-                  <tr key={alumno.id} className="hover:bg-surface-muted">
-                    <Td>
-                      <Link
-                        href={`/gestion/alumnos/${alumno.id}`}
-                        className="block font-medium text-ink hover:text-accent"
-                      >
-                        {alumno.user.firstName} {alumno.user.lastName ?? ""}
-                      </Link>
-                      <span className="text-xs text-ink-muted">{alumno.user.email}</span>
-                    </Td>
-                    <Td className="hidden text-ink-soft sm:table-cell">
-                      {alumno.studentProfile?.code ?? "—"}
-                    </Td>
-                    <Td className="hidden text-ink-soft md:table-cell">
-                      {matricula ? (
-                        <>
-                          <span className="block">{matricula.course.name}</span>
-                          <span className="text-xs text-ink-muted">
-                            {matricula.group?.name ?? "Sin grupo"}
+                  <li key={alumno.id}>
+                    <Link
+                      href={`/gestion/alumnos/${alumno.id}`}
+                      className="grid grid-cols-[minmax(0,2.2fr)_minmax(0,1fr)] items-center gap-4 px-4 py-3 text-sm transition-colors hover:bg-surface-muted focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-ring sm:grid-cols-[minmax(0,2.2fr)_minmax(0,0.8fr)_minmax(0,1fr)] md:grid-cols-[minmax(0,2.2fr)_minmax(0,0.8fr)_minmax(0,1.4fr)_minmax(0,1fr)] lg:grid-cols-[minmax(0,2.2fr)_minmax(0,0.8fr)_minmax(0,1.4fr)_minmax(0,1fr)_minmax(0,1fr)]"
+                    >
+                      <span className="flex min-w-0 items-center gap-3">
+                        <Avatar
+                          nombre={`${alumno.user.firstName} ${alumno.user.lastName ?? ""}`}
+                          url={alumno.user.avatarUrl}
+                        />
+                        <span className="min-w-0">
+                          <span className="block truncate font-medium text-ink">
+                            {alumno.user.firstName} {alumno.user.lastName ?? ""}
                           </span>
-                        </>
-                      ) : (
-                        "Sin matrícula"
-                      )}
-                    </Td>
-                    <Td>
-                      <Badge tone={STUDENT_STATUS_TONE[estado]}>
-                        {STUDENT_STATUS_LABEL[estado]}
-                      </Badge>
-                    </Td>
-                    <Td className="hidden text-ink-soft lg:table-cell">
-                      {formatDate(alumno.studentProfile?.lastActivityAt)}
-                    </Td>
-                  </tr>
+                          <span className="block truncate text-xs text-ink-muted">
+                            {alumno.user.email}
+                          </span>
+                        </span>
+                      </span>
+
+                      <span className="hidden truncate text-ink-soft sm:block">
+                        {alumno.studentProfile?.code ?? "—"}
+                      </span>
+
+                      <span className="hidden min-w-0 md:block">
+                        {matricula ? (
+                          <>
+                            <span className="block truncate text-ink-soft">
+                              {matricula.course.name}
+                            </span>
+                            <span className="block truncate text-xs text-ink-muted">
+                              {matricula.group?.name ?? "Sin grupo"}
+                            </span>
+                          </>
+                        ) : (
+                          <span className="text-ink-muted">Sin matrícula</span>
+                        )}
+                      </span>
+
+                      <span>
+                        <Badge tone={STUDENT_STATUS_TONE[estado]}>
+                          {STUDENT_STATUS_LABEL[estado]}
+                        </Badge>
+                      </span>
+
+                      <span className="hidden truncate text-ink-soft lg:block">
+                        {formatDate(alumno.studentProfile?.lastActivityAt)}
+                      </span>
+                    </Link>
+                  </li>
                 );
               })}
-            </tbody>
-          </Table>
+            </ul>
+          </div>
         )}
       </Card>
 

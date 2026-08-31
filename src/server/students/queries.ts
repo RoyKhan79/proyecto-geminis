@@ -83,7 +83,14 @@ export async function listStudents(db: TenantClient, filters: StudentFilters) {
         id: true,
         createdAt: true,
         user: {
-          select: { id: true, firstName: true, lastName: true, email: true, phone: true },
+          select: {
+            id: true,
+            firstName: true,
+            lastName: true,
+            email: true,
+            phone: true,
+            avatarUrl: true,
+          },
         },
         studentProfile: {
           select: { code: true, status: true, lastActivityAt: true },
@@ -257,29 +264,4 @@ export async function loadCourseOptions(db: TenantClient) {
   });
 }
 
-/** Cómo se llama cada estado en pantalla, en el idioma de la academia. */
-export const STUDENT_STATUS_LABEL: Record<StudentStatus, string> = {
-  PENDING: "Pendiente",
-  ACTIVE: "Activo",
-  ON_HOLD: "Baja temporal",
-  INACTIVE: "Baja",
-  ALUMNI: "Antiguo alumno",
-};
 
-/**
- * El color de cada estado.
- *
- * Va aparte de la etiqueta para que el color signifique siempre lo mismo en
- * toda la aplicación: un alumno de baja se ve igual en su ficha, en el listado
- * y en la lista de cobros.
- */
-export const STUDENT_STATUS_TONE: Record<
-  StudentStatus,
-  "neutral" | "positive" | "caution" | "critical" | "info"
-> = {
-  PENDING: "caution",
-  ACTIVE: "positive",
-  ON_HOLD: "caution",
-  INACTIVE: "critical",
-  ALUMNI: "neutral",
-};

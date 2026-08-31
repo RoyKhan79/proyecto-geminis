@@ -12,7 +12,7 @@ import {
   Select,
   Textarea,
 } from "@/components/ui/primitives";
-import { STUDENT_STATUS_LABEL } from "@/server/students/queries";
+import { STUDENT_STATUS_LABEL } from "@/lib/students/estados";
 
 /**
  * Un curso en el que se puede matricular al alumno.

@@ -33,6 +33,7 @@ export default async function ModulosDeAcademiaPage({
       slug: true,
       status: true,
       createdAt: true,
+      moduleDiscountPercent: true,
       deletedAt: true,
       modules: {
         select: {
@@ -86,6 +87,7 @@ export default async function ModulosDeAcademiaPage({
         academyId={academia.id}
         inicial={activos}
         preciosPactados={preciosPactados}
+        descuentoPactado={academia.moduleDiscountPercent}
       />
 
       {retirados.length > 0 ? (

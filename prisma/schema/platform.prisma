@@ -101,6 +101,15 @@ model Academy {
   /// política de IA…). JSON porque son banderas heterogéneas y cambiantes.
   settings Json @default("{}")
 
+  /// Descuento pactado sobre los módulos, en porcentaje entero.
+  ///
+  /// `null` significa «el que salga por volumen». Un número lo sustituye, y eso
+  /// incluye el cero: un acuerdo puede ser precisamente que no haya descuento
+  /// porque los precios de línea ya se negociaron a la baja. Por eso es
+  /// nullable y no un cero por defecto: hay que poder distinguir «no pactado»
+  /// de «pactado en cero».
+  moduleDiscountPercent Int?
+
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?

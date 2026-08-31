@@ -427,13 +427,23 @@ export function arrastraAlQuitar(
 }
 
 export type Presupuesto = {
-  lineas: { codigo: CodigoModulo; nombre: string; precioCents: number }[];
+  lineas: {
+    codigo: CodigoModulo;
+    nombre: string;
+    /** Lo que se cobra por esta línea. */
+    precioCents: number;
+    /** El de catálogo, para poder enseñar el tachado cuando se ha pactado otro. */
+    precioCatalogoCents: number;
+    /** Si esta línea lleva un precio negociado distinto del de catálogo. */
+    pactado: boolean;
+  }[];
   /** Suma antes del descuento. */
   subtotalCents: number;
-  /** Cuánto se descuenta por llevar muchos módulos. */
   descuentoCents: number;
   /** Porcentaje aplicado, para poder enseñarlo. */
   descuentoPorcentaje: number;
+  /** De dónde sale ese porcentaje. Se enseña, porque cambia la conversación. */
+  descuentoOrigen: "volumen" | "pactado";
   totalCents: number;
 };
 
@@ -466,17 +476,33 @@ export function descuentoPorVolumen(cuantosModulos: number): number {
 export function calcularPresupuesto(
   modulos: CodigoModulo[],
   preciosPactados: Partial<Record<CodigoModulo, number>> = {},
+  descuentoPactado?: number | null,
 ): Presupuesto {
   const completos = resolverDependencias(modulos);
 
-  const lineas = completos.map((codigo) => ({
-    codigo,
-    nombre: MODULOS[codigo].nombre,
-    precioCents: preciosPactados[codigo] ?? MODULOS[codigo].precioCents,
-  }));
+  const lineas = completos.map((codigo) => {
+    const catalogo = MODULOS[codigo].precioCents;
+    const pactado = preciosPactados[codigo];
+    return {
+      codigo,
+      nombre: MODULOS[codigo].nombre,
+      precioCents: pactado ?? catalogo,
+      precioCatalogoCents: catalogo,
+      pactado: pactado !== undefined && pactado !== catalogo,
+    };
+  });
 
   const subtotalCents = lineas.reduce((suma, l) => suma + l.precioCents, 0);
-  const descuentoPorcentaje = descuentoPorVolumen(completos.length);
+
+  // Un descuento pactado sustituye al de volumen, incluido el cero: un acuerdo
+  // puede ser precisamente que no haya descuento porque los precios de línea ya
+  // se negociaron. Por eso se comprueba contra null/undefined y no por
+  // «si es verdadero».
+  const hayPactado = descuentoPactado !== null && descuentoPactado !== undefined;
+  const descuentoPorcentaje = hayPactado
+    ? Math.max(0, Math.min(100, Math.round(descuentoPactado)))
+    : descuentoPorVolumen(completos.length);
+
   const descuentoCents = Math.round((subtotalCents * descuentoPorcentaje) / 100);
 
   return {
@@ -484,6 +510,7 @@ export function calcularPresupuesto(
     subtotalCents,
     descuentoCents,
     descuentoPorcentaje,
+    descuentoOrigen: hayPactado ? "pactado" : "volumen",
     totalCents: subtotalCents - descuentoCents,
   };
 }

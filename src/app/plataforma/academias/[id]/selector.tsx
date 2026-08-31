@@ -20,6 +20,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/primitives";
 import { formatCents, cn } from "@/lib/utils";
+import { DescuentoPactado } from "./descuento";
+import { PrecioDelModulo } from "./precio";
 
 /**
  * COMPONER EL PACK DE UNA ACADEMIA
@@ -37,11 +39,14 @@ export function SelectorDeModulos({
   academyId,
   inicial,
   preciosPactados,
+  descuentoPactado,
 }: {
   academyId: string;
   inicial: CodigoModulo[];
   /** Lo que paga esta academia por módulo, si se pactó algo distinto. */
   preciosPactados: Partial<Record<CodigoModulo, number>>;
+  /** Porcentaje acordado, o `null` para que salga del volumen. */
+  descuentoPactado: number | null;
 }) {
   const router = useRouter();
   const [pendiente, iniciar] = useTransition();
@@ -51,8 +56,8 @@ export function SelectorDeModulos({
 
   const lista = useMemo(() => [...elegidos], [elegidos]);
   const presupuesto = useMemo(
-    () => calcularPresupuesto(lista, preciosPactados),
-    [lista, preciosPactados],
+    () => calcularPresupuesto(lista, preciosPactados, descuentoPactado),
+    [lista, preciosPactados, descuentoPactado],
   );
   const porDependencia = useMemo(() => new Set(anadidosPorDependencia(lista)), [lista]);
 
@@ -124,7 +129,10 @@ export function SelectorDeModulos({
                 >
                   {pack.nombre}
                   <span className="text-ink-muted">
-                    {formatCents(calcularPresupuesto(pack.modulos, preciosPactados).totalCents)}
+                    {formatCents(
+                    calcularPresupuesto(pack.modulos, preciosPactados, descuentoPactado)
+                      .totalCents,
+                  )}
                   </span>
                 </Button>
               ))}
@@ -140,17 +148,26 @@ export function SelectorDeModulos({
             const pactado = preciosPactados[modulo.codigo];
 
             return (
-              <li key={modulo.codigo}>
+              <li
+                key={modulo.codigo}
+                className={cn(
+                  "flex gap-3 rounded-[var(--radius-card)] border p-4 transition-colors",
+                  dentro
+                    ? "border-accent/30 bg-accent-soft/40"
+                    : "border-line bg-surface",
+                )}
+              >
+                {/*
+                  La fila ya no es un botón entero. Lo era, y así no cabía el de
+                  «Editar» dentro: un botón dentro de otro botón no es HTML
+                  válido y los lectores de pantalla no saben cuál anunciar.
+                  Ahora el que alterna es solo la parte izquierda.
+                */}
                 <button
                   type="button"
                   onClick={() => alternar(modulo.codigo)}
                   aria-pressed={dentro}
-                  className={cn(
-                    "flex w-full gap-3 rounded-[var(--radius-card)] border p-4 text-left transition-colors",
-                    dentro
-                      ? "border-accent/30 bg-accent-soft/40"
-                      : "border-line bg-surface hover:border-line-strong",
-                  )}
+                  className="flex min-w-0 flex-1 gap-3 text-left"
                 >
                   <span
                     className={cn(
@@ -182,19 +199,14 @@ export function SelectorDeModulos({
                       {modulo.resumen}
                     </span>
                   </span>
-
-                  <span className="shrink-0 text-right">
-                    <span className="block font-semibold tabular-nums text-ink">
-                      {formatCents(pactado ?? modulo.precioCents)}
-                    </span>
-                    {pactado !== undefined && pactado !== modulo.precioCents ? (
-                      <span className="block text-[0.7rem] text-ink-muted line-through">
-                        {formatCents(modulo.precioCents)}
-                      </span>
-                    ) : null}
-                    <span className="block text-[0.7rem] text-ink-muted">al mes</span>
-                  </span>
                 </button>
+
+                <PrecioDelModulo
+                  academyId={academyId}
+                  codigo={modulo.codigo}
+                  precioActual={pactado ?? null}
+                  contratado={inicial.includes(modulo.codigo)}
+                />
               </li>
             );
           })}
@@ -212,7 +224,12 @@ export function SelectorDeModulos({
             <ul className="space-y-1 border-b border-line pb-3 text-sm">
               {presupuesto.lineas.map((linea) => (
                 <li key={linea.codigo} className="flex justify-between gap-3">
-                  <span className="min-w-0 truncate text-ink-soft">{linea.nombre}</span>
+                  <span className="min-w-0 truncate text-ink-soft">
+                    {linea.nombre}
+                    {linea.pactado ? (
+                      <span className="ml-1 text-[0.7rem] text-accent">pactado</span>
+                    ) : null}
+                  </span>
                   <span className="shrink-0 tabular-nums text-ink-muted">
                     {formatCents(linea.precioCents)}
                   </span>
@@ -227,14 +244,18 @@ export function SelectorDeModulos({
                   {formatCents(presupuesto.subtotalCents)}
                 </dd>
               </div>
-              {presupuesto.descuentoCents > 0 ? (
-                <div className="flex justify-between text-positive">
-                  <dt>Descuento {presupuesto.descuentoPorcentaje}%</dt>
-                  <dd className="tabular-nums">
-                    −{formatCents(presupuesto.descuentoCents)}
-                  </dd>
-                </div>
-              ) : null}
+              <div className="flex items-baseline justify-between gap-2">
+                <DescuentoPactado
+                  academyId={academyId}
+                  porcentaje={presupuesto.descuentoPorcentaje}
+                  origen={presupuesto.descuentoOrigen}
+                />
+                <dd className="shrink-0 tabular-nums text-positive">
+                  {presupuesto.descuentoCents > 0
+                    ? `−${formatCents(presupuesto.descuentoCents)}`
+                    : "—"}
+                </dd>
+              </div>
               <div className="flex items-baseline justify-between border-t border-line pt-2">
                 <dt className="font-medium text-ink">Al mes</dt>
                 <dd className="text-xl font-semibold tabular-nums text-ink">

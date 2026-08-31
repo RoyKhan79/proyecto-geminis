@@ -80,7 +80,19 @@ export async function GET(
     ctx.permissions.has("manager.access") && ctx.permissions.has("content.read");
   const descarga = new URL(request.url).searchParams.get("descargar") === "1";
 
-  if (!esPersonal) {
+  // Las fotos de perfil no cuelgan de ningún tema, así que la comprobación de
+  // temario no les vale. Se permiten a cualquiera de la academia —una foto de
+  // clase la ve la clase— pero solo si de verdad es la foto de alguien de ESTA
+  // academia: la consulta lo exige, no se fía de que la URL lo parezca.
+  const esFotoDeAlguienDeLaAcademia = await prismaBase.user.findFirst({
+    where: {
+      avatarUrl: `/api/archivos/${file.id}`,
+      memberships: { some: { academyId: ctx.academy.id, deletedAt: null } },
+    },
+    select: { id: true },
+  });
+
+  if (!esPersonal && !esFotoDeAlguienDeLaAcademia) {
     if (!nodo) {
       return NextResponse.json({ error: "Archivo no encontrado." }, { status: 404 });
     }
