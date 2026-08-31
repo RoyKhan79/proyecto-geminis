@@ -8,6 +8,7 @@ import { requirePermission } from "@/lib/auth/context";
 import { prismaBase } from "@/lib/db/client";
 import { addMemberToAcademy } from "@/server/academies/provision";
 import { buildStorageKey, storage } from "@/lib/storage";
+import { CAPACIDADES, capacidadesDisponibles } from "@/lib/access/capacidades";
 
 /**
  * Acciones sobre alumnos.
@@ -143,6 +144,7 @@ export async function updateStudentAction(
     select: {
       id: true,
       userId: true,
+      status: true,
       user: { select: { firstName: true, lastName: true, phone: true, email: true } },
       studentProfile: { select: { code: true, status: true, source: true, notes: true } },
     },
@@ -167,6 +169,23 @@ export async function updateStudentAction(
       notes: data.notes || null,
     },
   });
+
+  /*
+   * La membresía va detrás del estado del alumno, no por libre.
+   *
+   * Dar de baja suspende la membresía, y `requireAcademy` solo carga las que
+   * están activas. Si aquí se cambiara el estado del perfil sin tocarla, la
+   * ficha diría «Activo» y el alumno seguiría sin poder entrar: la pantalla
+   * enseñaría una cosa y la aplicación haría otra, que es la peor clase de
+   * fallo porque nadie lo ve hasta que llama por teléfono.
+   */
+  const membresiaQueToca = data.status === "INACTIVE" ? "SUSPENDED" : "ACTIVE";
+  if (membership.status !== membresiaQueToca) {
+    await ctx.db.membership.update({
+      where: { id: membershipId },
+      data: { status: membresiaQueToca },
+    });
+  }
 
   await recordAudit({
     academyId: ctx.academy.id,
@@ -244,6 +263,206 @@ export async function archiveStudentAction(formData: FormData) {
 
   revalidatePath("/gestion/alumnos");
   redirect("/gestion/alumnos");
+}
+
+/**
+ * Alta de un alumno que estaba de baja.
+ *
+ * Es la inversa de {@link archiveStudentAction}, y hacía falta que existiera:
+ * la baja suspende la membresía, y sin nada que la devuelva a activa el alumno
+ * se quedaba fuera para siempre. Cambiar el estado en el desplegable de la
+ * ficha no bastaba, porque eso solo tocaba el perfil.
+ *
+ * Lo que NO hace es resucitar las matrículas ni los derechos de acceso que la
+ * baja canceló. Volver a la academia y volver a tener pagado un curso son dos
+ * cosas distintas: devolver el acceso a un temario porque alguien pulsó «dar
+ * de alta» es regalar producto sin que nadie lo haya decidido. Se vuelve a
+ * matricular a mano, que es un acto deliberado y queda registrado.
+ */
+export async function restoreStudentAction(formData: FormData) {
+  const ctx = await requirePermission("students.write");
+  const membershipId = String(formData.get("membershipId") ?? "");
+
+  const membership = await ctx.db.membership.findUnique({
+    where: { id: membershipId },
+    select: { id: true, studentProfile: { select: { id: true } } },
+  });
+  if (!membership?.studentProfile) throw new Error("Ese alumno no existe.");
+
+  await prismaBase.studentProfile.update({
+    where: { membershipId },
+    data: { status: "ACTIVE" },
+  });
+  await ctx.db.membership.update({
+    where: { id: membershipId },
+    data: { status: "ACTIVE" },
+  });
+
+  await recordAudit({
+    academyId: ctx.academy.id,
+    actorId: ctx.user.id,
+    impersonatorId: ctx.impersonatedById,
+    action: "student.restore",
+    entityType: "Membership",
+    entityId: membershipId,
+  });
+
+  revalidatePath(`/gestion/alumnos/${membershipId}`);
+  revalidatePath("/gestion/alumnos");
+}
+
+const accesoSchema = z.object({
+  membershipId: z.string().min(1),
+  editionId: z.string().min(1, "Elige una convocatoria."),
+  capacidades: z.array(z.enum(CAPACIDADES.map((c) => c.codigo) as [string, ...string[]])),
+  /// Vacío = sin caducidad.
+  endsAt: z.string().trim().optional(),
+  note: z.string().trim().max(500).optional(),
+});
+
+/**
+ * QUÉ HERRAMIENTAS TIENE ESTE ALUMNO EN ESTA CONVOCATORIA
+ *
+ * El equivalente, un piso más abajo, de lo que hace la plataforma con los
+ * módulos de la academia: allí se decide qué paneles ve la academia según lo
+ * que paga; aquí, qué herramientas ve el alumno según lo que le paga a su
+ * academia.
+ *
+ * Se guarda como un derecho de origen MANUAL por convocatoria, con un alcance
+ * por capacidad marcada. Reescribe los alcances enteros en lugar de ir
+ * añadiendo y quitando: el formulario manda el estado final, y comparar listas
+ * es una fuente de fallos que aquí no compensa.
+ *
+ * Desmarcarlo todo revoca el derecho, no lo borra. Qué tuvo abierto un alumno y
+ * hasta cuándo es exactamente lo que hay que poder consultar cuando alguien
+ * reclama.
+ */
+export async function guardarAccesoAlumnoAction(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const ctx = await requirePermission("students.write");
+
+  const parsed = accesoSchema.safeParse({
+    membershipId: String(formData.get("membershipId") ?? ""),
+    editionId: String(formData.get("editionId") ?? ""),
+    capacidades: formData.getAll("capacidades").map(String),
+    endsAt: String(formData.get("endsAt") ?? ""),
+    note: String(formData.get("note") ?? ""),
+  });
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Revisa los datos." };
+  }
+  const data = parsed.data;
+
+  /*
+   * La academia no puede abrirle al alumno algo que ella no tiene contratado.
+   * La interfaz ya esconde esas casillas, pero esconder no es autorizar: el
+   * formulario se puede enviar a mano.
+   */
+  const permitidas = new Set(
+    capacidadesDisponibles(ctx.modulos).map((c) => c.codigo),
+  );
+  const sobran = data.capacidades.filter((c) => !permitidas.has(c as never));
+  if (sobran.length > 0) {
+    return {
+      error:
+        "Tu academia no tiene contratado el módulo que hace falta para alguna de esas herramientas.",
+    };
+  }
+
+  const alumno = await ctx.db.membership.findUnique({
+    where: { id: data.membershipId },
+    select: { id: true, studentProfile: { select: { id: true } } },
+  });
+  if (!alumno?.studentProfile) return { error: "Ese alumno no existe." };
+
+  // La convocatoria tiene que ser de ESTA academia. `ctx.db` ya filtra por
+  // inquilino, así que si no aparece es que no lo es.
+  const convocatoria = await ctx.db.oppositionEdition.findUnique({
+    where: { id: data.editionId },
+    select: { id: true },
+  });
+  if (!convocatoria) return { error: "Esa convocatoria no existe." };
+
+  const caduca = data.endsAt ? new Date(`${data.endsAt}T23:59:59.999Z`) : null;
+  if (caduca && Number.isNaN(caduca.getTime())) {
+    return { error: "La fecha de caducidad no es válida." };
+  }
+
+  const manuales = await ctx.db.entitlement.findMany({
+    where: { studentId: data.membershipId, source: "MANUAL" },
+    select: { id: true, scopes: { select: { editionId: true, capability: true } } },
+  });
+  const existente = manuales.find((e) =>
+    e.scopes.some((alcance) => alcance.editionId === data.editionId),
+  );
+  const antes = existente
+    ? existente.scopes
+        .filter((a) => a.editionId === data.editionId)
+        .map((a) => a.capability)
+        .sort()
+    : [];
+
+  if (data.capacidades.length === 0) {
+    if (existente) {
+      await ctx.db.entitlement.update({
+        where: { id: existente.id },
+        data: { status: "CANCELLED", endsAt: new Date() },
+      });
+    }
+  } else if (existente) {
+    await prismaBase.entitlementScope.deleteMany({
+      where: { entitlementId: existente.id, editionId: data.editionId },
+    });
+    await ctx.db.entitlement.update({
+      where: { id: existente.id },
+      data: {
+        status: "ACTIVE",
+        endsAt: caduca,
+        note: data.note || null,
+        scopes: {
+          create: data.capacidades.map((capability) => ({
+            editionId: data.editionId,
+            capability: capability as never,
+          })),
+        },
+      },
+    });
+  } else {
+    await ctx.db.entitlement.create({
+      data: {
+        studentId: data.membershipId,
+        source: "MANUAL",
+        status: "ACTIVE",
+        endsAt: caduca,
+        grantedById: ctx.membershipId,
+        note: data.note || null,
+        scopes: {
+          create: data.capacidades.map((capability) => ({
+            editionId: data.editionId,
+            capability: capability as never,
+          })),
+        },
+      },
+    });
+  }
+
+  await recordAudit({
+    academyId: ctx.academy.id,
+    actorId: ctx.user.id,
+    impersonatorId: ctx.impersonatedById,
+    action: "entitlement.grant",
+    entityType: "Membership",
+    entityId: data.membershipId,
+    changes: diff(
+      { editionId: data.editionId, capacidades: antes.join(", ") },
+      { editionId: data.editionId, capacidades: [...data.capacidades].sort().join(", ") },
+    ),
+  });
+
+  revalidatePath(`/gestion/alumnos/${data.membershipId}`);
+  return { ok: true };
 }
 
 const enrollmentSchema = z.object({

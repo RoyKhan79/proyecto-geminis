@@ -120,6 +120,9 @@ model OppositionEdition {
   clonedFrom   OppositionEdition?  @relation("EditionClone", fields: [clonedFromId], references: [id], onDelete: SetNull)
   clones       OppositionEdition[] @relation("EditionClone")
 
+  /// Accesos concedidos a mano sobre esta convocatoria.
+  entitlementScopes EntitlementScope[]
+
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?

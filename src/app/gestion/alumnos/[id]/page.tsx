@@ -1,12 +1,17 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ChevronLeft, KeyRound, Receipt } from "lucide-react";
+import { ChevronLeft, KeyRound, Receipt, SlidersHorizontal } from "lucide-react";
 import { requireAcademy } from "@/lib/auth/context";
-import { archiveStudentAction, updateStudentAction } from "@/server/students/actions";
+import {
+  archiveStudentAction,
+  restoreStudentAction,
+  updateStudentAction,
+} from "@/server/students/actions";
 import {
   getStudent,
   loadCourseOptions,
+  loadEditionOptions,
 } from "@/server/students/queries";
 import {
   STUDENT_STATUS_LABEL,
@@ -24,24 +29,18 @@ import {
   Table,
   Td,
   Th,
+  CardDescription,
 } from "@/components/ui/primitives";
 import { formatCents, formatDate, formatDateTime } from "@/lib/utils";
 import { FotoDelAlumno } from "./foto";
+import { AccesoForm, type AccesoConcedido } from "./acceso-form";
+import { capacidadesDisponibles, CAPABILITY_LABEL } from "@/lib/access/capacidades";
+import type { Capability } from "@/generated/prisma/enums";
 import { StudentForm } from "../student-form";
 import { EnrollForm } from "./enroll-form";
 import { BillingForm } from "./billing-form";
 
 export const metadata: Metadata = { title: "Ficha de alumno" };
-
-const CAPABILITY_LABEL: Record<string, string> = {
-  VIEW_CONTENT: "Ver contenido",
-  DOWNLOAD_CONTENT: "Descargar",
-  TAKE_TESTS: "Hacer tests",
-  TAKE_SIMULATIONS: "Simulacros",
-  ATTEND_CLASSES: "Clases en directo",
-  WATCH_RECORDINGS: "Grabaciones",
-  USE_AI_TUTOR: "Geminis IA",
-};
 
 const PAYMENT_LABEL: Record<string, string> = {
   PENDING: "Pendiente",
@@ -74,6 +73,33 @@ export default async function FichaAlumnoPage({
     : [];
 
   const puedeEditar = ctx.permissions.has("students.write");
+
+  /*
+   * Lo que la academia puede repartir y lo que ya le ha dado a este alumno.
+   *
+   * `concedido` solo mira los derechos de origen MANUAL: son los únicos que
+   * gestiona este panel. Los que vienen de una matrícula se enseñan arriba pero
+   * no se editan aquí, porque quitarlos a mano dejaría la matrícula diciendo
+   * una cosa y el acceso otra.
+   */
+  const convocatorias = puedeEditar ? await loadEditionOptions(ctx.db) : [];
+  const capacidadesQuePuedeDar = capacidadesDisponibles(ctx.modulos);
+
+  const accesoConcedido: Record<string, AccesoConcedido> = {};
+  for (const derecho of alumno.entitlements) {
+    if (derecho.source !== "MANUAL" || derecho.status !== "ACTIVE") continue;
+    for (const alcance of derecho.scopes) {
+      if (!alcance.editionId) continue;
+      const entrada = (accesoConcedido[alcance.editionId] ??= {
+        capacidades: [],
+        endsAt: derecho.endsAt ? derecho.endsAt.toISOString().slice(0, 10) : null,
+        note: derecho.note,
+      });
+      if (!entrada.capacidades.includes(alcance.capability)) {
+        entrada.capacidades.push(alcance.capability);
+      }
+    }
+  }
   const puedeBorrar = ctx.permissions.has("students.delete");
   const estado = alumno.studentProfile.status;
 
@@ -98,7 +124,19 @@ export default async function FichaAlumnoPage({
             <Badge tone={STUDENT_STATUS_TONE[estado]}>
               {STUDENT_STATUS_LABEL[estado]}
             </Badge>
-            {puedeBorrar && estado !== "INACTIVE" ? (
+            {estado === "INACTIVE" ? (
+              // La vuelta. Sin esto, dar de baja era un viaje de ida: la baja
+              // suspende la membresía y sin nada que la reactive el alumno se
+              // quedaba fuera para siempre.
+              puedeEditar ? (
+                <form action={restoreStudentAction}>
+                  <input type="hidden" name="membershipId" value={alumno.id} />
+                  <Button type="submit" variant="secondary" size="sm">
+                    Dar de alta
+                  </Button>
+                </form>
+              ) : null
+            ) : puedeBorrar ? (
               <form action={archiveStudentAction}>
                 <input type="hidden" name="membershipId" value={alumno.id} />
                 <Button type="submit" variant="secondary" size="sm">
@@ -112,6 +150,33 @@ export default async function FichaAlumnoPage({
 
       <div className="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
         <div className="space-y-6">
+          {/*
+            La foto va fuera del ternario de abajo a propósito.
+            Estaba dentro de la rama de solo lectura, así que quien podía
+            editar la ficha veía el formulario y nunca la foto, y quien la veía
+            no tenía permiso para tocarla: no había forma de subir ninguna.
+          */}
+          <Card>
+            <CardContent className="flex items-center gap-4 p-5">
+              <FotoDelAlumno
+                membershipId={alumno.id}
+                nombre={`${alumno.user.firstName} ${alumno.user.lastName ?? ""}`}
+                url={alumno.user.avatarUrl}
+                puedeEditar={puedeEditar}
+              />
+              <div className="min-w-0">
+                <p className="font-display text-[1.0625rem] font-semibold leading-snug tracking-[-0.015em] text-ink">
+                  Foto
+                </p>
+                <p className="mt-1 text-sm leading-relaxed text-ink-muted">
+                  {puedeEditar
+                    ? "Pulsa encima para cambiarla. Sirve para ponerle cara a un nombre cuando alguien llama o viene a recoger un certificado."
+                    : "Solo la puede cambiar quien tenga permiso para editar la ficha."}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+
           {puedeEditar ? (
             <StudentForm
               mode="edit"
@@ -135,15 +200,8 @@ export default async function FichaAlumnoPage({
               <CardHeader>
                 <CardTitle>Datos</CardTitle>
               </CardHeader>
-              <CardContent className="flex gap-5 pt-0">
-                <FotoDelAlumno
-                  membershipId={alumno.id}
-                  nombre={`${alumno.user.firstName} ${alumno.user.lastName ?? ""}`}
-                  url={alumno.user.avatarUrl}
-                  puedeEditar={puedeEditar}
-                />
-
-                <div className="grid flex-1 gap-3 text-sm sm:grid-cols-2">
+              <CardContent className="pt-0">
+                <div className="grid gap-3 text-sm sm:grid-cols-2">
                   <Dato label="Teléfono" value={alumno.user.phone ?? "—"} />
                   <Dato label="Expediente" value={alumno.studentProfile.code ?? "—"} />
                   <Dato label="DNI / NIE" value={alumno.studentProfile.nationalId ?? "—"} />
@@ -316,7 +374,7 @@ export default async function FichaAlumnoPage({
                               <span className="font-medium text-ink">{seccion}</span>
                               <span className="ml-1 text-ink-muted">
                                 {[...capacidades]
-                                  .map((c) => CAPABILITY_LABEL[c] ?? c)
+                                  .map((c) => CAPABILITY_LABEL[c as Capability] ?? c)
                                   .join(" · ")}
                               </span>
                             </li>
@@ -335,6 +393,34 @@ export default async function FichaAlumnoPage({
               )}
             </CardContent>
           </Card>
+
+          {/*
+            Y aquí se reparte. La tarjeta de arriba contesta «qué tiene»; esta,
+            «qué le doy». Van separadas porque lo de arriba incluye lo que viene
+            de una matrícula, que no se toca a mano desde aquí.
+          */}
+          {puedeEditar ? (
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <SlidersHorizontal className="size-4 text-ink-muted" aria-hidden />
+                  Herramientas del alumno
+                </CardTitle>
+                <CardDescription>
+                  Lo que le abres a mano, sin pasar por una matrícula. Solo salen
+                  los módulos que tiene contratados tu academia.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="p-5 pt-0">
+                <AccesoForm
+                  membershipId={alumno.id}
+                  convocatorias={convocatorias}
+                  capacidades={capacidadesQuePuedeDar}
+                  concedido={accesoConcedido}
+                />
+              </CardContent>
+            </Card>
+          ) : null}
 
           {ctx.permissions.has("payments.write") ? (
             <BillingForm

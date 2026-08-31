@@ -75,6 +75,7 @@ export async function loadStudentGrants(
         select: {
           capability: true,
           courseId: true,
+          editionId: true,
           node: { select: { id: true, path: true, editionId: true } },
         },
       },
@@ -124,6 +125,10 @@ export async function loadStudentGrants(
             capabilities: new Set([scope.capability]),
           });
         }
+      } else if (scope.editionId) {
+        // Alcance dado a mano desde la ficha del alumno: la capacidad cubre esa
+        // convocatoria entera, sin depender de que exista una matrícula.
+        addEditionCapability(scope.editionId, scope.capability);
       } else if (editionFromCourse) {
         // Derecho sin nodo concreto: cubre toda la convocatoria del curso.
         addEditionCapability(editionFromCourse, scope.capability);

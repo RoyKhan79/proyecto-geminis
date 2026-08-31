@@ -175,10 +175,19 @@ model EntitlementScope {
 
   courseId String?
 
+  /// Convocatoria completa. Es el anclaje de los accesos que concede la
+  /// academia a mano desde la ficha del alumno: «este alumno tiene tests de
+  /// Administrativo 2026», sin pasar por una matrícula ni por un producto.
+  /// El motor de acceso ya razona por convocatoria, así que un alcance con
+  /// `editionId` se resuelve sin caso especial.
+  editionId String?
+  edition   OppositionEdition? @relation(fields: [editionId], references: [id], onDelete: Cascade)
+
   capability Capability @default(VIEW_CONTENT)
 
-  @@unique([entitlementId, nodeId, courseId, capability])
+  @@unique([entitlementId, nodeId, courseId, editionId, capability])
   @@index([nodeId])
+  @@index([editionId])
   @@map("entitlement_scopes")
 }
 

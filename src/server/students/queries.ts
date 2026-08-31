@@ -208,7 +208,14 @@ export async function getStudent(db: TenantClient, membershipId: string) {
           scopes: {
             select: {
               capability: true,
+              editionId: true,
               node: { select: { id: true, label: true } },
+              edition: {
+                select: {
+                  name: true,
+                  opposition: { select: { name: true } },
+                },
+              },
             },
           },
         },
@@ -242,6 +249,30 @@ export async function getStudent(db: TenantClient, membershipId: string) {
 }
 
 /** Cursos y grupos disponibles, para los desplegables de filtros y matrícula. */
+/**
+ * Las convocatorias entre las que reparte acceso la ficha del alumno.
+ *
+ * Se ofrecen las abiertas y las de la academia entera, no solo aquellas en las
+ * que el alumno está matriculado: el sentido de conceder acceso a mano es
+ * precisamente poder abrirle algo en lo que no lo está.
+ */
+export async function loadEditionOptions(db: TenantClient) {
+  const ediciones = await db.oppositionEdition.findMany({
+    where: { deletedAt: null },
+    orderBy: [{ year: "desc" }, { name: "asc" }],
+    select: {
+      id: true,
+      name: true,
+      opposition: { select: { name: true } },
+    },
+  });
+
+  return ediciones.map((edicion) => ({
+    id: edicion.id,
+    nombre: `${edicion.opposition.name} · ${edicion.name}`,
+  }));
+}
+
 export async function loadCourseOptions(db: TenantClient) {
   return db.course.findMany({
     where: { deletedAt: null, status: { in: ["ACTIVE", "DRAFT"] } },
