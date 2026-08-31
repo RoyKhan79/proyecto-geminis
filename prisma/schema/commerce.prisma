@@ -507,6 +507,12 @@ model Invoice {
   paymentId String?
   payment   Payment? @relation(fields: [paymentId], references: [id], onDelete: SetNull)
 
+  /// Cuándo se le mandó al cliente por correo, y a qué dirección. Sirve para
+  /// contestar «¿os la mandé?» sin abrir el correo, y para que reenviar sea una
+  /// decisión con información delante en lugar de una apuesta.
+  sentAt DateTime?
+  sentTo String?
+
   createdById String?
 
   createdAt DateTime @default(now())

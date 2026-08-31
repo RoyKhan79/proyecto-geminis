@@ -41,7 +41,8 @@ export function FacturacionMensual({
             Facturar el mes
           </p>
           <p className="text-xs text-ink-muted">
-            Emite una factura por cada recibo del mes que todavía no la tenga. No
+            Emite una factura por cada recibo del mes que todavía no la tenga y
+            se la manda por correo a cada alumno, con su forma de pago. No
             factura dos veces el mismo recibo.
           </p>
         </div>
@@ -62,7 +63,7 @@ export function FacturacionMensual({
             className="flex items-start gap-2 rounded-[var(--radius-control)] bg-positive-soft px-3 py-2 text-sm text-positive"
           >
             <CheckCircle2 className="mt-0.5 size-4 shrink-0" aria-hidden />
-            Facturas emitidas.
+            {estado.mensaje ?? "Facturas emitidas."}
           </p>
         ) : null}
 

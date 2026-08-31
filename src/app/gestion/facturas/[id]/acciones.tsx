@@ -1,9 +1,10 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import { AlertCircle, Printer, Undo2 } from "lucide-react";
+import { AlertCircle, CheckCircle2, Printer, Send, Undo2 } from "lucide-react";
 import {
   rectifyInvoiceAction,
+  resendInvoiceAction,
   type InvoiceState,
 } from "@/server/billing/invoice-actions";
 import { Button } from "@/components/ui/button";
@@ -22,6 +23,70 @@ export function BotonImprimir() {
       <Printer aria-hidden />
       Imprimir
     </Button>
+  );
+}
+
+/**
+ * Mandarle la factura al cliente otra vez.
+ *
+ * El envío ya ocurre solo al facturar el mes; esto es para cuando no llegó, o
+ * para después de corregirle los datos a alguien y emitirle la rectificativa.
+ *
+ * Debajo dice cuándo se mandó y a dónde, porque reenviar sin saber si ya salió
+ * es lo que acaba mandando la misma factura tres veces.
+ */
+export function Reenviar({
+  invoiceId,
+  enviadaEl,
+  enviadaA,
+}: {
+  invoiceId: string;
+  enviadaEl: string | null;
+  enviadaA: string | null;
+}) {
+  const [estado, accion, enviando] = useActionState<InvoiceState, FormData>(
+    resendInvoiceAction,
+    undefined,
+  );
+
+  return (
+    <form action={accion} className="contents">
+      <input type="hidden" name="invoiceId" value={invoiceId} />
+      <Button
+        type="submit"
+        variant="secondary"
+        size="sm"
+        disabled={enviando}
+        title={
+          enviadaEl
+            ? `Ya se envió el ${enviadaEl}${enviadaA ? ` a ${enviadaA}` : ""}`
+            : "Todavía no se le ha enviado"
+        }
+      >
+        <Send aria-hidden />
+        {enviando ? "Enviando…" : enviadaEl ? "Volver a enviar" : "Enviar al cliente"}
+      </Button>
+
+      {estado?.error ? (
+        <span
+          role="alert"
+          className="flex items-center gap-1.5 text-xs font-medium text-critical"
+        >
+          <AlertCircle className="size-3.5 shrink-0" aria-hidden />
+          {estado.error}
+        </span>
+      ) : null}
+
+      {estado?.ok ? (
+        <span
+          role="status"
+          className="flex items-center gap-1.5 text-xs font-medium text-positive"
+        >
+          <CheckCircle2 className="size-3.5 shrink-0" aria-hidden />
+          {estado.mensaje ?? "Enviada."}
+        </span>
+      ) : null}
+    </form>
   );
 }
 

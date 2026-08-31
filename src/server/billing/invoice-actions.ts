@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { recordAudit } from "@/lib/audit";
+import { enviarFacturaAlCliente } from "./invoice-email";
 import { requirePermission } from "@/lib/auth/context";
 import { transaccionDeAcademia } from "@/lib/db/tenant";
 import {
@@ -23,7 +24,9 @@ import { inicioDeMes, nombreDelMes } from "./service";
  * falta poder decir qué exactamente y volver a pintar el formulario con lo que
  * la persona había escrito.
  */
-export type InvoiceState = { error?: string; ok?: boolean; id?: string } | undefined;
+export type InvoiceState =
+  | { error?: string; ok?: boolean; id?: string; mensaje?: string }
+  | undefined;
 
 /**
  * FACTURACIÓN
@@ -395,6 +398,44 @@ export async function rectifyInvoiceAction(
 
   if (!serieRect) return { error: "No hay ninguna serie de facturación disponible." };
 
+  /*
+   * Los datos del cliente se releen de su ficha, no se copian de la original.
+   *
+   * El motivo más común de rectificar es justo que estaban mal: la propia
+   * pantalla de la factura dice «pídele el NIF, añádelo a su ficha y emite una
+   * rectificativa». Copiándolos de la original, esa instrucción no servía para
+   * nada, porque la rectificativa salía con el mismo NIF vacío. Se recurre a
+   * los de la original solo para lo que la ficha no tenga.
+   */
+  const alumnoAhora = await ctx.db.membership.findUnique({
+    where: { id: original.studentId },
+    select: {
+      user: { select: { firstName: true, lastName: true, email: true } },
+      studentProfile: {
+        select: {
+          nationalId: true,
+          address: true,
+          postalCode: true,
+          city: true,
+          province: true,
+        },
+      },
+    },
+  });
+
+  const nombreAhora = alumnoAhora
+    ? `${alumnoAhora.user.firstName} ${alumnoAhora.user.lastName ?? ""}`.trim()
+    : "";
+  const direccionAhora =
+    [
+      alumnoAhora?.studentProfile?.address,
+      alumnoAhora?.studentProfile?.postalCode,
+      alumnoAhora?.studentProfile?.city,
+      alumnoAhora?.studentProfile?.province,
+    ]
+      .filter(Boolean)
+      .join(", ") || null;
+
   const lineas: LineaFactura[] = original.lines.map((l) => ({
     description: `Rectificación de ${original.reference}: ${l.description}`,
     quantity: Number(l.quantity),
@@ -421,10 +462,11 @@ export async function rectifyInvoiceAction(
       issuerTaxId: original.issuerTaxId,
       issuerAddress: original.issuerAddress,
       issuerEmail: original.issuerEmail,
-      customerName: original.customerName,
-      customerTaxId: original.customerTaxId,
-      customerAddress: original.customerAddress,
-      customerEmail: original.customerEmail,
+      customerName: nombreAhora || original.customerName,
+      customerTaxId:
+        alumnoAhora?.studentProfile?.nationalId ?? original.customerTaxId,
+      customerAddress: direccionAhora ?? original.customerAddress,
+      customerEmail: alumnoAhora?.user.email ?? original.customerEmail,
 
       subtotalCents: totales.subtotalCents,
       discountCents: 0,
@@ -568,7 +610,20 @@ export async function issueMonthlyInvoicesAction(
     where: {
       deletedAt: null,
       dueDate: { gte: desde, lt: hasta },
-      invoices: { none: {} },
+      /*
+       * Recibos sin ninguna factura viva.
+       *
+       * Antes se pedían recibos sin ninguna factura en absoluto, y eso dejaba
+       * el circuito a medias: si una factura salía con el NIF mal, corregías la
+       * ficha y emitías la rectificativa, el recibo se quedaba con la anulada
+       * pegada y ya no había forma de emitir la buena. El cliente terminaba con
+       * una factura anulada, una en negativo y ninguna correcta.
+       *
+       * Una factura rectificada está anulada, así que no cuenta: el recibo
+       * vuelve a estar pendiente de facturar y este mismo botón emite la
+       * correcta, ya con los datos nuevos.
+       */
+      invoices: { none: { status: { not: "RECTIFIED" } } },
     },
     select: {
       id: true,
@@ -604,6 +659,7 @@ export async function issueMonthlyInvoicesAction(
     .join(", ");
 
   let emitidas = 0;
+  const emitidasIds: string[] = [];
 
   for (const recibo of recibos) {
     // El importe del recibo es lo que paga el alumno, impuestos incluidos. Si
@@ -670,6 +726,7 @@ export async function issueMonthlyInvoicesAction(
       },
       select: { id: true },
     });
+    emitidasIds.push(factura.id);
 
     await ctx.db.invoiceLine.createMany({
       data: totales.lineas.map((linea, position) => ({
@@ -688,15 +745,80 @@ export async function issueMonthlyInvoicesAction(
     emitidas += 1;
   }
 
+  /*
+   * Y se mandan.
+   *
+   * Va después de facturar y no dentro del bucle a propósito: la numeración es
+   * lo delicado, y no puede quedarse a medias porque un servidor de correo
+   * tarde o rechace una dirección. Aquí ya está todo emitido y guardado; lo que
+   * pase con el correo no lo deshace.
+   *
+   * En serie y no todas a la vez: cien correos de golpe es exactamente la forma
+   * de que un proveedor de SMTP te limite el envío.
+   */
+  let enviadas = 0;
+  const sinCorreo: string[] = [];
+
+  for (const id of emitidasIds) {
+    const resultado = await enviarFacturaAlCliente(ctx.academy.id, id);
+    if (resultado.enviada) enviadas += 1;
+    else if (resultado.motivo) sinCorreo.push(resultado.motivo);
+  }
+
   await recordAudit({
     academyId: ctx.academy.id,
     actorId: ctx.user.id,
     action: "invoice.monthly",
     entityType: "Academy",
     entityId: ctx.academy.id,
-    changes: { mes: parsed.data.periodo, emitidas },
+    changes: { mes: parsed.data.periodo, emitidas, enviadas },
   });
 
   revalidatePath("/gestion/facturas");
-  return { ok: true };
+
+  // Se cuenta lo que ha pasado de verdad. «Facturas emitidas» a secas, cuando
+  // tres no han salido, es la clase de mensaje por la que alguien se entera un
+  // mes después.
+  const resumen =
+    sinCorreo.length === 0
+      ? `${emitidas} ${emitidas === 1 ? "factura emitida y enviada" : "facturas emitidas y enviadas"}.`
+      : `${emitidas} emitidas · ${enviadas} enviadas. Sin enviar: ${sinCorreo.slice(0, 3).join(" ")}${
+          sinCorreo.length > 3 ? ` y ${sinCorreo.length - 3} más.` : ""
+        }`;
+
+  return { ok: true, mensaje: resumen };
+}
+
+/**
+ * Vuelve a mandarle la factura al cliente.
+ *
+ * Existe porque «no me ha llegado» pasa, y porque después de corregir los datos
+ * de alguien y emitirle la rectificativa hay que poder mandársela sin buscar el
+ * correo original.
+ */
+export async function resendInvoiceAction(
+  _prev: InvoiceState,
+  formData: FormData,
+): Promise<InvoiceState> {
+  const ctx = await requirePermission("payments.write");
+  const invoiceId = String(formData.get("invoiceId") ?? "");
+
+  const resultado = await enviarFacturaAlCliente(ctx.academy.id, invoiceId);
+  if (!resultado.enviada) {
+    return { error: resultado.motivo ?? "No se ha podido enviar." };
+  }
+
+  await recordAudit({
+    academyId: ctx.academy.id,
+    actorId: ctx.user.id,
+    impersonatorId: ctx.impersonatedById,
+    action: "invoice.send",
+    entityType: "Invoice",
+    entityId: invoiceId,
+    changes: { destino: resultado.destino ?? "" },
+  });
+
+  revalidatePath(`/gestion/facturas/${invoiceId}`);
+  revalidatePath("/gestion/facturas");
+  return { ok: true, mensaje: `Enviada a ${resultado.destino}.` };
 }

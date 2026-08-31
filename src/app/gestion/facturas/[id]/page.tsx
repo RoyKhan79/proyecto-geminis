@@ -7,7 +7,7 @@ import { markInvoicePaidAction } from "@/server/billing/invoice-actions";
 import { Button } from "@/components/ui/button";
 import { Badge, Card, CardContent } from "@/components/ui/primitives";
 import { formatCents, formatDate } from "@/lib/utils";
-import { BotonImprimir, Rectificar } from "./acciones";
+import { BotonImprimir, Rectificar, Reenviar } from "./acciones";
 
 export const metadata: Metadata = { title: "Factura" };
 
@@ -53,6 +53,8 @@ export default async function FacturaPage({
       customerTaxId: true,
       customerAddress: true,
       customerEmail: true,
+      sentAt: true,
+      sentTo: true,
       subtotalCents: true,
       discountCents: true,
       taxableCents: true,
@@ -121,6 +123,20 @@ export default async function FacturaPage({
                 referencia={factura.reference ?? ""}
               />
             </>
+          ) : null}
+
+          {/*
+            Reenviar vale para cualquier factura ya emitida, no solo para las
+            que siguen abiertas: una rectificativa recién hecha —que nace
+            «emitida» y sustituye a la que tenía el NIF mal— es justo el caso
+            en el que hace falta volver a mandarla.
+          */}
+          {puedeEscribir && factura.status !== "DRAFT" ? (
+            <Reenviar
+              invoiceId={factura.id}
+              enviadaEl={factura.sentAt ? formatDate(factura.sentAt) : null}
+              enviadaA={factura.sentTo}
+            />
           ) : null}
 
           <BotonImprimir />
