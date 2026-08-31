@@ -794,7 +794,9 @@ export async function issueMonthlyInvoicesAction(
     const factura = await facturarRecibo(ctx, recibo, {
       seriesId: parsed.data.seriesId,
       taxRate: parsed.data.taxRate,
-      exencion: exencion?.texto ?? null,
+      // La mención solo se guarda si de verdad va exenta: una factura al
+      // 21 % que diga «operación exenta de IVA» es una factura mal emitida.
+      exencion: parsed.data.taxRate === 0 ? (exencion?.texto ?? null) : null,
       academia,
       direccionAcademia,
     });
@@ -919,7 +921,9 @@ export async function issueInvoiceForPaymentAction(
   const factura = await facturarRecibo(ctx, recibo, {
     seriesId: parsed.data.seriesId,
     taxRate: parsed.data.taxRate,
-    exencion: exencion?.texto ?? null,
+    // La mención solo se guarda si de verdad va exenta: una factura al
+      // 21 % que diga «operación exenta de IVA» es una factura mal emitida.
+      exencion: parsed.data.taxRate === 0 ? (exencion?.texto ?? null) : null,
     academia,
     direccionAcademia: [academia.address, academia.city, academia.province]
       .filter(Boolean)

@@ -31,7 +31,18 @@ export function configuracionDeCobro(academia: {
   redsysTerminal: string | null;
   redsysSecretKey: string | null;
   redsysLive: boolean;
-}): { config: ConfiguracionRedsys; enPruebas: boolean } {
+}): {
+  config: ConfiguracionRedsys;
+  enPruebas: boolean;
+  /**
+   * La academia no ha puesto sus credenciales y se está usando el comercio de
+   * demostración. Es lo que impide dar por cobrado nada: la clave de pruebas de
+   * Redsys es PÚBLICA, así que cualquiera puede firmar con ella una
+   * notificación que diga «pagado». Quien reciba la respuesta del banco tiene
+   * que mirar esto ANTES de tocar un recibo.
+   */
+  sinConfigurar: boolean;
+} {
   const clave = descifrar(academia.redsysSecretKey);
 
   if (academia.redsysMerchantCode && clave) {
@@ -43,6 +54,7 @@ export function configuracionDeCobro(academia: {
         live: academia.redsysLive,
       },
       enPruebas: !academia.redsysLive,
+      sinConfigurar: false,
     };
   }
 
@@ -53,6 +65,7 @@ export function configuracionDeCobro(academia: {
       live: false,
     },
     enPruebas: true,
+    sinConfigurar: true,
   };
 }
 
@@ -62,7 +75,13 @@ function base(): string {
 }
 
 export type PreparacionDeCobro =
-  | { ok: true; peticion: PeticionDePago; enPruebas: boolean; importeCents: number }
+  | {
+      ok: true;
+      peticion: PeticionDePago;
+      enPruebas: boolean;
+      sinConfigurar: boolean;
+      importeCents: number;
+    }
   | { ok: false; motivo: string };
 
 /**
@@ -104,7 +123,7 @@ export async function prepararCobroConTarjeta(
   });
   if (!academia) return { ok: false, motivo: "No se ha podido leer la academia." };
 
-  const { config, enPruebas } = configuracionDeCobro(academia);
+  const { config, enPruebas, sinConfigurar } = configuracionDeCobro(academia);
 
   let orden = recibo.gatewayOrder;
   if (!orden) {
@@ -118,6 +137,7 @@ export async function prepararCobroConTarjeta(
   return {
     ok: true,
     enPruebas,
+    sinConfigurar,
     importeCents: recibo.amountCents,
     peticion: construirPeticion({
       config,

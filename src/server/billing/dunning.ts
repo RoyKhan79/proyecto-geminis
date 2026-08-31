@@ -1,6 +1,7 @@
 import { prismaBase } from "@/lib/db/client";
 import { tenantDb, type TenantClient } from "@/lib/db/tenant";
 import { sendEmail } from "@/lib/email";
+import { descifrar } from "@/lib/crypto/field";
 import { formatDate } from "@/lib/utils";
 import { enlaceDePago, instruccionesDePago } from "./invoice-email";
 
@@ -89,6 +90,15 @@ export function quePasaHoy(
   return { avisar: avisar || suspender, suspender, diasDeRetraso: retraso };
 }
 
+/** Escapa lo que va dentro del HTML: los conceptos y los nombres llevan de todo. */
+function escapar(texto: string) {
+  return texto
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
 /** El correo que se le manda a quien debe un recibo. */
 export function componerAvisoDeImpago(datos: {
   nombre: string;
@@ -128,14 +138,14 @@ export function componerAvisoDeImpago(datos: {
   ].join("\n");
 
   const html = `<div style="font-family:system-ui,-apple-system,'Segoe UI',sans-serif;font-size:15px;line-height:1.6;color:#1a1a1a;max-width:560px">
-  <p>Hola ${nombre},</p>
-  <p>${encabezado}: <strong>${datos.concepto}</strong>, ${importe}, que venció el ${formatDate(datos.vencimiento)} (hace ${datos.diasDeRetraso} días).</p>
+  <p>Hola ${escapar(nombre)},</p>
+  <p>${encabezado}: <strong>${escapar(datos.concepto)}</strong>, ${importe}, que venció el ${formatDate(datos.vencimiento)} (hace ${datos.diasDeRetraso} días).</p>
   <div style="background:#f4f6fb;border-radius:10px;padding:14px 16px;margin:20px 0">
-    <p style="margin:0 0 4px;font-weight:600">${datos.pago.titulo}</p>
-    <p style="margin:0;color:#333">${datos.pago.cuerpo}</p>
+    <p style="margin:0 0 4px;font-weight:600">${escapar(datos.pago.titulo)}</p>
+    <p style="margin:0;color:#333">${escapar(datos.pago.cuerpo)}</p>
   </div>
   <p>${cierre}</p>
-  <p style="margin-top:24px">${datos.academia}</p>
+  <p style="margin-top:24px">${escapar(datos.academia)}</p>
 </div>`;
 
   return {
@@ -209,8 +219,9 @@ export async function reclamarA(
     pago: instruccionesDePago({
       metodo: recibo.student.billingProfile?.method,
       diaDeCobro: recibo.student.billingProfile?.chargeDay,
-      ibanDelAlumno: recibo.student.billingProfile?.iban,
-      ibanDeLaAcademia: academia.billingIban,
+      // Cifrados en columna: sin descifrar, el correo enseñaría base64.
+      ibanDelAlumno: descifrar(recibo.student.billingProfile?.iban ?? null),
+      ibanDeLaAcademia: descifrar(academia.billingIban),
       referencia: recibo.concept,
       nombreAcademia: academia.legalName ?? academia.name,
       enlaceDePago: enlaceDePago(recibo.id),
@@ -303,30 +314,67 @@ export async function ejecutarAvisosDeImpago(
       },
     });
 
+    /*
+     * Se agrupa POR ALUMNO antes de hacer nada.
+     *
+     * Recorriendo recibos, alguien con tres meses sin pagar recibía TRES
+     * correos idénticos en la misma pasada, tres avisos en su bandeja y un
+     * recuento de suspendidos inflado por tres. Se reclama a una persona, no a
+     * un apunte contable: un correo, con la deuda entera.
+     */
+    const porAlumno = new Map<string, typeof recibos>();
     for (const recibo of recibos) {
-      const accion = quePasaHoy(recibo, academia, hoy);
+      const suyos = porAlumno.get(recibo.studentId) ?? [];
+      suyos.push(recibo);
+      porAlumno.set(recibo.studentId, suyos);
+    }
+
+    for (const [studentId, suyos] of porAlumno) {
+      // El más antiguo manda: marca desde cuándo se debe y decide los plazos.
+      const masAntiguo = suyos.reduce((peor, r) =>
+        (r.dueDate as Date) < (peor.dueDate as Date) ? r : peor,
+      );
+      const ultimoAviso = suyos.reduce<Date | null>(
+        (u, r) => (r.lastReminderAt && (!u || r.lastReminderAt > u) ? r.lastReminderAt : u),
+        null,
+      );
+      const yaSuspendido = suyos.find((r) => r.suspendedAt)?.suspendedAt ?? null;
+
+      const accion = quePasaHoy(
+        {
+          dueDate: masAntiguo.dueDate,
+          lastReminderAt: ultimoAviso,
+          suspendedAt: yaSuspendido,
+        },
+        academia,
+        hoy,
+      );
       if (!accion.avisar && !accion.suspender) continue;
+
+      const deudaCents = suyos.reduce((t, r) => t + r.amountCents, 0);
 
       try {
         if (accion.suspender) {
           await db.entitlement.updateMany({
-            where: { studentId: recibo.studentId, status: "ACTIVE" },
+            where: { studentId, status: "ACTIVE" },
             data: { status: "PAST_DUE" },
           });
           await db.enrollment.updateMany({
-            where: { studentId: recibo.studentId, status: "ACTIVE" },
+            where: { studentId, status: "ACTIVE" },
             data: { status: "PAST_DUE" },
           });
-          await db.payment.update({
-            where: { id: recibo.id },
+          // La marca va en todos sus recibos vencidos: si solo fuera en uno, la
+          // pasada de mañana volvería a «suspender» por los demás.
+          await db.payment.updateMany({
+            where: { id: { in: suyos.map((r) => r.id) } },
             data: { suspendedAt: hoy },
           });
           await db.notification.create({
             data: {
-              recipientId: recibo.studentId,
+              recipientId: studentId,
               type: "payment.due",
               title: "Acceso pausado por un recibo pendiente",
-              body: `Tienes pendiente «${recibo.concept}». En cuanto se registre el pago recuperas el acceso.`,
+              body: `Tienes pendiente «${masAntiguo.concept}». En cuanto se registre el pago recuperas el acceso.`,
               status: "SENT",
               sentAt: hoy,
             },
@@ -335,37 +383,40 @@ export async function ejecutarAvisosDeImpago(
         }
 
         const correo = componerAvisoDeImpago({
-          nombre: recibo.student.user.firstName,
-          concepto: recibo.concept,
-          importeCents: recibo.amountCents,
-          vencimiento: recibo.dueDate as Date,
+          nombre: masAntiguo.student.user.firstName,
+          concepto:
+            suyos.length > 1
+              ? `${masAntiguo.concept} (y ${suyos.length - 1} más)`
+              : masAntiguo.concept,
+          importeCents: deudaCents,
+          vencimiento: masAntiguo.dueDate as Date,
           diasDeRetraso: accion.diasDeRetraso,
           academia: academia.legalName ?? academia.name,
           seCorta: accion.suspender,
-          yaCortado: Boolean(recibo.suspendedAt),
+          yaCortado: Boolean(yaSuspendido),
           pago: instruccionesDePago({
-            metodo: recibo.student.billingProfile?.method,
-            diaDeCobro: recibo.student.billingProfile?.chargeDay,
-            ibanDelAlumno: recibo.student.billingProfile?.iban,
-            ibanDeLaAcademia: academia.billingIban,
-            referencia: recibo.concept,
+            metodo: masAntiguo.student.billingProfile?.method,
+            diaDeCobro: masAntiguo.student.billingProfile?.chargeDay,
+            // Cifrados en columna: sin descifrar, el correo enseñaría base64.
+            ibanDelAlumno: descifrar(masAntiguo.student.billingProfile?.iban ?? null),
+            ibanDeLaAcademia: descifrar(academia.billingIban),
+            referencia: masAntiguo.concept,
             nombreAcademia: academia.legalName ?? academia.name,
-            // Reclamar sin poner el botón de pagar delante es media reclamación.
-            enlaceDePago: enlaceDePago(recibo.id),
+            enlaceDePago: enlaceDePago(masAntiguo.id),
           }),
         });
 
-        await sendEmail({ to: recibo.student.user.email, ...correo });
+        await sendEmail({ to: masAntiguo.student.user.email, ...correo });
 
-        await db.payment.update({
-          where: { id: recibo.id },
+        await db.payment.updateMany({
+          where: { id: { in: suyos.map((r) => r.id) } },
           data: { lastReminderAt: hoy, reminderCount: { increment: 1 } },
         });
         resultado.avisos += 1;
       } catch (error) {
-        // Un recibo que falla no puede impedir que se reclamen los demás.
+        // Un alumno que falla no puede impedir que se reclame a los demás.
         resultado.errores.push(
-          `${academia.name} · ${recibo.concept}: ${(error as Error).message}`,
+          `${academia.name} · ${masAntiguo.student.user.email}: ${(error as Error).message}`,
         );
       }
     }

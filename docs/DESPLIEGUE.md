@@ -179,6 +179,7 @@ Qué queda programado:
 |---|---|
 | Cada día a las 8:30 | **Radar del BOE.** Busca convocatorias nuevas de las ramas que vigila cada academia. Solo actúa sobre las que tienen contratado el módulo «Normativa». |
 | Domingos a las 9:15 | **Recuperación de una semana.** Por si el servidor estuvo caído: sin esto, un corte de un día se convierte en una convocatoria que nadie vio. |
+| Cada día a las 9:00 | **Avisos de impago.** Reclama los recibos vencidos y, pasado el plazo de cada academia, le pausa el acceso al alumno. Solo actúa sobre academias con el módulo «Cobros». |
 | Cada día a las 4:40 | **Mantenimiento.** Sesiones caducadas, enlaces de recuperación vencidos y contadores del limitador. |
 
 El radar es idempotente: repetir un día no duplica nada.

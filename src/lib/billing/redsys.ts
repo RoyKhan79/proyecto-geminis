@@ -226,7 +226,12 @@ export function comprobarRespuesta(
    * pestaña. No es un error del que haya que avisar a nadie.
    */
   const codigo = datos.Ds_Response ?? datos.DS_RESPONSE ?? "";
-  const numero = Number(codigo);
+  /*
+   * El código tiene que venir y tiene que ser un número. `Number("")` es cero,
+   * así que sin esta comprobación una notificación bien firmada pero SIN código
+   * de respuesta caía dentro del rango de aprobadas y se daba por pagada.
+   */
+  const numero = /^\d+$/.test(codigo.trim()) ? Number(codigo.trim()) : NaN;
   const pagada = Number.isFinite(numero) && numero >= 0 && numero <= 99;
 
   return {

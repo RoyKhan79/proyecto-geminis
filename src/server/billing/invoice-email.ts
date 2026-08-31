@@ -2,6 +2,7 @@ import { sendEmail } from "@/lib/email";
 import { prismaBase } from "@/lib/db/client";
 import { formatDate } from "@/lib/utils";
 import { env } from "@/lib/env";
+import { descifrar } from "@/lib/crypto/field";
 
 /**
  * LA FACTURA QUE LE LLEGA AL ALUMNO
@@ -255,8 +256,10 @@ export async function enviarFacturaAlCliente(
   const pago = instruccionesDePago({
     metodo: factura.student.billingProfile?.method,
     diaDeCobro: factura.student.billingProfile?.chargeDay,
-    ibanDelAlumno: factura.student.billingProfile?.iban,
-    ibanDeLaAcademia: factura.academy.billingIban,
+    // Los IBAN se guardan cifrados en columna. Sin descifrar aquí, el correo
+    // le pediría al alumno que transfiriera a una ristra de base64.
+    ibanDelAlumno: descifrar(factura.student.billingProfile?.iban ?? null),
+    ibanDeLaAcademia: descifrar(factura.academy.billingIban),
     referencia: factura.reference,
     nombreAcademia: factura.academy.legalName ?? factura.academy.name,
     enlaceDePago: factura.paymentId ? enlaceDePago(factura.paymentId) : null,

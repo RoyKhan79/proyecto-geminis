@@ -1,12 +1,9 @@
 import { NextResponse } from "next/server";
 import { prismaBase } from "@/lib/db/client";
 import { tenantDb } from "@/lib/db/tenant";
-import { descifrar } from "@/lib/crypto/field";
 import { recordAudit } from "@/lib/audit";
-import {
-  CLAVE_DE_PRUEBAS,
-  comprobarRespuesta,
-} from "@/lib/billing/redsys";
+import { comprobarRespuesta } from "@/lib/billing/redsys";
+import { configuracionDeCobro } from "@/server/billing/tarjeta";
 
 /**
  * LO QUE CONTESTA EL BANCO CUANDO ALGUIEN PAGA CON TARJETA
@@ -69,6 +66,7 @@ export async function POST(request: Request) {
       academy: {
         select: {
           redsysMerchantCode: true,
+          redsysTerminal: true,
           redsysSecretKey: true,
           redsysLive: true,
         },
@@ -80,12 +78,36 @@ export async function POST(request: Request) {
   // Redsys no lo reintente eternamente, pero no se toca nada.
   if (!recibo) return new NextResponse("OK", { status: 200 });
 
-  const clave =
-    descifrar(recibo.academy.redsysSecretKey) ??
-    // Sin credenciales propias, el cobro salió por el comercio de pruebas.
-    CLAVE_DE_PRUEBAS;
+  /*
+   * La clave se elige con la MISMA función que firmó la petición.
+   *
+   * Antes se leía aquí a mano, y eso abría un caso en el que no cuadraban: una
+   * academia con clave guardada pero sin código de comercio firmaba con la de
+   * pruebas y verificaba con la suya, así que todos sus cobros se rechazaban.
+   */
+  const { config, sinConfigurar } = configuracionDeCobro(recibo.academy);
 
-  const respuesta = comprobarRespuesta(cuerpo, clave);
+  /*
+   * ── LO MÁS IMPORTANTE DE ESTE ARCHIVO ──────────────────────────────────────
+   *
+   * Una academia sin credenciales cobra contra el comercio de demostración, y
+   * la clave de pruebas de Redsys es PÚBLICA: está en su documentación. Con
+   * ella, un alumno puede leer su propio número de pedido en la página de pago,
+   * firmarse una notificación que diga «pagado» y mandarla aquí.
+   *
+   * Así que en ese modo no se da nada por cobrado. La demostración sirve para
+   * ver el circuito, no para saldar recibos de verdad.
+   */
+  if (sinConfigurar) {
+    console.warn(
+      "[tarjeta] notificación en modo demostración para el pedido",
+      orden,
+      "· no se salda el recibo: la academia no tiene TPV configurado",
+    );
+    return new NextResponse("OK", { status: 200 });
+  }
+
+  const respuesta = comprobarRespuesta(cuerpo, config.secretKey);
 
   if (!respuesta.valida) {
     console.error(

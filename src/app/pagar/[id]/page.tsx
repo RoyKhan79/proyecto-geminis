@@ -103,10 +103,16 @@ export default async function PagarPage({
         </p>
       </div>
 
-      {cobro.enPruebas ? (
+      {cobro.sinConfigurar ? (
         <p className="rounded-[var(--radius-control)] bg-caution-soft px-3 py-2 text-xs leading-relaxed text-caution">
-          <strong>Entorno de pruebas.</strong> No se va a cobrar nada de verdad.
-          La academia todavía no ha conectado su TPV.
+          <strong>Demostración.</strong> La academia todavía no ha conectado su
+          TPV: no se cobra nada y el recibo seguirá pendiente. Pregúntale cómo
+          pagarlo.
+        </p>
+      ) : cobro.enPruebas ? (
+        <p className="rounded-[var(--radius-control)] bg-caution-soft px-3 py-2 text-xs leading-relaxed text-caution">
+          <strong>Entorno de pruebas.</strong> El TPV está configurado pero no
+          en modo real todavía: no se mueve dinero.
         </p>
       ) : null}
 
