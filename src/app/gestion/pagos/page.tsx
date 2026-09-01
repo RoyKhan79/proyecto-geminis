@@ -136,6 +136,12 @@ export default async function PagosPage({
           puedeEscribir ? (
             <>
               <Button asChild variant="secondary">
+                <Link href="/gestion/pagos/conciliar">
+                  <Landmark aria-hidden />
+                  Conciliar
+                </Link>
+              </Button>
+              <Button asChild variant="secondary">
                 <Link href="/gestion/pagos/morosidad">
                   <Users aria-hidden />
                   Quién debe
