@@ -4,7 +4,7 @@ import { SectionIcon } from "@/components/ui/section-icon";
 /**
  * El titular de una pantalla del Campus.
  *
- * El Campus no usa {@link PageHeader}: su carcasa es una barra de aplicación
+ * El Campus no usa `PageHeader`: su carcasa es una barra de aplicación
  * compacta pensada para el móvil, y un encabezado de escritorio ahí se come
  * media pantalla. Pero el icono de sección sí le corresponde, así que se pone
  * al lado del título en lugar de encima.

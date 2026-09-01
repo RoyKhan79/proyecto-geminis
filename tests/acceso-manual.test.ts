@@ -206,14 +206,26 @@ describe("el filtro de la consulta respeta la capacidad, no solo la convocatoria
     expect(where.OR).toHaveLength(0);
   });
 
-  it("lo libre se lee, pero no se descarga ni se testea", async () => {
+  it("la muestra gratuita se lee y se testea: es el gancho comercial", async () => {
     await prismaBase.entitlement.deleteMany({ where: { studentId: alumno.id } });
     const grants = await loadStudentGrants(academia.id, alumno.id);
 
+    // Quien no ha comprado nada puede leer la muestra y hacerle un test.
     expect(studentNodeWhere(grants, "VIEW_CONTENT").OR).toContainEqual({
       isFree: true,
     });
-    expect(studentNodeWhere(grants, "DOWNLOAD_CONTENT").OR).toHaveLength(0);
+    expect(studentNodeWhere(grants, "TAKE_TESTS").OR).toContainEqual({
+      isFree: true,
+    });
+  });
+
+  it("pero la muestra no se descarga, ni abre simulacros ni el tutor", async () => {
+    await prismaBase.entitlement.deleteMany({ where: { studentId: alumno.id } });
+    const grants = await loadStudentGrants(academia.id, alumno.id);
+
+    for (const capacidad of ["DOWNLOAD_CONTENT", "TAKE_SIMULATIONS", "USE_AI_TUTOR"] as const) {
+      expect(studentNodeWhere(grants, capacidad).OR, capacidad).toHaveLength(0);
+    }
   });
 });
 

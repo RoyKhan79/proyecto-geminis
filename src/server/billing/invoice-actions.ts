@@ -713,6 +713,12 @@ const SELECT_RECIBO = {
   },
 } as const;
 
+/**
+ * @param _prev Estado anterior del formulario, que aquí no se usa.
+ * @param formData Mes, serie, tipo de IVA y mención de exención.
+ * @returns Cuántas se han emitido y cuántas han salido por correo, o el motivo
+ *   si falta el NIF de la academia o no hay recibos que facturar.
+ */
 export async function issueMonthlyInvoicesAction(
   _prev: InvoiceState,
   formData: FormData,

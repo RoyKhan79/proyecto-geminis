@@ -10,8 +10,10 @@ import { Button } from "@/components/ui/button";
 import { Field, Input, Select } from "@/components/ui/primitives";
 import type { Capacidad } from "@/lib/access/capacidades";
 
+/** Una convocatoria en el desplegable, con su nombre ya montado. */
 export type ConvocatoriaOption = { id: string; nombre: string };
 
+/** Lo que el alumno ya tiene abierto en una convocatoria, para sembrar el formulario. */
 export type AccesoConcedido = {
   capacidades: string[];
   endsAt: string | null;

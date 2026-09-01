@@ -475,6 +475,14 @@ export async function saveTpvAction(
   return { ok: true };
 }
 
+/**
+ * Guarda los datos con los que la academia gira sus remesas.
+ *
+ * @param _prev Estado anterior del formulario, que aquí no se usa.
+ * @param formData Razón social, NIF, cuenta e identificador de acreedor.
+ * @returns Confirmación, o el motivo si el IBAN o el identificador no son
+ *   válidos. El IBAN se guarda cifrado.
+ */
 export async function saveCreditorAction(
   _prev: BillingState,
   formData: FormData,

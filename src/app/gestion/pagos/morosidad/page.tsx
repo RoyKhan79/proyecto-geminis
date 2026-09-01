@@ -64,6 +64,10 @@ const METODO: Record<string, string> = {
   OTHER: "Otro",
 };
 
+/**
+ * @returns La pantalla con el resumen de deuda, la tabla de quien debe y la
+ *   lista aparte de quien está al día.
+ */
 export default async function MorosidadPage() {
   const ctx = await requirePagePermission("payments.read");
 

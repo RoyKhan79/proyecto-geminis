@@ -42,6 +42,7 @@ export const CLAVE_DE_PRUEBAS = "sq7HjrUOBfKmC576ILgskD5srU870gJ7";
 /** Comercio y terminal de pruebas que Redsys deja usar a cualquiera. */
 export const COMERCIO_DE_PRUEBAS = { merchantCode: "999008881", terminal: "001" };
 
+/** Las credenciales del TPV de una academia, ya descifradas y listas para firmar. */
 export type ConfiguracionRedsys = {
   merchantCode: string;
   terminal: string;
@@ -56,6 +57,10 @@ export type ConfiguracionRedsys = {
  * identificadores son UUID, que no valen, así que se construye uno: cuatro
  * dígitos de tiempo y ocho caracteres del identificador del recibo. Se guarda
  * en el recibo para poder reconocerlo cuando el banco conteste.
+ *
+ * @param paymentId Identificador del recibo, del que se toma la cola.
+ * @param ahora Momento del que salen los cuatro dígitos de cabecera.
+ * @returns Doce caracteres, los cuatro primeros numéricos, en mayúsculas.
  */
 export function numeroDePedido(paymentId: string, ahora: Date = new Date()): string {
   const minutos = Math.floor(ahora.getTime() / 60000) % 10000;
@@ -70,6 +75,9 @@ export function numeroDePedido(paymentId: string, ahora: Date = new Date()): str
  * 3DES pide exactamente 24 bytes, así que la clave en base64 tiene que
  * decodificar a eso. Se valida cuando la academia la teclea: si no, el error
  * aparecería semanas después, la primera vez que alguien intente pagar.
+ *
+ * @param clave La clave tal y como la da el banco, en base64.
+ * @returns Si sirve para firmar, es decir, si decodifica a 24 bytes.
  */
 export function claveDeComercioValida(clave: string): boolean {
   try {
@@ -97,6 +105,13 @@ function claveDelPedido(orden: string, claveComercio: string): Buffer {
 }
 
 /** El HMAC-SHA256 de los parámetros con la clave derivada del pedido. */
+/**
+ * @param parametrosBase64 Los parámetros ya serializados, tal y como viajan.
+ * @param orden Número de pedido, del que se deriva la clave de esta operación.
+ * @param claveComercio Clave del comercio en base64.
+ * @returns La firma en base64.
+ * @throws Si la clave no decodifica a 24 bytes, que es lo que pide 3DES.
+ */
 export function firmar(
   parametrosBase64: string,
   orden: string,
@@ -108,6 +123,12 @@ export function firmar(
     .digest("base64");
 }
 
+/**
+ * El formulario firmado que se le enseña al alumno.
+ *
+ * Los tres campos van con estos nombres exactos porque son los que espera el
+ * protocolo del banco; renombrarlos rompe el cobro.
+ */
 export type PeticionDePago = {
   url: string;
   Ds_SignatureVersion: "HMAC_SHA256_V1";
@@ -120,6 +141,12 @@ export type PeticionDePago = {
  *
  * El importe va en céntimos y sin decimales porque es lo que espera Redsys:
  * mandar «45.00» en lugar de «4500» cobra cuarenta y cinco céntimos.
+ *
+ * @param datos Credenciales, pedido, importe en céntimos y las tres
+ *   direcciones de vuelta: la de la notificación, la de pago correcto y la de
+ *   pago fallido.
+ * @returns El formulario listo para enviar, con su firma y la dirección de la
+ *   pasarela que corresponda al entorno.
  */
 export function construirPeticion(datos: {
   config: ConfiguracionRedsys;
@@ -154,6 +181,14 @@ export function construirPeticion(datos: {
   };
 }
 
+/**
+ * El veredicto sobre lo que ha contestado el banco.
+ *
+ * Son dos cosas distintas y conviene no confundirlas: `valida` dice si la firma
+ * cuadra —si la respuesta viene de verdad del banco— y `pagada`, si ese banco
+ * dice que el cobro salió bien. Una respuesta puede ser válida y no estar
+ * pagada: es un rechazo por fondos, y no es ningún error.
+ */
 export type RespuestaRedsys = {
   valida: boolean;
   pagada: boolean;
@@ -172,6 +207,12 @@ export type RespuestaRedsys = {
  *
  * Redsys firma la notificación en base64 «seguro para URL», con `-` y `_` en
  * lugar de `+` y `/`. Comparar sin normalizar eso rechaza pagos buenos.
+ *
+ * @param cuerpo Lo que ha llegado en el formulario del banco.
+ * @param claveComercio Clave del comercio de ESA academia, ya descifrada.
+ * @returns El veredicto. **No lanza nunca**: cualquier problema —parámetros
+ *   ilegibles, clave mal, firma que no cuadra— sale como `valida: false` con su
+ *   motivo, porque quien llama es un endpoint público que no puede reventar.
  */
 export function comprobarRespuesta(
   cuerpo: { Ds_MerchantParameters?: string; Ds_Signature?: string },

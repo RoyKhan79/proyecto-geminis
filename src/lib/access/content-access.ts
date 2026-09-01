@@ -168,8 +168,7 @@ export async function loadStudentGrants(
  *
  * Es lo que permite subir el temario completo el primer día y que el alumno
  * solo vea por dónde va su clase.
- */
-/**
+ *
  * OJO al usarla: `studentNodeWhere` YA la incluye dentro. Esparcir las dos sobre
  * el mismo objeto —`...studentNodeWhere(g), ...releaseWhere(g.groupIds)`— hace
  * que la segunda pise la clave `AND` de la primera. Ahora mismo el resultado
@@ -275,8 +274,7 @@ export function studentCanAccessNode(
  * Fragmento `where` de Prisma que limita una consulta de ContentNode a lo que
  * el alumno puede ver. Se aplica en la propia consulta, no filtrando después:
  * así no se pagina sobre datos que luego hay que descartar.
- */
-/**
+ *
  * ¿Tiene este alumno esta herramienta en alguna parte?
  *
  * Es la comprobación de ENTRADA, la que decide si se le deja abrir el tutor o
@@ -298,6 +296,15 @@ export function tieneCapacidad(
   return false;
 }
 
+/**
+ * @param grants Los derechos del alumno, ya cargados.
+ * @param capability Para qué se pide el contenido. **No es opcional de
+ *   verdad**: el valor por defecto es solo para las pantallas que enseñan
+ *   temario, y pasarlo mal abre contenido que no toca.
+ * @param now Momento con el que se compara el ritmo de apertura del profesor.
+ * @returns Un `where` de Prisma. Si no tiene ningún derecho con esa capacidad,
+ *   el `OR` sale vacío y la consulta no devuelve nada, que es lo correcto.
+ */
 export function studentNodeWhere(
   grants: StudentGrants,
   capability: Capability = "VIEW_CONTENT",
@@ -329,9 +336,23 @@ export function studentNodeWhere(
   const editionFilter =
     ediciones.length > 0 ? [{ editionId: { in: ediciones } }] : [];
 
-  // Lo libre solo es libre para leerlo. Descargarlo o hacer tests con ello
-  // sigue necesitando su derecho, igual que en `studentCanAccessNode`.
-  const libre = capability === "VIEW_CONTENT" ? [{ isFree: true }] : [];
+  /*
+   * Lo marcado como muestra gratuita se lee y se testea; no se descarga ni
+   * entra en simulacros ni en el tutor.
+   *
+   * Que se pueda hacer un test de un tema libre es deliberado y es una
+   * herramienta comercial: quien todavía no ha comprado nada prueba un test de
+   * ejemplo. Lo dice `loadStudentTestTopics`, y dejarlo fuera al hacer este
+   * filtro consciente de la capacidad le quitaba a la academia su gancho de
+   * venta sin que nadie se enterara.
+   *
+   * Descargarlo es otra cosa: ahí hay un archivo de por medio, y el propio
+   * `/api/archivos` ya lo niega.
+   */
+  const libre =
+    capability === "VIEW_CONTENT" || capability === "TAKE_TESTS"
+      ? [{ isFree: true }]
+      : [];
 
   return {
     status: "PUBLISHED" as const,

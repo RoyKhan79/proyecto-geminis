@@ -23,6 +23,13 @@ export type Capacidad = {
   modulo: CodigoModulo;
 };
 
+/**
+ * El catálogo, en el orden en el que se enseña en la ficha del alumno.
+ *
+ * Va de lo básico a lo accesorio: primero leer, luego practicar, luego las
+ * clases, y la IA al final. Es el orden en el que una academia decide qué le
+ * abre a alguien.
+ */
 export const CAPACIDADES: Capacidad[] = [
   {
     codigo: "VIEW_CONTENT",

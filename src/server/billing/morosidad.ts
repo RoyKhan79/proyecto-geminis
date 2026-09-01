@@ -24,6 +24,7 @@ export type SituacionAlumno =
   | "reclamar"
   | "suspendido";
 
+/** La situación de cobro de un alumno, con todo lo que hace falta para decidir. */
 export type FilaDeMorosidad = {
   membershipId: string;
   nombre: string;
@@ -42,6 +43,7 @@ export type FilaDeMorosidad = {
   proximoPaso: string;
 };
 
+/** Las filas ya ordenadas y los recuentos de cabecera. */
 export type ResumenDeMorosidad = {
   filas: FilaDeMorosidad[];
   totales: {
@@ -53,6 +55,7 @@ export type ResumenDeMorosidad = {
   };
 };
 
+/** Los plazos de reclamación de la academia, que deciden en qué grupo cae cada alumno. */
 export type AjustesDeAviso = {
   dunningEnabled: boolean;
   dunningFirstDays: number;
@@ -66,6 +69,12 @@ export type AjustesDeAviso = {
  * Incluye a los que están al día a propósito: la pregunta no es solo «a quién
  * reclamo», también es «de quién no me tengo que preocupar», y una lista donde
  * solo salen los morosos no deja ver que el resto va bien.
+ *
+ * @param db Cliente ya acotado a la academia.
+ * @param ajustes Sus plazos de reclamación.
+ * @param hoy Fecha desde la que se cuentan los retrasos; se pasa en las pruebas.
+ * @returns Todos los alumnos —también los que van al día— con su deuda, su
+ *   retraso y lo que la tarea diaria hará con cada uno.
  */
 export async function cargarMorosidad(
   db: TenantClient,

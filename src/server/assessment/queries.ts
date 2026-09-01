@@ -116,8 +116,7 @@ export async function loadTopicOptions(db: TenantClient) {
 /**
  * Temas sobre los que el alumno puede examinarse: los que tiene contratados y
  * que además tienen preguntas publicadas.
- */
-/**
+ *
  * Incluye también los temas marcados como muestra gratuita: quien todavía no ha
  * comprado nada puede probar un test de ejemplo. Es deliberado y es una
  * herramienta comercial, no un descuido.

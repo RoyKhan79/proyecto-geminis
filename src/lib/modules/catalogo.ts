@@ -39,6 +39,7 @@ export type CodigoModulo =
   | "ANALITICA"
   | "NORMATIVA";
 
+/** Un módulo del catálogo: lo que se vende, lo que incluye y lo que cuesta. */
 export type Modulo = {
   codigo: CodigoModulo;
   nombre: string;
@@ -267,6 +268,12 @@ export type Pack = {
   modulos: CodigoModulo[];
 };
 
+/**
+ * Los tres montajes preparados.
+ *
+ * Nadie quiere elegir doce casillas la primera vez, así que se empieza por uno
+ * de estos y a partir de ahí se ajusta.
+ */
 export const PACKS: Pack[] = [
   {
     codigo: "esencial",
@@ -426,6 +433,7 @@ export function arrastraAlQuitar(
   return sinEl.filter((c) => (MODULOS[c]?.requiere ?? []).includes(codigo));
 }
 
+/** El desglose de lo que pagaría una academia: módulos, descuento y total. */
 export type Presupuesto = {
   lineas: {
     codigo: CodigoModulo;

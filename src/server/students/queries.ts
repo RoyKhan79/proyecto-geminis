@@ -273,6 +273,10 @@ export async function loadEditionOptions(db: TenantClient) {
   }));
 }
 
+/**
+ * @param db Cliente acotado a la academia.
+ * @returns Los cursos que se pueden matricular, cada uno con sus grupos.
+ */
 export async function loadCourseOptions(db: TenantClient) {
   return db.course.findMany({
     where: { deletedAt: null, status: { in: ["ACTIVE", "DRAFT"] } },

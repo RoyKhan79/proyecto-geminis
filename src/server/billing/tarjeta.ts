@@ -74,6 +74,10 @@ function base(): string {
   return (env.APP_URL ?? "http://localhost:3000").replace(/\/$/, "");
 }
 
+/**
+ * El resultado de preparar un cobro: el formulario firmado, o el motivo por el
+ * que no se puede cobrar ese recibo.
+ */
 export type PreparacionDeCobro =
   | {
       ok: true;
@@ -91,6 +95,12 @@ export type PreparacionDeCobro =
  * lo tenía: si alguien vuelve atrás y lo intenta otra vez, tiene que ser el
  * mismo pedido. Con uno nuevo cada vez, un pago que llegara tarde no
  * encontraría a qué recibo pertenece.
+ */
+/**
+ * @param academyId Academia dueña del recibo.
+ * @param paymentId El recibo que se va a cobrar.
+ * @returns El formulario firmado para la pasarela, o el motivo del rechazo si
+ *   el recibo no existe, ya está pagado o no tiene importe.
  */
 export async function prepararCobroConTarjeta(
   academyId: string,

@@ -38,6 +38,10 @@ const DIA = 24 * 60 * 60 * 1000;
  * guardan con `new Date(año, mes, día)` en toda la aplicación, y «lleva tres
  * días de retraso» es una frase que dice una persona mirando su calendario, no
  * el meridiano de Greenwich.
+ *
+ * @param fecha Punto de partida.
+ * @param hasta Punto de llegada.
+ * @returns Días naturales completos entre las dos, negativos si van al revés.
  */
 export function diasDesde(fecha: Date, hasta: Date): number {
   const a = Date.UTC(fecha.getFullYear(), fecha.getMonth(), fecha.getDate());
@@ -51,6 +55,12 @@ export function diasDesde(fecha: Date, hasta: Date): number {
  * Separada del envío para poder probar el calendario entero sin base de datos
  * ni correo: es la parte donde un error se traduce en cortarle el acceso a
  * alguien antes de tiempo.
+ *
+ * @param recibo Vencimiento, último aviso y si ya se suspendió por él.
+ * @param ajustes Los plazos de la academia.
+ * @param hoy El día que se está procesando.
+ * @returns Si toca avisar, si toca cortar el acceso, y cuántos días lleva de
+ *   retraso. Con los avisos apagados o sin fecha de vencimiento, no toca nada.
  */
 export function quePasaHoy(
   recibo: {
@@ -100,6 +110,12 @@ function escapar(texto: string) {
 }
 
 /** El correo que se le manda a quien debe un recibo. */
+/**
+ * @param datos Alumno, deuda, retraso y la forma de pago ya redactada, más si
+ *   este correo es el que anuncia el corte o si ya estaba cortado.
+ * @returns Asunto, texto y HTML. El tono cambia según corte: el recordatorio no
+ *   amenaza con nada y el del corte explica cómo se recupera.
+ */
 export function componerAvisoDeImpago(datos: {
   nombre: string;
   concepto: string;
@@ -163,6 +179,12 @@ export function componerAvisoDeImpago(datos: {
  * Comparte el correo y las marcas con la tarea diaria: si esto mandara un texto
  * distinto, el alumno recibiría dos versiones de la misma reclamación según
  * quién la disparó.
+ *
+ * @param db Cliente acotado a la academia.
+ * @param academyId La academia, para leer su nombre y su cuenta.
+ * @param membershipId El alumno al que se reclama.
+ * @param hoy Fecha del aviso.
+ * @returns Cuántos recibos cubre el correo enviado; cero si no debía nada.
  */
 export async function reclamarA(
   db: TenantClient,
@@ -240,6 +262,7 @@ export async function reclamarA(
   return recibos.length;
 }
 
+/** Lo que ha hecho una pasada de avisos, para poder contarlo en el registro. */
 export type ResultadoDunning = {
   academias: number;
   avisos: number;
@@ -253,6 +276,11 @@ export type ResultadoDunning = {
  * Pensada para la tarea diaria. Es idempotente por construcción: las marcas del
  * recibo —`lastReminderAt` y `suspendedAt`— hacen que ejecutarla dos veces el
  * mismo día no mande el aviso dos veces ni vuelva a suspender.
+ *
+ * @param hoy El día que se procesa. Se puede pasar otro para comprobar el
+ *   calendario sin esperar semanas.
+ * @returns Cuántas academias se han recorrido, cuántos avisos han salido,
+ *   cuántos alumnos se han suspendido y los errores que no han impedido seguir.
  */
 export async function ejecutarAvisosDeImpago(
   hoy: Date = new Date(),

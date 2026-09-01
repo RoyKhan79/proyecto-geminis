@@ -126,13 +126,6 @@ export function claveEsDeLaAcademia(clave: string, academyId: string): boolean {
  * Abre un archivo comprobando antes que es de esa academia.
  *
  * Es la única función que debería usarse para leer un archivo desde una
- * petición. `getStream` a secas queda para migraciones y scripts, donde no hay
- * academia con la que comparar.
- */
-/**
- * Abre un archivo comprobando antes que es de esa academia.
- *
- * Es la única función que debería usarse para leer un archivo desde una
  * petición. `storage().getStream()` a secas queda para migraciones y scripts,
  * donde no hay academia con la que comparar.
  *

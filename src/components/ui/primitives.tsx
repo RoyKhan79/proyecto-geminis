@@ -291,6 +291,7 @@ export const ICON_TONES = [
   "gold",
 ] as const;
 
+/** Una de las familias de color de {@link ICON_TONES}. */
 export type IconTone = (typeof ICON_TONES)[number];
 
 /** El tinte aplicado al trazo del icono, sin pastilla debajo. */
