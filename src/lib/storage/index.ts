@@ -316,6 +316,139 @@ export function isAllowedMime(mime: string) {
   return mime in ALLOWED_MIME;
 }
 
+// ── Los bytes, no lo que diga el navegador ───────────────────────────────────
+
+/**
+ * Firmas conocidas de los formatos que admitimos.
+ *
+ * `file.type` lo pone el navegador a partir de la extensión, así que lo elige
+ * quien sube el archivo: renombrar `algo.exe` a `algo.pdf` basta para que
+ * llegue aquí como `application/pdf`. La lista blanca de tipos filtraba una
+ * etiqueta, no un contenido.
+ *
+ * Esto mira los primeros bytes, que sí son el archivo. No es infalible —un
+ * formato se puede envolver dentro de otro— pero cierra el caso fácil, que es
+ * el que se intenta: subir algo que no es lo que dice ser para que la
+ * plataforma lo sirva desde su propio dominio.
+ *
+ * Solo se listan los formatos con una firma estable y documentada. Los que no
+ * la tienen (texto plano, algunos audios) pasan: exigirles una firma sería
+ * inventarse una comprobación que no existe.
+ */
+const FIRMAS: Record<string, { desplazamiento: number; bytes: number[] }[]> = {
+  "application/pdf": [{ desplazamiento: 0, bytes: [0x25, 0x50, 0x44, 0x46] }], // %PDF
+  "image/png": [{ desplazamiento: 0, bytes: [0x89, 0x50, 0x4e, 0x47] }],
+  "image/jpeg": [{ desplazamiento: 0, bytes: [0xff, 0xd8, 0xff] }],
+  "image/gif": [{ desplazamiento: 0, bytes: [0x47, 0x49, 0x46, 0x38] }], // GIF8
+  // RIFF….WEBP: la firma va partida en dos, con el tamaño en medio.
+  "image/webp": [
+    { desplazamiento: 0, bytes: [0x52, 0x49, 0x46, 0x46] },
+    { desplazamiento: 8, bytes: [0x57, 0x45, 0x42, 0x50] },
+  ],
+  // Los de Office modernos son ZIP.
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document": [
+    { desplazamiento: 0, bytes: [0x50, 0x4b, 0x03, 0x04] },
+  ],
+  "application/vnd.openxmlformats-officedocument.presentationml.presentation": [
+    { desplazamiento: 0, bytes: [0x50, 0x4b, 0x03, 0x04] },
+  ],
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [
+    { desplazamiento: 0, bytes: [0x50, 0x4b, 0x03, 0x04] },
+  ],
+  // Los de Office antiguos comparten el contenedor OLE.
+  "application/msword": [
+    { desplazamiento: 0, bytes: [0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1] },
+  ],
+  "application/vnd.ms-powerpoint": [
+    { desplazamiento: 0, bytes: [0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1] },
+  ],
+  "application/vnd.ms-excel": [
+    { desplazamiento: 0, bytes: [0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1] },
+  ],
+  // ftyp en el cuarto byte: MP4 y M4A comparten contenedor.
+  "video/mp4": [{ desplazamiento: 4, bytes: [0x66, 0x74, 0x79, 0x70] }],
+  "audio/mp4": [{ desplazamiento: 4, bytes: [0x66, 0x74, 0x79, 0x70] }],
+  "video/webm": [{ desplazamiento: 0, bytes: [0x1a, 0x45, 0xdf, 0xa3] }],
+  "audio/wav": [{ desplazamiento: 0, bytes: [0x52, 0x49, 0x46, 0x46] }],
+};
+
+/**
+ * Lo que NUNCA puede subirse, aunque venga con una etiqueta inocente.
+ *
+ * Se mira aparte de las firmas porque estos hay que rechazarlos aunque el tipo
+ * declarado sea uno que no tenga firma conocida: un HTML declarado como
+ * `text/plain` pasaría todas las comprobaciones de arriba y se serviría desde
+ * el dominio de Geminis.
+ */
+const PROHIBIDOS: { nombre: string; prueba: (inicio: Buffer) => boolean }[] = [
+  {
+    nombre: "un documento HTML",
+    prueba: (inicio) => {
+      const texto = inicio.toString("latin1").trimStart().toLowerCase();
+      return (
+        texto.startsWith("<!doctype html") ||
+        texto.startsWith("<html") ||
+        texto.startsWith("<?xml") ||
+        texto.startsWith("<svg") ||
+        texto.startsWith("<script")
+      );
+    },
+  },
+  {
+    nombre: "un programa de Windows",
+    prueba: (inicio) => inicio[0] === 0x4d && inicio[1] === 0x5a, // MZ
+  },
+  {
+    nombre: "un programa de Linux",
+    prueba: (inicio) =>
+      inicio[0] === 0x7f && inicio[1] === 0x45 && inicio[2] === 0x4c && inicio[3] === 0x46, // \x7fELF
+  },
+  {
+    nombre: "un guion de consola",
+    prueba: (inicio) => inicio[0] === 0x23 && inicio[1] === 0x21, // #!
+  },
+];
+
+/**
+ * ¿El contenido del archivo se corresponde con el tipo que dice tener?
+ *
+ * @param buffer Los bytes del archivo. Basta con los primeros, pero se acepta
+ *   entero para no obligar a quien llama a recortarlo.
+ * @param mime El tipo declarado, ya comprobado contra {@link ALLOWED_MIME}.
+ * @returns `null` si todo cuadra, o el motivo del rechazo, escrito para poder
+ *   enseñárselo a quien sube el archivo.
+ *
+ * @example
+ * ```ts
+ * const motivo = motivoParaNoAceptar(buffer, file.type);
+ * if (motivo) return { error: motivo };
+ * ```
+ */
+export function motivoParaNoAceptar(buffer: Buffer, mime: string): string | null {
+  const inicio = buffer.subarray(0, 64);
+
+  for (const { nombre, prueba } of PROHIBIDOS) {
+    if (prueba(inicio)) {
+      return `Ese archivo es ${nombre}, no un ${ALLOWED_MIME[mime]?.toLowerCase() ?? "documento"}. No se admite.`;
+    }
+  }
+
+  const esperadas = FIRMAS[mime];
+  if (!esperadas) return null; // Formato sin firma estable: se acepta.
+
+  const cuadra = esperadas.every(({ desplazamiento, bytes }) =>
+    bytes.every((b, i) => inicio[desplazamiento + i] === b),
+  );
+
+  if (!cuadra) {
+    return `El contenido del archivo no se corresponde con un ${
+      ALLOWED_MIME[mime]?.toLowerCase() ?? mime
+    }. Comprueba que no se ha renombrado la extensión.`;
+  }
+
+  return null;
+}
+
 /**
  * Traduce un tipo MIME al tipo de recurso del temario.
  *

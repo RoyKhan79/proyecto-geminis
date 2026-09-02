@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { recordAudit } from "@/lib/audit";
 import { requireAcademy, requirePermission } from "@/lib/auth/context";
+import { limitarAccion } from "@/lib/rate-limit";
 import { loadStudentGrants, tieneCapacidad } from "@/lib/access/content-access";
 import { aiDisponible, askAi } from "@/lib/ai/gateway";
 import {
@@ -79,6 +80,12 @@ export async function askStudentAction(
   if (!tieneCapacidad(derechos, "USE_AI_TUTOR")) {
     return { error: "No tienes el asistente incluido. Consúltalo con tu academia." };
   }
+
+  // Cada pregunta la paga la academia en tokens. El tope va DESPUÉS de
+  // comprobar que esta persona puede preguntar —no se cuenta a quien no iba a
+  // poder— y ANTES de recuperar nada: la búsqueda también cuesta.
+  const espera = await limitarAccion("iaAlumno", ctx.membershipId);
+  if (espera) return { error: espera };
 
   const parsed = preguntaSchema.safeParse(Object.fromEntries(formData.entries()));
   if (!parsed.success) {
@@ -249,6 +256,10 @@ export async function generateQuestionsAction(
   formData: FormData,
 ): Promise<AiState> {
   const ctx = await requirePermission("ai.copilot");
+
+  const espera = await limitarAccion("iaCopiloto", ctx.membershipId);
+  if (espera) return { error: espera };
+
   const parsed = copilotoSchema.safeParse(Object.fromEntries(formData.entries()));
 
   if (!parsed.success) {
@@ -425,6 +436,11 @@ export async function generateQuestionsAction(
 export async function indexContentAction(): Promise<AiState> {
   const ctx = await requirePermission("ai.settings");
 
+  // Indexar recorre el temario entero de la academia. Es una tarea de fondo que
+  // se lanza cuando cambia el material, no algo que tenga sentido repetir.
+  const espera = await limitarAccion("iaIndexar", ctx.academy.id);
+  if (espera) return { error: espera };
+
   const resultados = await indexarAcademia(ctx.academy.id);
   const indexados = resultados.filter((r) => r.estado === "INDEXED");
   const fallidos = resultados.filter((r) => r.estado === "FAILED");
@@ -470,6 +486,12 @@ export async function explainMistakeAction(
   const attemptId = String(formData.get("attemptId") ?? "");
   const questionId = String(formData.get("questionId") ?? "");
   if (!attemptId || !questionId) return { error: "Falta la pregunta." };
+
+  // Comparte el mismo cubo que las preguntas del tutor: las dos acaban en el
+  // mismo proveedor y en la misma factura, así que separarlas daría el doble
+  // de llamadas a quien alternara entre ellas.
+  const espera = await limitarAccion("iaAlumno", ctx.membershipId);
+  if (espera) return { error: espera };
 
   // El intento tiene que ser de quien lo pide. Sin esto, cualquiera podría
   // pedir la corrección de un examen ajeno.

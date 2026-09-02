@@ -80,6 +80,69 @@ export async function rateLimit(
   }
 }
 
+/**
+ * LÍMITES DE LAS ACCIONES CARAS
+ *
+ * El limitador estaba puesto donde se ve el ataque de manual —entrar, recuperar
+ * la contraseña— y en ningún sitio más. Pero hay operaciones que no dan acceso a
+ * nada y aun así no se pueden repetir sin freno:
+ *
+ *   · una pregunta a Geminis IA llama a un proveedor externo, y eso lo paga la
+ *     academia por tokens consumidos. Un alumno con el tutor incluido y un bucle
+ *     de tres líneas puede gastarle el presupuesto del mes en una tarde, y no
+ *     hace falta mala fe: basta un script de «resumir todos los temas»;
+ *
+ *   · abrir un Excel de importación descomprime y analiza un archivo entero. Ya
+ *     no puede reventar el proceso —lo impide `zip-seguro.ts`— pero cien
+ *     seguidos siguen ocupando el servidor de todas las academias;
+ *
+ *   · indexar el contenido recorre el temario completo de la academia.
+ *
+ * Los topes de aquí son generosos a propósito: tienen que estorbar a un bucle y
+ * no a una persona. Alguien estudiando pregunta cinco veces en diez minutos, no
+ * cuarenta.
+ */
+export const LIMITES = {
+  /** Preguntas al tutor por alumno. Da para una sesión de estudio larga. */
+  iaAlumno: { limit: 40, windowSeconds: 600 },
+  /** Generaciones del copiloto por miembro del equipo. Cada una es cara. */
+  iaCopiloto: { limit: 30, windowSeconds: 600 },
+  /** Reindexados de la academia. Es una tarea de fondo, no algo que repetir. */
+  iaIndexar: { limit: 3, windowSeconds: 3600 },
+  /** Archivos de importación abiertos por persona. */
+  importacion: { limit: 20, windowSeconds: 600 },
+} as const;
+
+/**
+ * Aplica uno de los límites de {@link LIMITES} a una persona concreta.
+ *
+ * @param accion Cuál de los límites.
+ * @param quien Identificador de quien lo pide: el `membershipId`, no el usuario,
+ *   porque el gasto lo soporta la academia y una misma persona puede estar en
+ *   dos con presupuestos distintos.
+ * @returns `null` si se puede seguir, o el mensaje que enseñarle si no. Devuelve
+ *   texto y no un booleano para que quien llama no tenga que inventarse la
+ *   redacción y acabe filtrando el tope exacto.
+ *
+ * @example
+ * ```ts
+ * const espera = await limitarAccion("iaAlumno", ctx.membershipId);
+ * if (espera) return { error: espera };
+ * ```
+ */
+export async function limitarAccion(
+  accion: keyof typeof LIMITES,
+  quien: string,
+): Promise<string | null> {
+  const resultado = await rateLimit(`${accion}:${quien}`, LIMITES[accion]);
+  if (resultado.allowed) return null;
+
+  const minutos = Math.max(1, Math.ceil(resultado.retryAfterSeconds / 60));
+  return `Has hecho esto muchas veces seguidas. Vuelve a intentarlo en ${minutos} ${
+    minutos === 1 ? "minuto" : "minutos"
+  }.`;
+}
+
 /** Borra el contador. Se llama tras un inicio de sesión correcto. */
 export async function resetRateLimit(key: string): Promise<void> {
   try {

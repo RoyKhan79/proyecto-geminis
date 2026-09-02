@@ -12,12 +12,26 @@
  *   node scripts/auditoria.mjs [http://localhost:3000]
  */
 
+// Las credenciales del superadministrador vienen del entorno, y este script se
+// lanza con `node` a secas, sin `--env-file`. Se carga aquí para que
+// `npm run auditoria` funcione sin tener que recordar exportarlas a mano.
+try {
+  // `process.cwd()` y no una ruta relativa al módulo: estos scripts se lanzan
+  // siempre desde la raíz con `npm run`, y construir la ruta desde `import.meta`
+  // obliga a deshacer a mano el `/C:/…` que devuelve una URL en Windows.
+  process.loadEnvFile(`${process.cwd()}/.env`);
+} catch {
+  // En integración continua las variables vienen del entorno, no de un archivo.
+}
+
 const BASE = process.argv[2] ?? "http://localhost:3000";
 const PASSWORD = "Geminis2026!";
 
 let pasadas = 0;
 let fallidas = 0;
 const fallos = [];
+let omitidas = 0;
+const sinProbar = [];
 
 function comprobar(titulo, condicion, detalle = "") {
   if (condicion) {
@@ -29,6 +43,40 @@ function comprobar(titulo, condicion, detalle = "") {
     console.log(`  ✗ ${titulo} ${detalle}`);
   }
 }
+
+/**
+ * «No se ha podido probar» NO es «ha pasado», y tampoco es «ha fallado».
+ *
+ * Varias comprobaciones de aquí necesitan que la demo tenga datos: temas
+ * publicados, un documento subido, dos alumnos con packs distintos. Sin ellos,
+ * expresiones como `alcanzables < nodos.length` valen `0 < 0`, que es falso, y
+ * el informe cantaba una fuga donde lo único que pasaba era que faltaba
+ * `npm run demo:todo`.
+ *
+ * Eso hace daño en las dos direcciones. Hacia fuera, porque un informe que
+ * dice «✗ el alumno alcanza secciones que no ha pagado» cuando no hay ni una
+ * sección es sencillamente falso. Y hacia dentro, porque quien lo vea fallar
+ * siempre por lo mismo dejará de mirarlo, y el día que la fuga sea de verdad
+ * ya nadie lee esa línea.
+ *
+ * @param titulo Qué se iba a comprobar.
+ * @param motivo Por qué no se ha podido, para que se sepa qué falta.
+ */
+function omitir(titulo, motivo) {
+  omitidas += 1;
+  sinProbar.push(`${titulo} · ${motivo}`);
+  console.log(`  ~ ${titulo} · OMITIDO: ${motivo}`);
+}
+
+/**
+ * El superadministrador con el que probar la consola de plataforma.
+ *
+ * Del entorno, siempre. Sin ellas, las comprobaciones de ese nivel se omiten:
+ *
+ *   SUPERADMIN_EMAIL=... SUPERADMIN_PASSWORD=... npm run auditoria:http
+ */
+const SUPERADMIN_EMAIL = process.env.SUPERADMIN_EMAIL ?? "";
+const SUPERADMIN_PASSWORD = process.env.SUPERADMIN_PASSWORD ?? "";
 
 async function login(email, password = PASSWORD) {
   const html = await (await fetch(`${BASE}/entrar`)).text();
@@ -165,7 +213,19 @@ async function main() {
   const secretaria = await login("secretaria@academiademo.test");
   const alumna = await login("alumno1@academiademo.test");
   const alumnoTests = await login("alumno2@academiademo.test");
-  const superadmin = await login("antonio.fusterverdu@gmail.com", "licantropiA1!");
+  /*
+   * Las credenciales del superadministrador vienen del entorno, nunca escritas
+   * aquí. Estaban puestas a mano —correo y contraseña reales— y eso convertía
+   * este script en el tercer sitio del repositorio desde el que se podía entrar
+   * en la consola de plataforma de cualquier instalación. Un script de auditoría
+   * que publica una credencial no está auditando: está abriendo una puerta.
+   *
+   * Si no están configuradas, las comprobaciones que necesitan ese nivel se
+   * omiten y se dice. Omitirlas es correcto; inventarse un PASS, no.
+   */
+  const superadmin = SUPERADMIN_EMAIL
+    ? await login(SUPERADMIN_EMAIL, SUPERADMIN_PASSWORD)
+    : null;
 
   comprobar("el administrador entra", Boolean(admin));
   comprobar("el alumnado entra", Boolean(alumna));
@@ -219,12 +279,19 @@ async function main() {
     `→ ${adminPlataforma.status}`,
   );
 
+  if (!superadmin) {
+    omitir(
+      "el superadmin no entra en la gestión de una academia",
+      "sin SUPERADMIN_EMAIL/SUPERADMIN_PASSWORD en el entorno",
+    );
+  } else {
   const superadminAcademia = await pedir(superadmin, "/gestion");
   comprobar(
     "el superadmin no entra en la gestión de una academia sin pertenecer a ella",
     superadminAcademia.status === 307,
     `→ ${superadminAcademia.status}`,
   );
+  }
 
   // ── 6. Contenido de pago ──────────────────────────────────────────────────
   console.log("\n6. CONTENIDO SEGÚN LO CONTRATADO");
@@ -237,16 +304,24 @@ async function main() {
     ),
   ];
 
-  let alcanzables = 0;
-  for (const nodo of nodos) {
-    const r = await pedir(alumnoTests, `/campus/estudiar/${nodo}`);
-    if (r.status === 200) alcanzables += 1;
+  if (nodos.length === 0) {
+    // Cero contra cero no demuestra nada: ni que haya fuga ni que no la haya.
+    omitir(
+      "secciones que no se han contratado",
+      "la alumna de referencia no tiene ninguna sección publicada a la que llegar",
+    );
+  } else {
+    let alcanzables = 0;
+    for (const nodo of nodos) {
+      const r = await pedir(alumnoTests, `/campus/estudiar/${nodo}`);
+      if (r.status === 200) alcanzables += 1;
+    }
+    comprobar(
+      "el alumno con pack de tests no alcanza las secciones de la otra alumna",
+      alcanzables < nodos.length,
+      `(${alcanzables}/${nodos.length} alcanzables)`,
+    );
   }
-  comprobar(
-    "el alumno con pack de tests no alcanza las secciones de la otra alumna",
-    alcanzables < nodos.length,
-    `(${alcanzables}/${nodos.length} alcanzables)`,
-  );
 
   // ── 7. Archivos ───────────────────────────────────────────────────────────
   console.log("\n7. ARCHIVOS");
@@ -298,17 +373,54 @@ async function main() {
       propietaria.cabeceras["x-content-type-options"] === "nosniff",
     );
 
-    const descarga = await pedir(alumna, `/api/archivos/${conPdf}?descargar=1`);
+    /*
+     * LA DESCARGA · comprobando la regla, no una configuración concreta
+     *
+     * Esto decía «la descarga se deniega si la academia no la permite» y
+     * exigía un 403. Pero no comprobaba en ningún sitio que la academia NO la
+     * permitiera: daba por supuesta una configuración de la demo. En cuanto la
+     * demo se sembró con el temario descargable —que es lo normal— la
+     * comprobación empezó a fallar diciendo que había una fuga donde lo que
+     * había era un permiso concedido a propósito.
+     *
+     * Una aserción que afirma algo sobre un estado que no ha mirado no vale
+     * para nada, y hace daño: quien la vea fallar buscará una vulnerabilidad
+     * que no existe, o peor, la callará.
+     *
+     * Lo que sí es una regla de seguridad, y es lo que se comprueba ahora:
+     *
+     *   1. quien NO tiene el contenido contratado no lo descarga, permita lo
+     *      que permita la academia;
+     *   2. las dos respuestas posibles para quien sí lo tiene son coherentes:
+     *      o 200 con `Content-Disposition: attachment`, o 403. Nunca un 200
+     *      que en realidad sirva otra cosa.
+     */
+    const descargaAjena = await pedir(
+      alumnoTests,
+      `/api/archivos/${conPdf}?descargar=1`,
+    );
     comprobar(
-      "la descarga se deniega si la academia no la permite",
-      descarga.status === 403,
-      `→ ${descarga.status}`,
+      "quien no tiene el contenido contratado tampoco lo descarga",
+      descargaAjena.status === 404 || descargaAjena.status === 403,
+      `→ ${descargaAjena.status}`,
+    );
+
+    const descarga = await pedir(alumna, `/api/archivos/${conPdf}?descargar=1`);
+    const disposicion = descarga.cabeceras["content-disposition"] ?? "";
+    comprobar(
+      "la descarga o se deniega, o llega como adjunto",
+      descarga.status === 403 ||
+        (descarga.status === 200 && disposicion.startsWith("attachment")),
+      `→ ${descarga.status} · ${disposicion.slice(0, 40)}`,
     );
 
     const inventado = await pedir(alumna, `/api/archivos/${"0".repeat(36)}`);
     comprobar("un identificador inventado devuelve 404", inventado.status === 404);
   } else {
-    comprobar("hay un documento con el que probar", false, "(no encontrado)");
+    omitir(
+      "servicio de archivos",
+      "la demo no tiene ningún documento subido · npm run demo:contenido",
+    );
   }
 
   // ── 8. Manipulación de identificadores ────────────────────────────────────
@@ -356,21 +468,54 @@ async function main() {
 
   // El selector de temas del asistente es, en la práctica, un listado de lo
   // que ese alumno tiene contratado: no puede ofrecer más de lo que estudia.
-  const temasEnIa = (iaAlumna.cuerpo.match(/<option value="[^"]+"/g) ?? []).length;
+  /** Los identificadores de tema que el selector del asistente ofrece. */
+  const temasOfrecidos = (cuerpo) =>
+    new Set(
+      [...cuerpo.matchAll(/<option value="([^"]+)"/g)]
+        .map((m) => m[1])
+        .filter((v) => v && v !== ""),
+    );
+
+  const temasAlumna = temasOfrecidos(iaAlumna.cuerpo);
   const estudiarAlumna = await pedir(alumna, "/campus/estudiar");
-  comprobar(
-    "el asistente no ofrece temas que el alumno no tenga",
-    temasEnIa > 0 && estudiarAlumna.status === 200,
-    `${temasEnIa} temas ofrecidos`,
-  );
 
   const iaOtroAlumno = await pedir(alumnoTests, "/campus/ia");
-  const temasOtro = (iaOtroAlumno.cuerpo.match(/<option value="[^"]+"/g) ?? []).length;
-  comprobar(
-    "cada alumno ve en la IA solo su propio alcance",
-    temasOtro !== temasEnIa,
-    `${temasEnIa} frente a ${temasOtro}`,
-  );
+  const temasOtro = temasOfrecidos(iaOtroAlumno.cuerpo);
+
+  if (temasAlumna.size === 0 && temasOtro.size === 0) {
+    omitir(
+      "el alcance de cada alumno en el asistente",
+      "ningún alumno de la demo tiene temas contratados · npm run demo:todo",
+    );
+  } else {
+    comprobar(
+      "el asistente no ofrece temas que el alumno no tenga",
+      temasAlumna.size > 0 && estudiarAlumna.status === 200,
+      `${temasAlumna.size} temas ofrecidos`,
+    );
+
+    /*
+     * Se comparan los CONJUNTOS, no los recuentos.
+     *
+     * Antes esto era `temasOtro !== temasEnIa`, es decir, dos números
+     * distintos. Y eso no demuestra aislamiento por dos motivos: dos alumnos
+     * con packs distintos pero del mismo tamaño harían fallar la comprobación
+     * sin que hubiera nada mal, y dos alumnos con el mismo número de temas
+     * podrían estar viendo EXACTAMENTE los mismos —que sería la fuga— y la
+     * comprobación pasaría. Medía una cosa que no era la que importa.
+     *
+     * Lo que importa es que el alumno con menos contratado no vea ni un tema
+     * que no sea suyo.
+     */
+    const ajenos = [...temasOtro].filter((t) => !temasAlumna.has(t));
+    const compartidos = [...temasOtro].filter((t) => temasAlumna.has(t));
+
+    comprobar(
+      "cada alumno ve en el asistente solo su propio alcance",
+      temasOtro.size < temasAlumna.size || ajenos.length > 0,
+      `${temasAlumna.size} frente a ${temasOtro.size}, ${compartidos.length} en común`,
+    );
+  }
 
   const iaGestion = await pedir(alumna, "/gestion/ia");
   comprobar(
@@ -533,13 +678,26 @@ async function main() {
 
   // ── Resumen ───────────────────────────────────────────────────────────────
   console.log(`\n${"=".repeat(60)}`);
-  console.log(`RESULTADO: ${pasadas} comprobaciones superadas, ${fallidas} fallidas`);
+  console.log(
+    `RESULTADO: ${pasadas} comprobaciones superadas, ${fallidas} fallidas` +
+      (omitidas > 0 ? `, ${omitidas} sin poder probarse` : ""),
+  );
+
+  if (sinProbar.length > 0) {
+    // Se dicen aparte y en voz alta: una comprobación que no se ha podido
+    // hacer no es una comprobación superada, y el informe no puede dar a
+    // entender que sí.
+    console.log("\nNO SE HAN PODIDO PROBAR (la demo no tenía con qué):");
+    for (const linea of sinProbar) console.log(`  · ${linea}`);
+    console.log("  Siembra la demo y vuelve a pasarla: npm run demo:todo");
+  }
+
   if (fallos.length > 0) {
     console.log("\nFALLOS:");
     for (const fallo of fallos) console.log(`  · ${fallo}`);
     process.exit(1);
   }
-  console.log("Sin incidencias.\n");
+  console.log("\nSin incidencias.\n");
 }
 
 main().catch((error) => {

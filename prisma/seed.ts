@@ -36,16 +36,59 @@ const DEMO_PASSWORD = "Geminis2026!";
  * pertenece a ninguna academia y por tanto no ve el contenido de ninguna. Para
  * entrar en una tiene que impersonar, y eso queda registrado (§3).
  *
- * Se pueden cambiar con variables de entorno al sembrar, para no dejar unas
- * credenciales conocidas en un despliegue real:
+ * Sus credenciales SIEMPRE vienen del entorno. Antes había unas por defecto
+ * escritas aquí, y eso era un agujero de manual: cualquiera que leyera el
+ * repositorio conocía el correo y la contraseña del superadministrador de
+ * cualquier despliegue donde se hubiera sembrado. Un valor por defecto en un
+ * archivo versionado no es un valor por defecto: es una credencial pública.
  *
  *   SUPERADMIN_EMAIL=... SUPERADMIN_PASSWORD=... npm run db:seed
+ *
+ * Si no se indican, la siembra NO crea superadministrador y lo dice. Darlo de
+ * alta después es una línea: `npm run superadmin`.
  */
-const SUPERADMIN_EMAIL =
-  process.env.SUPERADMIN_EMAIL ?? "antonio.fusterverdu@gmail.com";
-const SUPERADMIN_PASSWORD = process.env.SUPERADMIN_PASSWORD ?? "licantropiA1!";
+const SUPERADMIN_EMAIL = process.env.SUPERADMIN_EMAIL ?? null;
+const SUPERADMIN_PASSWORD = process.env.SUPERADMIN_PASSWORD ?? null;
+
+/**
+ * La siembra NO se ejecuta contra producción.
+ *
+ * Lo primero que hace `main()` es borrar la academia de demostración y todos
+ * los usuarios acabados en `@academiademo.test`. Eso está bien en un portátil
+ * y es una pérdida de datos en un servidor. Además deja cuentas con
+ * contraseña conocida —la demo se publica en el README—, que en producción
+ * son sencillamente una puerta abierta.
+ *
+ * Se puede forzar con `PERMITIR_SEMILLA_EN_PRODUCCION=si`, pero hay que
+ * escribirlo a mano: la idea es que nadie lo haga sin querer desde un script de
+ * despliegue.
+ */
+function comprobarEntorno() {
+  if (process.env.NODE_ENV !== "production") return;
+  if (process.env.PERMITIR_SEMILLA_EN_PRODUCCION === "si") {
+    console.warn(
+      "⚠ Sembrando datos de demostración en un entorno marcado como producción, " +
+        "porque PERMITIR_SEMILLA_EN_PRODUCCION=si.",
+    );
+    return;
+  }
+  console.error(
+    [
+      "✗ NODE_ENV=production: la siembra no se ejecuta.",
+      "",
+      "  Esta semilla borra la academia de demostración y crea cuentas con una",
+      "  contraseña que está publicada en el README. En un servidor real eso es",
+      "  a la vez una pérdida de datos y una puerta abierta.",
+      "",
+      "  Si de verdad quieres una demo en este entorno:",
+      "    PERMITIR_SEMILLA_EN_PRODUCCION=si npm run db:seed",
+    ].join("\n"),
+  );
+  process.exit(1);
+}
 
 async function main() {
+  comprobarEntorno();
   console.log("→ Sembrando datos de demostración…");
 
   await seedPlans();
@@ -122,6 +165,14 @@ async function limpiarDemo() {
 }
 
 async function seedSuperadmin() {
+  if (!SUPERADMIN_EMAIL || !SUPERADMIN_PASSWORD) {
+    console.log(
+      "  · Sin superadministrador: no se han indicado SUPERADMIN_EMAIL ni SUPERADMIN_PASSWORD.",
+    );
+    console.log("    Créalo cuando quieras con `npm run superadmin`.");
+    return;
+  }
+
   const passwordHash = await hashPassword(SUPERADMIN_PASSWORD);
 
   await prismaBase.user.upsert({
@@ -131,8 +182,7 @@ async function seedSuperadmin() {
     update: { isPlatformAdmin: true, passwordHash },
     create: {
       email: SUPERADMIN_EMAIL,
-      firstName: "Antonio",
-      lastName: "Fuster",
+      firstName: "Superadmin",
       isPlatformAdmin: true,
       passwordHash,
       emailVerifiedAt: new Date(),

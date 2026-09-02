@@ -24,25 +24,35 @@ const cabecerasSeguridad = [
     key: "Permissions-Policy",
     value: "camera=(), microphone=(), geolocation=(), interest-cohort=()",
   },
-  {
-    key: "Content-Security-Policy",
-    value: [
-      "default-src 'self'",
-      // Next.js necesita inline para su arranque; en desarrollo además eval.
-      `script-src 'self' 'unsafe-inline'${process.env.NODE_ENV === "development" ? " 'unsafe-eval'" : ""}`,
-      "style-src 'self' 'unsafe-inline'",
-      "img-src 'self' data: blob: https:",
-      "font-src 'self' data:",
-      "connect-src 'self'",
-      // Los PDFs se muestran en un iframe del propio dominio.
-      "frame-src 'self'",
-      "frame-ancestors 'self'",
-      "base-uri 'self'",
-      "form-action 'self'",
-      "object-src 'none'",
-    ].join("; "),
-  },
 ];
+
+/**
+ * La política de las respuestas de API.
+ *
+ * La de las páginas ya NO está aquí: la pone `src/proxy.ts`, que genera un
+ * testigo distinto en cada petición y así puede prescindir de `unsafe-inline`
+ * para los scripts. Poner también una aquí sería contraproducente: dos
+ * cabeceras `Content-Security-Policy` no se suman, se aplican las dos, y la de
+ * aquí —sin el testigo— bloquearía justo los scripts que la otra autoriza.
+ *
+ * Las rutas de `/api` quedan fuera del proxy, así que llevan la suya, y es más
+ * cerrada porque puede serlo: ninguna respuesta de API es un documento con
+ * scripts. Eso importa más de lo que parece en `/api/archivos`, que sirve lo
+ * que ha subido una academia: aunque un día se colara ahí un HTML con el tipo
+ * equivocado, con `script-src 'none'` no ejecutaría nada.
+ */
+const cspDeApi = [
+  "default-src 'none'",
+  "script-src 'none'",
+  // Los PDF y las imágenes se abren en un iframe o una etiqueta del propio
+  // sitio, y el visor del navegador necesita poder pintarlos.
+  "img-src 'self' data: blob:",
+  "style-src 'unsafe-inline'",
+  "frame-ancestors 'self'",
+  "base-uri 'none'",
+  "form-action 'none'",
+  "object-src 'none'",
+].join("; ");
 
 const nextConfig: NextConfig = {
   // No anunciamos con qué está hecho: es información gratuita para quien busca
@@ -59,7 +69,13 @@ const nextConfig: NextConfig = {
       });
     }
 
-    return [{ source: "/:path*", headers: cabeceras }];
+    return [
+      { source: "/:path*", headers: cabeceras },
+      {
+        source: "/api/:path*",
+        headers: [{ key: "Content-Security-Policy", value: cspDeApi }],
+      },
+    ];
   },
 };
 

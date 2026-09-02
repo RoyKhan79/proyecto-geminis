@@ -280,3 +280,18 @@ export default function CondicionesPage() {
     </LegalPage>
   );
 }
+
+/**
+ * Se renderiza en cada petición aunque su contenido no cambie.
+ *
+ * No es un capricho: la cabecera de seguridad del contenido lleva un testigo
+ * distinto por petición (`src/proxy.ts`), y Next solo puede ponérselo a los
+ * scripts de una página que se genere al pedirla. Una página prerenderizada se
+ * escribió durante la compilación, cuando ese testigo todavía no existía, así
+ * que sus scripts llegarían sin él y el navegador los bloquearía.
+ *
+ * El coste de generar una página de texto en cada visita es despreciable; el de
+ * dejar `unsafe-inline` puesto para que estas cuatro siguieran siendo
+ * estáticas, no.
+ */
+export const dynamic = "force-dynamic";

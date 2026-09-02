@@ -276,8 +276,13 @@ export async function enviarFacturaAlCliente(
     return { enviada: false, motivo: "El servidor de correo no lo aceptó.", destino };
   }
 
-  await prismaBase.invoice.update({
-    where: { id: factura.id },
+  // `updateMany` y no `update`, para poder acotar por academia en el propio
+  // filtro. La factura ya se leyó acotada más arriba, así que hoy es
+  // redundante; se escribe igual porque la regla del proyecto es que ninguna
+  // consulta que salte la guardia vaya sin su `academyId`, y una redundancia
+  // barata vale más que confiar en que nadie separe nunca estas dos consultas.
+  await prismaBase.invoice.updateMany({
+    where: { id: factura.id, academyId },
     data: { sentAt: new Date(), sentTo: destino },
   });
 

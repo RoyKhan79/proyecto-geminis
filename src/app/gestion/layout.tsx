@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { LogOut, ShieldAlert } from "lucide-react";
-import { signOutAction } from "@/lib/auth/actions";
+import { ShieldAlert } from "lucide-react";
+import { BotonCerrarSesion } from "@/components/cerrar-sesion";
 import { stopImpersonationAction } from "@/server/platform/actions";
 import { requireAcademy } from "@/lib/auth/context";
 import { MANAGER_NAV } from "@/components/manager/nav-config";
@@ -90,16 +90,7 @@ export default async function ManagerLayout({
             >
               {initials(ctx.user.firstName, ctx.user.lastName)}
             </span>
-            <form action={signOutAction}>
-              <Button
-                type="submit"
-                variant="ghost"
-                size="icon"
-                aria-label="Cerrar sesión"
-              >
-                <LogOut aria-hidden />
-              </Button>
-            </form>
+            <BotonCerrarSesion />
           </div>
         </header>
 

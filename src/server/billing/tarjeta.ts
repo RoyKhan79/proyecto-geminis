@@ -138,8 +138,12 @@ export async function prepararCobroConTarjeta(
   let orden = recibo.gatewayOrder;
   if (!orden) {
     orden = numeroDePedido(recibo.id);
-    await prismaBase.payment.update({
-      where: { id: recibo.id },
+    // Acotado por academia también al escribir. El recibo se leyó con su
+    // `academyId` un poco más arriba, pero esta consulta salta la guardia y la
+    // regla no admite excepciones: si mañana alguien mueve la lectura, la
+    // escritura sigue sin poder tocar el recibo de otra academia.
+    await prismaBase.payment.updateMany({
+      where: { id: recibo.id, academyId },
       data: { gatewayOrder: orden },
     });
   }

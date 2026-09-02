@@ -12,7 +12,15 @@ export const TENANT_MODELS = new Set<string>([
   // superadministrador, con el cliente sin guardia; está aquí para que la
   // academia pueda LEER los suyos —enseñarle qué tiene contratado— sin poder
   // ver los de otra ni, mucho menos, activarse ninguno.
-  "academyModule",
+  //
+  // OJO al nombre: va en mayúscula inicial como todos los demás, porque lo que
+  // recibe la guardia es el nombre del MODELO de Prisma (`AcademyModule`), no
+  // el de su delegado (`academyModule`). Estuvo escrito en minúscula y el
+  // efecto era que este modelo no constaba como de academia: la guardia lo
+  // trataba como «sin clasificar» y lanzaba error al usarlo desde `ctx.db`. No
+  // llegó a ser una fuga —falla cerrando, que es lo correcto— pero la lectura
+  // que este comentario prometía no funcionaba. Lo cazó `npm run auditoria`.
+  "AcademyModule",
   "Membership",
   "Role",
   "OppositionType",

@@ -2,6 +2,7 @@ import { AsyncLocalStorage } from "node:async_hooks";
 import { prismaBase } from "./client";
 import { env } from "@/lib/env";
 import { DERIVED_MODELS, GLOBAL_MODELS, TENANT_MODELS } from "./tenant-models";
+import { RELACIONES_DE_TENANT } from "./tenant-relations";
 
 /**
  * GUARDIA MULTI-TENANT
@@ -270,6 +271,80 @@ async function conRls<T>(
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /**
+ * Comprueba que las claves foráneas de una escritura apuntan a esta academia.
+ *
+ * Es lo que impide crear una fila propia colgada de una entidad ajena. Sin
+ * esto, `oppositionEdition.create({ data: { oppositionId: <de otra academia> } })`
+ * pasaba: la fila resultante era legítima —de esta academia— y la integridad
+ * referencial de PostgreSQL se salta Row Level Security por diseño, así que la
+ * entidad de la otra academia «existía» a efectos de la clave foránea. El
+ * resultado era una fila de A apuntando a datos de B, y bastaba un
+ * `include: { opposition: true }` para leerlos.
+ *
+ * Las consultas se agrupan por modelo destino: un `create` con tres claves al
+ * mismo modelo cuesta una consulta, no tres.
+ *
+ * @param model El modelo que se está escribiendo.
+ * @param filas Los objetos `data` de la operación. Son varios en `createMany`.
+ * @param academyId La academia del contexto.
+ * @throws {TenantViolationError} Si alguna clave apunta fuera. Se lanza y no se
+ *   filtra en silencio porque una escritura cruzada no es un caso de uso: es un
+ *   fallo del programa, y dejarlo pasar en silencio lo deja suelto.
+ */
+async function comprobarRelaciones(
+  model: string,
+  filas: Record<string, unknown>[],
+  academyId: string,
+): Promise<void> {
+  const relaciones = RELACIONES_DE_TENANT[model];
+  if (!relaciones) return;
+
+  /** Identificadores a comprobar, agrupados por el modelo al que apuntan. */
+  const porDestino = new Map<string, Set<string>>();
+
+  for (const fila of filas) {
+    if (!fila) continue;
+    for (const { campo, destino } of relaciones) {
+      const valor = fila[campo];
+      // Nulo o ausente: no hay a qué apuntar, no hay nada que comprobar.
+      if (typeof valor !== "string" || !valor) continue;
+      const yaVistos = porDestino.get(destino) ?? new Set<string>();
+      yaVistos.add(valor);
+      porDestino.set(destino, yaVistos);
+    }
+  }
+
+  if (porDestino.size === 0) return;
+
+  for (const [destino, ids] of porDestino) {
+    const delegate = (
+      prismaBase as unknown as Record<
+        string,
+        { findMany: (arg: unknown) => Promise<{ id: string }[]> }
+      >
+    )[delegateKey(destino)];
+
+    // Se pregunta por los que SÍ son de esta academia y se compara el recuento.
+    // Así un identificador que no existe y uno que es de otra academia se
+    // tratan igual, que es lo correcto: la respuesta no puede servir para
+    // averiguar qué tiene la academia de al lado.
+    const encontrados = await delegate.findMany({
+      where: { id: { in: [...ids] }, academyId },
+      select: { id: true },
+    });
+
+    if (encontrados.length !== ids.size) {
+      const buenos = new Set(encontrados.map((f) => f.id));
+      const malos = [...ids].filter((id) => !buenos.has(id));
+      throw new TenantViolationError(
+        `Al escribir en ${model} se ha intentado enlazar con ${destino} ` +
+          `${malos.join(", ")}, que no es de esta academia.`,
+      );
+    }
+  }
+}
+
+/**
  * Devuelve un cliente Prisma que no puede salirse de una academia.
  *
  * Es la puerta por la que pasa **todo** el acceso a datos con sesión. Lo que
@@ -347,6 +422,16 @@ export function tenantDb(academyId: string) {
           const a = args as Record<string, unknown>;
 
           if (READ_MANY_OPS.has(operation)) {
+            // `updateMany` entra por aquí porque su `where` se acota igual que
+            // el de una lectura, pero además trae un `data` que puede llevar
+            // claves foráneas hacia otra academia.
+            if (operation === "updateMany" && a.data) {
+              await comprobarRelaciones(
+                model,
+                [a.data as Record<string, unknown>],
+                academyId,
+              );
+            }
             return correr(
               model,
               operation,
@@ -372,41 +457,39 @@ export function tenantDb(academyId: string) {
               return correr(model, operation, a, query);
             }
 
-            case "create":
-              return correr(
+            case "create": {
+              const data = withAcademyId(
+                (a.data as Record<string, unknown>) ?? {},
+                academyId,
                 model,
-                operation,
-                {
-                  ...a,
-                  data: withAcademyId(
-                    (a.data as Record<string, unknown>) ?? {},
-                    academyId,
-                    model,
-                  ),
-                },
-                query,
               );
+              await comprobarRelaciones(model, [data], academyId);
+              return correr(model, operation, { ...a, data }, query);
+            }
 
             case "createMany":
             case "createManyAndReturn": {
               const rows = Array.isArray(a.data) ? a.data : [a.data];
-              return correr(
-                model,
-                operation,
-                {
-                  ...a,
-                  data: rows.map((row) =>
-                    withAcademyId(row as Record<string, unknown>, academyId, model),
-                  ),
-                },
-                query,
+              const conAcademia = rows.map((row) =>
+                withAcademyId(row as Record<string, unknown>, academyId, model),
               );
+              await comprobarRelaciones(model, conAcademia, academyId);
+              return correr(model, operation, { ...a, data: conAcademia }, query);
             }
 
             case "update":
             case "delete": {
               if (!(await ownsByUnique(model, a.where, academyId))) {
                 throw new NotFoundInTenantError(model);
+              }
+              // Al actualizar también: mover un registro propio para que cuelgue
+              // de una entidad ajena es la misma fuga que crearlo así.
+              if (operation === "update" && a.data) {
+                await comprobarRelaciones(
+                  model,
+                  [a.data as Record<string, unknown>],
+                  academyId,
+                );
               }
               return correr(model, operation, a, query);
             }
@@ -419,14 +502,20 @@ export function tenantDb(academyId: string) {
                   `El registro de ${model} pertenece a otra academia.`,
                 );
               }
-              const payload = {
-                ...a,
-                create: withAcademyId(
-                  (a.create as Record<string, unknown>) ?? {},
-                  academyId,
+              const create = withAcademyId(
+                (a.create as Record<string, unknown>) ?? {},
+                academyId,
+                model,
+              );
+              await comprobarRelaciones(model, [create], academyId);
+              if (a.update) {
+                await comprobarRelaciones(
                   model,
-                ),
-              };
+                  [a.update as Record<string, unknown>],
+                  academyId,
+                );
+              }
+              const payload = { ...a, create };
               return correr(
                 model,
                 operation,

@@ -171,7 +171,9 @@ export default async function RemesasPage({
           datos={{
             legalName: academia?.legalName ?? "",
             taxId: academia?.taxId ?? "",
-            billingIban: ibanAcreedor ?? "",
+            // Solo la máscara: el número entero no baja al navegador.
+            ibanOculto: ibanAcreedor ? ocultarIban(ibanAcreedor) : "",
+            tieneIban: Boolean(ibanAcreedor),
             creditorId: academia?.creditorId ?? "",
             mandatePrefix: academia?.mandatePrefix ?? "",
           }}

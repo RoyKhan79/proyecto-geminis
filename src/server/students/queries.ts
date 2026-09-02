@@ -1,6 +1,7 @@
 import type { StudentStatus } from "@/generated/prisma/enums";
 import type { TenantClient } from "@/lib/db/tenant";
 import { descifrar } from "@/lib/crypto/field";
+import { ocultarIban } from "@/lib/billing/iban";
 
 /**
  * Consultas de alumnos.
@@ -243,7 +244,23 @@ export async function getStudent(db: TenantClient, membershipId: string) {
   return {
     ...alumno,
     billingProfile: alumno.billingProfile
-      ? { ...alumno.billingProfile, iban: descifrar(alumno.billingProfile.iban) }
+      ? {
+          ...alumno.billingProfile,
+          /*
+           * La cuenta sale ENMASCARADA de aquí.
+           *
+           * Esto lo consume la ficha del alumno, que es una pantalla: el número
+           * entero no tiene por qué salir de la base para pintarla. Quien de
+           * verdad lo necesita —generar el fichero de adeudos— lo descifra por
+           * su cuenta, en el último momento y solo para las filas que van al
+           * fichero (ver src/app/api/remesas/[runId]/route.ts).
+           */
+          iban: undefined,
+          ibanOculto: (() => {
+            const claro = descifrar(alumno.billingProfile.iban);
+            return claro ? ocultarIban(claro) : null;
+          })(),
+        }
       : null,
   };
 }

@@ -43,7 +43,17 @@ export function BillingForm({
   studentId: string;
   perfil: {
     method: string;
-    iban: string | null;
+    /**
+     * La cuenta del alumno ENMASCARADA: «ES91 •••• •••• 1332».
+     *
+     * Nunca el número entero. Antes bajaba completo al navegador en el
+     * `defaultValue` de este campo y —peor— en un `<input type="hidden">` que
+     * se enviaba de vuelta aunque nadie estuviera tocando la domiciliación. Es
+     * el dato bancario de un tercero: no tiene por qué estar en el HTML, en la
+     * caché del navegador ni en una captura de pantalla para que alguien del
+     * equipo consulte la ficha de un alumno.
+     */
+    ibanOculto: string | null;
     holderName: string | null;
     mandateRef: string | null;
     mandateSignedAt: Date | null;
@@ -130,13 +140,19 @@ export function BillingForm({
                 <Field
                   label="IBAN"
                   htmlFor="iban"
-                  required
-                  hint="Se comprueba el dígito de control al guardar."
+                  required={!perfil?.ibanOculto}
+                  hint={
+                    perfil?.ibanOculto
+                      ? `Guardada: ${perfil.ibanOculto}. Déjalo en blanco para no cambiarla.`
+                      : "Se comprueba el dígito de control al guardar."
+                  }
                 >
                   <Input
                     name="iban"
-                    placeholder="ES91 2100 0418 4502 0005 1332"
-                    defaultValue={perfil?.iban ?? ""}
+                    placeholder={
+                      perfil?.ibanOculto ?? "ES91 2100 0418 4502 0005 1332"
+                    }
+                    defaultValue=""
                     autoComplete="off"
                   />
                 </Field>
@@ -175,7 +191,14 @@ export function BillingForm({
               </div>
             </div>
           ) : (
-            <input type="hidden" name="iban" value={perfil?.iban ?? ""} />
+            /*
+              Aquí había un campo oculto que reenviaba el IBAN entero para no
+              perderlo al guardar con otra forma de pago. Ya no hace falta —y no
+              debía estar—: la acción conserva la cuenta guardada cuando el
+              campo llega vacío, así que no reenviar nada es lo correcto y
+              además saca el número del HTML.
+            */
+            null
           )}
 
           <Field label="Notas de cobro" htmlFor="notes">

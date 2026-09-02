@@ -23,6 +23,28 @@ type Punto = {
   cumple: boolean;
   detalle: string;
   comoSeArregla?: string;
+  /**
+   * La comprobación no se ha hecho de verdad: solo tiene sentido en producción
+   * y esto se está ejecutando en otro sitio.
+   *
+   * Hace falta porque tres puntos llevaban un `|| !isProduction` y por tanto
+   * salían con un ✓ al lado de un detalle que decía lo contrario. El informe
+   * llegó a leerse así:
+   *
+   *     ✓ La dirección pública usa HTTPS
+   *         http://localhost:3000
+   *     ✓ Sin datos de demostración
+   *         24 cuentas de demostración con contraseña conocida
+   *
+   * Es una contradicción, y de las peligrosas: quien lo lea por encima ve dos
+   * marcas verdes. La intención era buena —no exigir HTTPS en un portátil— pero
+   * el resultado es que el script que decide si un despliegue es apto da luz
+   * verde justo cuando NO se está ejecutando contra el despliegue.
+   *
+   * Ahora esos puntos salen con `~` y el resumen avisa de que el veredicto no
+   * vale hasta pasarlo en el servidor de verdad.
+   */
+  sinComprobar?: boolean;
 };
 
 const puntos: Punto[] = [];
@@ -97,9 +119,8 @@ async function main() {
   comprobar({
     nivel: "recomendado",
     titulo: "Conexión a la base de datos cifrada",
-    cumple:
-      /sslmode=(require|verify-ca|verify-full)/.test(env.DATABASE_URL) ||
-      !isProduction,
+    cumple: /sslmode=(require|verify-ca|verify-full)/.test(env.DATABASE_URL),
+    sinComprobar: !isProduction,
     detalle: /sslmode=/.test(env.DATABASE_URL)
       ? "sslmode indicado en la conexión"
       : "sin sslmode: en producción la conexión debería ir cifrada",
@@ -217,7 +238,8 @@ async function main() {
   comprobar({
     nivel: "obligatorio",
     titulo: "La dirección pública usa HTTPS",
-    cumple: env.APP_URL.startsWith("https://") || !isProduction,
+    cumple: env.APP_URL.startsWith("https://"),
+    sinComprobar: !isProduction,
     detalle: env.APP_URL,
     comoSeArregla: "APP_URL=https://…  · sin HTTPS, la cookie de sesión viaja en claro",
   });
@@ -231,7 +253,8 @@ async function main() {
   comprobar({
     nivel: "obligatorio",
     titulo: "Sin datos de demostración",
-    cumple: !isProduction || (demo === 0 && cuentasDemo === 0),
+    cumple: demo === 0 && cuentasDemo === 0,
+    sinComprobar: !isProduction,
     detalle:
       demo > 0 || cuentasDemo > 0
         ? `${cuentasDemo} cuentas de demostración con contraseña conocida`
@@ -253,7 +276,11 @@ async function main() {
   // ── Informe ────────────────────────────────────────────────────────────────
   const obligatorios = puntos.filter((p) => p.nivel === "obligatorio");
   const recomendados = puntos.filter((p) => p.nivel === "recomendado");
-  const faltan = obligatorios.filter((p) => !p.cumple);
+  // Los que faltan de verdad, y aparte los que no se han podido mirar desde
+  // aquí. Meterlos en el mismo saco sería volver al problema de antes por el
+  // otro lado: un despliegue local no puede fallar por no tener HTTPS.
+  const faltan = obligatorios.filter((p) => !p.cumple && !p.sinComprobar);
+  const pendientes = puntos.filter((p) => p.sinComprobar);
 
   for (const grupo of [
     { titulo: "OBLIGATORIO", lista: obligatorios },
@@ -261,15 +288,21 @@ async function main() {
   ]) {
     console.log(`\n${grupo.titulo}`);
     for (const p of grupo.lista) {
-      console.log(`  ${p.cumple ? "✓" : "✗"} ${p.titulo}`);
-      console.log(`      ${p.detalle}`);
-      if (!p.cumple && p.comoSeArregla) {
+      // `~` cuando no se ha comprobado de verdad. Ni ✓ ni ✗: las dos marcas
+      // afirmarían algo que este entorno no puede saber.
+      const marca = p.sinComprobar ? "~" : p.cumple ? "✓" : "✗";
+      console.log(`  ${marca} ${p.titulo}`);
+      console.log(
+        `      ${p.detalle}${p.sinComprobar ? " · solo se comprueba en producción" : ""}`,
+      );
+      if (!p.cumple && !p.sinComprobar && p.comoSeArregla) {
         console.log(`      → ${p.comoSeArregla}`);
       }
     }
   }
 
   console.log(`\n${"=".repeat(70)}`);
+
   if (faltan.length > 0) {
     console.log(
       `✗ Faltan ${faltan.length} de ${obligatorios.length} requisitos obligatorios.`,
@@ -277,6 +310,28 @@ async function main() {
     console.log("  NO pongas datos reales de alumnos hasta resolverlos.\n");
     process.exit(1);
   }
+
+  /*
+   * Y aquí va lo que hace honesto a este script.
+   *
+   * Si se ha pasado fuera de producción, hay comprobaciones que no se han hecho
+   * —HTTPS, datos de demostración, cifrado de la conexión— y decir «listo para
+   * producción» sería justo lo contrario de lo que este archivo existe para
+   * hacer. Se dice lo que se ha comprobado y lo que no, y no se da el visto
+   * bueno hasta pasarlo donde toca.
+   */
+  if (pendientes.length > 0) {
+    console.log(
+      `~ ${obligatorios.length - faltan.length} de ${obligatorios.length} requisitos comprobados, ` +
+        `pero ${pendientes.length} solo se pueden mirar en producción:`,
+    );
+    for (const p of pendientes) console.log(`    · ${p.titulo}`);
+    console.log("");
+    console.log(`  Este entorno es ${env.NODE_ENV}, así que esto NO es un visto bueno.`);
+    console.log("  Vuelve a pasarlo en el servidor, con NODE_ENV=production.\n");
+    return;
+  }
+
   console.log("✓ Listo para producción.\n");
 }
 

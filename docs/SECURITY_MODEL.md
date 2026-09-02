@@ -61,11 +61,67 @@ añadir un modelo con `academyId` y olvidar registrarlo rompe la suite.
 
 ### Segunda barrera: Row Level Security
 
-Todavía **no** está activa. La guardia de aplicación es la primera línea; RLS en
-PostgreSQL sería la segunda, para el caso de que alguien acceda a la base por
-fuera de la aplicación. Requiere ejecutar cada petición dentro de una
-transacción con `SET LOCAL app.academy_id`, lo que tiene coste y complejidad.
-Está previsto para la fase 2. Se documenta aquí para que no se dé por hecho.
+**Está activa.** Este apartado decía lo contrario —«todavía no está activa,
+previsto para la fase 2»— y llevaba meses siendo falso: RLS se activó en la
+migración `rls_segunda_barrera`. Se corrige aquí porque una documentación de
+seguridad que va por detrás del código es peor que no tenerla: alguien puede
+decidir en función de lo que lee.
+
+Cómo funciona: cada operación de academia se envuelve en una transacción que
+fija `geminis.academy_id`, y PostgreSQL aplica una política de aislamiento sobre
+cada tabla con datos de academia —hoy **57**—. Cuando la variable no está puesta
+(migraciones, semillas, consola de plataforma, autenticación) la política deja
+pasar: esos usos son deliberados y la auditoría interna los revisa uno a uno.
+
+Tres cosas que hacen que esta barrera sea real y no decorativa:
+
+- **`FORCE ROW LEVEL SECURITY`** en todas. Sin `FORCE`, el dueño de la tabla se
+  salta las políticas.
+- **La aplicación NO se conecta como dueño.** Se conecta con `geminis_app`, un
+  rol sin `SUPERUSER` y sin `BYPASSRLS`. Cuando no era así, RLS estaba activada
+  y no protegía absolutamente nada; lo cuenta la migración
+  `rol_de_aplicacion_sin_bypass`, que existe porque eso llegó a pasar.
+- **`WITH CHECK` además de `USING`.** Lo primero impide leer filas ajenas; lo
+  segundo, escribirlas. Una política con solo `USING` deja escribir mal y parece
+  que está puesta.
+
+Coste medido (`npm run rls:medir`): unos 3 ms por consulta. Se puede apagar con
+`DB_RLS=off` para medir o depurar; en producción va encendida y `src/lib/env.ts`
+no deja arrancar sin ella.
+
+Qué lo comprueba: `npm run rls:probar` intenta leer, escribir y borrar datos de
+otra academia con SQL crudo, saltándose la guardia de aplicación; y
+`tests/rls.test.ts` compara el esquema con las políticas reales y falla si
+aparece una tabla con `academyId` sin cubrir. Esa prueba existe porque el fallo
+ya se dio: las seis tablas de facturación —las que guardan los IBAN— se crearon
+después de la migración original y se quedaron fuera de su lista escrita a mano.
+
+### Tercera cosa que se comprueba al escribir: las claves foráneas
+
+La guardia mira a qué registro apunta un `where`, y por eso `update` y `delete`
+sobre algo ajeno fallan. Al **crear** no hay registro al que apuntar, así que
+durante un tiempo esto pasaba:
+
+```ts
+dbDeLaAcademiaA.oppositionEdition.create({
+  data: { oppositionId: <id de una oposición de la academia B>, name: "2026" },
+})
+```
+
+La fila resultante era legítima —de A— y por eso la política de PostgreSQL la
+aceptaba; la integridad referencial se comprueba saltándose RLS por diseño, así
+que la oposición de B «existía» a esos efectos. Resultado: una fila de A colgada
+de datos de B, y un `include: { opposition: true }` de por medio para leerlos.
+
+No llegó a ser explotable porque las acciones cargan siempre el padre con
+`ctx.db` antes de usarlo, y ahí sí se filtra. Pero eso es disciplina, no
+barrera. Ahora la guardia comprueba cada clave foránea contra la academia del
+contexto (`src/lib/db/tenant-relations.ts`), y `tests/tenant-relaciones.test.ts`
+compara esa lista con el esquema para que no se quede vieja.
+
+Lo ideal sería que la base de datos lo hiciera imposible, con claves compuestas
+del tipo `(academyId, oppositionId) → oppositions(academyId, id)`. Son 108
+claves que reescribir; queda anotado como pendiente, no como hecho.
 
 ---
 
@@ -88,11 +144,16 @@ Está previsto para la fase 2. Se documenta aquí para que no se dé por hecho.
 
 ### Limitaciones conocidas
 
-- El limitador es en memoria del proceso (ADR-0016): con varias instancias cada
-  una lleva su cuenta. Sustituirlo por Redis no toca a quien lo usa.
-- No hay todavía verificación de correo, recuperación de contraseña ni segundo
-  factor. El modelo de datos ya contempla `PasswordResetToken` y
-  `emailVerifiedAt`.
+- **No hay segundo factor.** Es la limitación que queda y la que más pesa en la
+  cuenta de un administrador de academia, que puede exportar todos sus datos.
+- El limitador cuenta en la base de datos, no en memoria. La versión anterior
+  contaba por proceso (ADR-0016), y con varias instancias detrás de un
+  balanceador eso no es limitar sino aparentar que se limita. Está en `login`,
+  `recuperar contraseña`, las llamadas a la IA y la importación de archivos.
+- La verificación de correo y la recuperación de contraseña **sí existen** desde
+  hace tiempo; esta lista decía que no. Van con testigo de un solo uso, con
+  caducidad, guardado como resumen y con el propósito dentro del propio testigo
+  para que un enlace de verificación no pueda cambiar una contraseña.
 
 ---
 

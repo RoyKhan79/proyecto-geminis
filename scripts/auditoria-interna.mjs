@@ -23,6 +23,26 @@ import path from "node:path";
 let pasadas = 0;
 const fallos = [];
 
+/**
+ * El código de un archivo, sin sus comentarios.
+ *
+ * Una auditoría que busca cadenas de texto NO puede mirar los comentarios: el
+ * propio `src/proxy.ts` explica en su cabecera que antes decía
+ * `script-src 'self' 'unsafe-inline'`, y esa frase —que documenta un fallo ya
+ * corregido— hacía fallar la comprobación de que ese valor ya no está. El
+ * síntoma es feo pero la lección es peor: si la auditoría lee comentarios,
+ * escribir bien la documentación de un fallo lo reintroduce a ojos del script.
+ *
+ * Quita bloques `/* … *\u002f` y líneas `//`. No es un analizador de JavaScript
+ * y no lo pretende: se le puede colar una barra doble dentro de un texto. Para
+ * lo que hace aquí —mirar directivas de una cabecera— sobra.
+ */
+function sinComentarios(codigo) {
+  return codigo
+    .replace(/\/\*[\s\S]*?\*\//g, "")
+    .replace(/(^|[^:])\/\/.*$/gm, "$1");
+}
+
 function comprobar(titulo, condicion, detalle = "") {
   if (condicion) {
     pasadas += 1;
@@ -58,7 +78,26 @@ const PUBLICAS = new Set([
   "src/app/verificar/[token]/page.tsx",
   "src/app/sin-conexion/page.tsx",
   "src/app/sin-acceso/page.tsx",
+  // El enlace de pago se le manda al alumno por correo y lo abre quien le paga
+  // las clases, que puede no tener cuenta. Enseña solo el concepto y el importe,
+  // y el identificador del recibo es un UUID v7 que no se adivina probando.
+  "src/app/pagar/[id]/page.tsx",
 ]);
+
+/**
+ * Funciones auxiliares que YA llevan la guarda dentro.
+ *
+ * Varias acciones no llaman a `requireAcademy` en su cuerpo: llaman a una
+ * función del mismo archivo que carga la entidad y comprueba de paso que es
+ * de quien la pide. Eso es igual de válido y hay que reconocerlo, o la
+ * auditoría acaba empujando a repetir la guarda por gusto.
+ *
+ * La lista se escribe a mano a propósito: cada entrada es una función que
+ * alguien ha leído y ha comprobado que autoriza de verdad.
+ */
+const AUXILIARES_CON_GUARDIA = [
+  "cargarPropio(", // src/server/exams/actions.ts
+];
 
 /** Acciones que no pueden exigir sesión porque son las que la crean. */
 const ACCIONES_SIN_SESION = new Set([
@@ -108,7 +147,26 @@ async function main() {
   // ── 2. Acciones de servidor ───────────────────────────────────────────────
   console.log("\n2. ACCIONES DE SERVIDOR · ninguna sin comprobación");
 
+  /*
+   * Se mira CADA ACCIÓN, no cada archivo.
+   *
+   * Antes esto buscaba `requirePermission` en el texto del archivo entero, y
+   * así un archivo con veinte acciones donde UNA sola comprobara pasaba la
+   * auditoría con las otras diecinueve abiertas. Es el falso positivo clásico
+   * de auditar por cadenas de texto, y en un archivo de acciones —que suelen
+   * tener diez o quince— era el caso normal, no el raro: la auditoría decía
+   * «29 comprobaciones superadas» sin haber mirado la mayoría de las acciones.
+   *
+   * Ahora se parte el archivo por cada `export async function` y se comprueba
+   * el cuerpo de cada una. Sigue siendo una comprobación de texto, con lo que
+   * eso tiene de limitado: ve que la guarda está escrita, no que esté bien
+   * puesta ni que sea la que toca. Para eso están las pruebas, que la ejecutan
+   * de verdad. Esto sirve para lo que sirve un inventario: detectar la que
+   * falta entera.
+   */
   const accionesSinGuardia = [];
+  let totalAcciones = 0;
+
   for (const archivo of [...servidor, ...librerias]) {
     const relativo = archivo.replace(/\\/g, "/");
     const contenido = await readFile(archivo, "utf8");
@@ -116,24 +174,30 @@ async function main() {
     if (!contenido.startsWith('"use server"')) continue;
     if (ACCIONES_SIN_SESION.has(relativo)) continue;
 
-    const comprueba =
-      /require(Permission|Academy|PlatformAdmin|Auth)/.test(contenido) ||
-      /getAuthContext/.test(contenido);
+    const exportadas = [
+      ...contenido.matchAll(/export\s+async\s+function\s+(\w+)\s*\(/g),
+    ];
 
-    if (!comprueba) accionesSinGuardia.push(relativo);
+    for (let i = 0; i < exportadas.length; i++) {
+      const nombre = exportadas[i][1];
+      const desde = exportadas[i].index;
+      const hasta =
+        i + 1 < exportadas.length ? exportadas[i + 1].index : contenido.length;
+      const cuerpo = contenido.slice(desde, hasta);
+
+      totalAcciones += 1;
+
+      const comprueba =
+        /require(Permission|Academy|PlatformAdmin|Auth)/.test(cuerpo) ||
+        /getAuthContext/.test(cuerpo) ||
+        AUXILIARES_CON_GUARDIA.some((aux) => cuerpo.includes(aux));
+
+      if (!comprueba) accionesSinGuardia.push(`${relativo} · ${nombre}`);
+    }
   }
 
-  const totalAcciones = (
-    await Promise.all(
-      [...servidor, ...librerias].map(async (f) => {
-        const c = await readFile(f, "utf8");
-        return c.startsWith('"use server"') ? 1 : 0;
-      }),
-    )
-  ).reduce((a, b) => a + b, 0);
-
   comprobar(
-    `los ${totalAcciones} módulos de acciones comprueban sesión o permiso`,
+    `las ${totalAcciones} acciones de servidor comprueban sesión o permiso`,
     accionesSinGuardia.length === 0,
     accionesSinGuardia.join(", "),
   );
@@ -345,8 +409,8 @@ async function main() {
   console.log("\n8. CABECERAS");
 
   const config = await readFile("next.config.ts", "utf8");
+
   for (const cabecera of [
-    "Content-Security-Policy",
     "X-Frame-Options",
     "X-Content-Type-Options",
     "Referrer-Policy",
@@ -356,6 +420,47 @@ async function main() {
     comprobar(`se envía ${cabecera}`, config.includes(cabecera));
   }
   comprobar("no se anuncia la versión del servidor", /poweredByHeader:\s*false/.test(config));
+
+  /*
+   * LA CABECERA DE SEGURIDAD DEL CONTENIDO, MIRADA DE VERDAD
+   *
+   * Antes esto era `config.includes("Content-Security-Policy")`, y ese PASS no
+   * significaba nada: se cumplía igual con una política que dijera
+   * `script-src 'unsafe-inline'`, que es exactamente la que NO protege de un
+   * XSS. Una comprobación que no puede fallar cuando el problema está presente
+   * es peor que no tenerla, porque ocupa su sitio.
+   *
+   * Ahora se lee la política de donde vive de verdad —`src/proxy.ts`, que la
+   * genera con un testigo por petición— y se comprueba lo que importa:
+   */
+  const proxy = sinComentarios(await readFile("src/proxy.ts", "utf8"));
+
+  comprobar(
+    "la política de contenido se genera por petición, en el proxy",
+    /Content-Security-Policy/.test(proxy) && /script-src/.test(proxy),
+  );
+  comprobar(
+    "los scripts van con testigo, no con 'unsafe-inline'",
+    /script-src[^`]*nonce-\$\{testigo\}/.test(proxy) &&
+      !/script-src[^`\n]*'unsafe-inline'/.test(proxy),
+  );
+  comprobar(
+    "'unsafe-eval' solo en desarrollo",
+    !/unsafe-eval/.test(proxy) || /enDesarrollo[^\n]*unsafe-eval/.test(proxy),
+  );
+  for (const directiva of [
+    "default-src",
+    "object-src 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+    "frame-ancestors",
+  ]) {
+    comprobar(`la política incluye ${directiva}`, proxy.includes(directiva));
+  }
+  comprobar(
+    "las respuestas de /api no pueden ejecutar scripts",
+    /source:\s*"\/api\/:path\*"/.test(config) && /script-src 'none'/.test(config),
+  );
 
   // ── 9. La IA no publica sola ──────────────────────────────────────────────
   console.log("\n9. IA · nada se publica sin que lo apruebe una persona");

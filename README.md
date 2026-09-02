@@ -46,10 +46,10 @@ Y además, sobre el plan inicial:
 | **Recuperar contraseña** | Y verificación de correo, con testigos de un solo uso |
 | **Textos legales** | Política de privacidad y condiciones de uso |
 
-En cifras: **70 tablas · 60 pantallas · 45.000 líneas · 148 pruebas automáticas ·
-79 comprobaciones de auditoría** (33 sobre el código y 46 contra el servidor),
+En cifras: **71 tablas · 60 pantallas · 45.000 líneas · 432 pruebas automáticas ·
+77 comprobaciones de auditoría** (41 sobre el código y 36 contra el servidor),
 más las pruebas específicas de aislamiento, cobros, facturas, dispositivos,
-copias de seguridad y fuga por la IA.
+copias de seguridad y fuga por la IA, y 38 ataques en `npm run pentest`.
 
 El detalle está en [docs/MVP_ROADMAP.md](docs/MVP_ROADMAP.md), la revisión punto
 por punto del encargo en
@@ -90,6 +90,12 @@ npm run demo:todo
 
 Todas usan la contraseña `Geminis2026!`.
 
+> **Estas cuentas son solo para desarrollo.** Su contraseña está publicada aquí,
+> así que en un servidor real son una puerta abierta. Hay dos cosas que lo
+> impiden y conviene saber cuáles son: `npm run db:seed` se niega a ejecutarse
+> con `NODE_ENV=production`, y `npm run desplegar:comprobar` no da el visto
+> bueno mientras queden cuentas `@academiademo.test` en la base.
+
 | Perfil | Correo | Dónde entra |
 |--------|--------|-------------|
 | Administración | `admin@academiademo.test` | Geminis Manager |
@@ -99,7 +105,7 @@ Todas usan la contraseña `Geminis2026!`.
 | Alumno · pack solo tests | `alumno2@academiademo.test` | Campus, sin temario |
 | Alumno · pack solo clases | `alumno3@academiademo.test` | Campus, sin temario ni tests |
 | Alumna · solo temario | `alumno4@academiademo.test` | Campus, sin clases ni tests |
-| Superadmin de plataforma | `superadmin@geminis.test` | Consola de plataforma |
+| Superadmin de plataforma | *no se crea solo* · `npm run superadmin -- <correo>` | Consola de plataforma |
 
 Entrar con `alumno1` y con `alumno2` seguidos es la mejor forma de ver de un
 vistazo cómo el contenido depende de lo contratado.
@@ -130,7 +136,8 @@ vistazo cómo el contenido depende de lo contratado.
 | `npm run dispositivos:probar` | Comprueba el límite de sesiones por alumno |
 | `npm run copia` | Copia de seguridad, completa y por academia |
 | `npm run copia:restaurar -- <archivo>` | Comprueba que esa copia sirve |
-| `npm run superadmin -- <correo> "<contraseña>"` | Crea el superadministrador |
+| `npm run superadmin -- <correo>` | Crea el superadministrador · pide la contraseña por teclado, sin que se vea |
+| `npm run cifrar:rotar` | Cambia la clave de cifrado sin dejar ningún dato ilegible |
 | `npm run ia:probar` | Comprueba desde la terminal que Geminis IA responde |
 | `npm run iconos` | Regenera los iconos de la app con los colores de marca |
 

@@ -14,7 +14,13 @@
  */
 
 const VERSION = "geminis-v1";
-const ESENCIALES = ["/campus", "/sin-conexion"];
+/*
+ * Lo que se guarda al instalar. `/campus` estaba aquí y ya no: es una pantalla
+ * con datos de una persona concreta, así que precargarla significaba dejarla en
+ * el disco antes incluso de que nadie la pidiera. La pantalla de «sin conexión»
+ * no depende de nadie y es justo la que hace falta cuando no hay red.
+ */
+const ESENCIALES = ["/sin-conexion"];
 
 /**
  * La mochila: temas que el alumno ha decidido guardar para estudiar sin
@@ -84,12 +90,33 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Nada de material privado en la caché del dispositivo.
-  const privado =
-    url.pathname.startsWith("/api/") ||
-    url.pathname.startsWith("/gestion") ||
-    url.pathname.startsWith("/entrar");
-  if (privado) return;
+  /*
+   * Nada de material privado en la caché del dispositivo.
+   *
+   * `/campus` faltaba en esta lista, y era el peor olvido posible: es LA
+   * pantalla del alumno. Sus notas, sus mensajes, su nombre y lo que lleva
+   * estudiado acababan guardados en el disco del navegador, donde se quedaban
+   * después de cerrar sesión. En una academia eso no es hipotético: los
+   * ordenadores del aula los usan veinte personas al día, y bastaba que al
+   * siguiente le fallara la red un segundo para que la caché le sirviera la
+   * página del anterior.
+   *
+   * La regla que se sigue ahora: **se cachea la carcasa, nunca lo que depende
+   * de quién ha entrado**. Si una ruta pinta datos de alguien, va aquí.
+   */
+  const PRIVADAS = [
+    "/api/",
+    "/campus",
+    "/gestion",
+    "/plataforma",
+    "/inicio",
+    "/elegir-academia",
+    "/entrar",
+    "/pagar",
+    "/recuperar",
+    "/verificar",
+  ];
+  if (PRIVADAS.some((prefijo) => url.pathname.startsWith(prefijo))) return;
 
   // Navegación: primero la red (los datos han de estar frescos), y si no hay
   // conexión, lo que haya en caché o la pantalla de sin conexión.
@@ -124,6 +151,33 @@ self.addEventListener("fetch", (event) => {
       }),
     );
   }
+});
+
+/**
+ * Borrar lo guardado al cerrar sesión.
+ *
+ * La página avisa por aquí justo antes de salir. Se van las dos cachés: la de
+ * navegación —que ya no debería llevar nada privado, pero puede arrastrar lo
+ * que guardara una versión anterior de este archivo— y la mochila, con los
+ * temas que el alumno se descargó.
+ *
+ * Que se vaya también la mochila es una decisión, no un descuido: es material
+ * de pago, y quien cierra sesión en un ordenador compartido espera no dejar
+ * nada suyo detrás. El coste es tener que volver a descargarla en el propio
+ * dispositivo, y es el lado por el que conviene equivocarse.
+ */
+self.addEventListener("message", (event) => {
+  if (event.data?.tipo !== "cerrar-sesion") return;
+
+  event.waitUntil(
+    caches.keys().then((claves) =>
+      Promise.all(
+        claves
+          .filter((c) => c === VERSION || c === MOCHILA)
+          .map((c) => caches.delete(c)),
+      ),
+    ),
+  );
 });
 
 // Notificaciones push. La suscripción y el envío llegan con el módulo de

@@ -32,6 +32,11 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+# ...menos la plantilla, que NO lleva secretos y tiene que estar versionada:
+# es lo único que le dice a quien despliega qué variables hacen falta. Sin esta
+# excepción, `.env*` se la comía y el proyecto no se podía arrancar de cero
+# sin preguntar. La excepción va DESPUÉS del patrón; al revés no funciona.
+!.env.example
 
 # vercel
 .vercel

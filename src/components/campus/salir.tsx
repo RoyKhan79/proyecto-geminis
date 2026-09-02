@@ -3,6 +3,7 @@
 import { LogOut } from "lucide-react";
 import { signOutAction } from "@/lib/auth/actions";
 import { vaciarMochila } from "@/lib/campus/mochila-cliente";
+import { limpiarDispositivo } from "@/lib/campus/salida-limpia";
 import { Button } from "@/components/ui/button";
 
 /**
@@ -23,6 +24,9 @@ export function BotonSalir({ ancho = false }: { ancho?: boolean }) {
       action={signOutAction}
       onSubmit={() => {
         void vaciarMochila();
+        // Y la caché de navegación, que guardaba páginas de `/campus` con el
+        // nombre y las notas de quien acaba de salir.
+        void limpiarDispositivo();
       }}
       className={ancho ? "w-full" : undefined}
     >

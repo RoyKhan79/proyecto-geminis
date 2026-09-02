@@ -9,6 +9,7 @@ import {
   MAX_UPLOAD_BYTES,
   buildStorageKey,
   isAllowedMime,
+  motivoParaNoAceptar,
   resourceTypeForMime,
   storage,
 } from "@/lib/storage";
@@ -113,6 +114,14 @@ export async function aplicarAsistenteAction(
         error: `«${fila.archivo.name}» es de un tipo que no admitimos (${fila.archivo.type || "desconocido"}).`,
       };
     }
+
+    // Los bytes, no la extensión. Aquí importa más que en la subida de uno en
+    // uno: en un lote de sesenta archivos nadie mira lo que entra.
+    const motivo = motivoParaNoAceptar(
+      Buffer.from(await fila.archivo.arrayBuffer()),
+      fila.archivo.type,
+    );
+    if (motivo) return { error: `«${fila.archivo.name}»: ${motivo}` };
   }
 
   // La marca de la tanda. Va en `metadata`, que es el campo libre de la

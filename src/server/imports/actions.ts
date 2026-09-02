@@ -6,6 +6,8 @@ import { z } from "zod";
 import { recordAudit } from "@/lib/audit";
 import { requirePermission } from "@/lib/auth/context";
 import { ImportParseError, parseImportFile, suggestMapping } from "./parse";
+import { MAX_BYTES_ARCHIVO } from "./zip-seguro";
+import { limitarAccion } from "@/lib/rate-limit";
 import {
   STUDENT_FIELDS,
   applyImport,
@@ -18,7 +20,9 @@ import {
 /** Lo que el asistente de importación devuelve en cada paso. */
 export type ImportState = { error?: string; ok?: boolean } | undefined;
 
-const MAX_BYTES = 10 * 1024 * 1024;
+// El mismo tope que usa la inspección del archivo, para que no puedan
+// separarse: un límite aquí y otro allí acaban siendo dos límites distintos.
+const MAX_BYTES = MAX_BYTES_ARCHIVO;
 
 /** Paso 1 y 2: subir el archivo y detectar sus columnas. */
 export async function uploadImportAction(
@@ -31,6 +35,12 @@ export async function uploadImportAction(
   if (!(file instanceof File) || file.size === 0) {
     return { error: "Elige un archivo." };
   }
+  // Abrir un archivo de importación descomprime y analiza el contenido entero.
+  // Ya no puede reventar el proceso —lo impide `zip-seguro.ts`— pero cien
+  // seguidos siguen ocupando el servidor de todas las academias.
+  const espera = await limitarAccion("importacion", ctx.membershipId);
+  if (espera) return { error: espera };
+
   if (file.size > MAX_BYTES) {
     return { error: "El archivo supera los 10 MB." };
   }

@@ -108,6 +108,17 @@ export async function saveBillingProfileAction(
     select: { id: true, iban: true, mandateRef: true, mandateUsed: true },
   });
 
+  /*
+   * Campo en blanco = «no cambies la cuenta».
+   *
+   * La pantalla ya no baja el IBAN al navegador —solo su máscara—, así que un
+   * campo vacío significa «no lo toco», no «bórralo». Sin esto, guardar la
+   * ficha después de cambiar cualquier otra cosa dejaría al alumno sin
+   * domiciliación, y el fallo aparecería semanas después, el día de la remesa.
+   */
+  const ibanGuardado = descifrar(existente?.iban ?? null);
+  if (!iban && ibanGuardado) iban = ibanGuardado;
+
   // Si cambia el IBAN o la referencia, el mandato es otro a efectos del banco:
   // el próximo cobro tiene que volver a ir como primero. La comparación se hace
   // sobre el valor descifrado: dos cifrados del mismo IBAN son distintos, así
@@ -495,11 +506,31 @@ export async function saveCreditorAction(
   }
   const data = parsed.data;
 
+  /*
+   * El campo del IBAN llega VACÍO cuando no se quiere cambiar.
+   *
+   * Es la consecuencia de que la pantalla ya no baje la cuenta entera al
+   * navegador —solo su máscara—, y hay que tratarla con cuidado: si «vacío»
+   * siguiera significando «bórralo», como antes, guardar el formulario después
+   * de cambiar solo el NIF dejaría a la academia sin cuenta de cobro y sin
+   * poder emitir remesas, y nadie relacionaría una cosa con la otra.
+   *
+   * Así que vacío es «no lo toques», y para quitarla hay una casilla que hay
+   * que marcar a conciencia.
+   */
+  const borrar = formData.get("borrarIban") === "1";
+  const escrito = data.billingIban?.trim();
+
   let iban: string | null = null;
-  if (data.billingIban?.trim()) {
-    const comprobado = validarIban(data.billingIban);
+  let cambiarIban = false;
+
+  if (borrar) {
+    cambiarIban = true;
+  } else if (escrito) {
+    const comprobado = validarIban(escrito);
     if (!comprobado.valido) return { error: `Cuenta de la academia: ${comprobado.motivo}` };
     iban = comprobado.iban;
+    cambiarIban = true;
   }
 
   const identificador = data.creditorId?.trim().toUpperCase() || null;
@@ -515,7 +546,7 @@ export async function saveCreditorAction(
     data: {
       legalName: data.legalName || null,
       taxId: data.taxId || null,
-      billingIban: iban ? cifrar(iban) : null,
+      ...(cambiarIban ? { billingIban: iban ? cifrar(iban) : null } : {}),
       creditorId: identificador,
       mandatePrefix: data.mandatePrefix?.toUpperCase() || null,
     },
@@ -527,7 +558,13 @@ export async function saveCreditorAction(
     action: "billing.creditor.save",
     entityType: "Academy",
     entityId: ctx.academy.id,
-    changes: { tieneIban: Boolean(iban), tieneIdentificador: Boolean(identificador) },
+    // El IBAN no se anota, ni siquiera enmascarado: el registro de auditoría se
+    // consulta desde la aplicación y no tiene por qué llevar datos bancarios.
+    changes: {
+      ibanCambiado: cambiarIban,
+      ibanBorrado: borrar,
+      tieneIdentificador: Boolean(identificador),
+    },
   });
 
   revalidatePath("/gestion/pagos/remesas");

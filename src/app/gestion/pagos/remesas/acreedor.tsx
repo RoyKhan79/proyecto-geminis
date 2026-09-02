@@ -20,7 +20,19 @@ export function DatosAcreedorForm({
   datos: {
     legalName: string;
     taxId: string;
-    billingIban: string;
+    /**
+     * La cuenta de la academia, ENMASCARADA: «ES91 •••• •••• 1332».
+     *
+     * Aquí no llega el número entero, y es a propósito. Antes sí llegaba, en el
+     * `defaultValue` de un campo de texto, así que la cuenta de cobro de la
+     * academia viajaba dentro del HTML de una pantalla de listado: se quedaba en
+     * la caché del navegador, salía en cualquier captura de pantalla y estaría
+     * al alcance de un script si algún día se colara uno. Lo cazó
+     * `npm run pentest`, y por eso ahora solo baja la máscara.
+     */
+    ibanOculto: string;
+    /** Si ya hay cuenta guardada. Cambia lo que dice el campo. */
+    tieneIban: boolean;
     creditorId: string;
     mandatePrefix: string;
   };
@@ -103,14 +115,36 @@ export function DatosAcreedorForm({
               <Field
                 label="Cuenta donde se ingresan los recibos"
                 htmlFor="billingIban"
+                hint={
+                  datos.tieneIban
+                    ? `Guardada: ${datos.ibanOculto}. Déjalo en blanco para no cambiarla.`
+                    : "Todavía no hay ninguna cuenta guardada."
+                }
               >
                 <Input
                   name="billingIban"
-                  placeholder="ES91 2100 0418 4502 0005 1332"
-                  defaultValue={datos.billingIban}
+                  placeholder={
+                    datos.tieneIban ? datos.ibanOculto : "ES91 2100 0418 4502 0005 1332"
+                  }
+                  defaultValue=""
                   autoComplete="off"
                 />
               </Field>
+
+              {datos.tieneIban ? (
+                <label className="flex items-start gap-2 text-xs text-ink-muted">
+                  <input
+                    type="checkbox"
+                    name="borrarIban"
+                    value="1"
+                    className="mt-0.5"
+                  />
+                  <span>
+                    Quitar la cuenta guardada. Sin cuenta no se pueden generar
+                    ficheros de adeudos.
+                  </span>
+                </label>
+              ) : null}
 
               <Field
                 label="Identificador de acreedor"

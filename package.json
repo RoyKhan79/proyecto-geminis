@@ -41,6 +41,7 @@
     "rls:concurrencia": "node --env-file=.env --import tsx scripts/probar-concurrencia.ts",
     "facturas:probar": "node --env-file=.env --import tsx scripts/probar-facturas.ts",
     "cifrar:migrar": "node --env-file=.env --import tsx scripts/cifrar-existentes.ts",
+    "cifrar:rotar": "node --env-file=.env --import tsx scripts/rotar-clave.ts",
     "dispositivos:probar": "node --env-file=.env --import tsx scripts/probar-dispositivos.ts",
     "copia": "node --env-file=.env --import tsx scripts/copia-seguridad.ts",
     "copia:restaurar": "node --env-file=.env --import tsx scripts/restaurar-copia.ts",
@@ -75,7 +76,7 @@
     "date-fns": "^4.4.0",
     "exceljs": "^4.4.0",
     "lucide-react": "^1.31.0",
-    "next": "16.3.0",
+    "next": "^16.3.4",
     "nodemailer": "^9.0.5",
     "papaparse": "^5.5.4",
     "pg": "^8.23.0",
@@ -96,7 +97,7 @@
     "@types/react-dom": "^19",
     "embedded-postgres": "^18.4.0-beta.17",
     "eslint": "^9",
-    "eslint-config-next": "16.3.0",
+    "eslint-config-next": "^16.3.4",
     "playwright": "^1.62.1",
     "prisma": "^7.9.1",
     "tailwindcss": "^4",
@@ -107,7 +108,11 @@
     "vitest": "^4.1.10"
   },
   "overrides": {
-    "typescript-eslint": "8.66.0"
+    "typescript-eslint": "8.66.0",
+    "deepmerge-ts": "^8.0.2",
+    "exceljs": {
+      "uuid": "^11.1.1"
+    }
   },
   "allowScripts": {
     "@prisma/engines@7.9.1": true,

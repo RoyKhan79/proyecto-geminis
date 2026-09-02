@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Activity, LogOut } from "lucide-react";
-import { signOutAction } from "@/lib/auth/actions";
+import { Activity } from "lucide-react";
+import { BotonCerrarSesion } from "@/components/cerrar-sesion";
 import { requirePlatformAdmin } from "@/lib/auth/context";
 import { prismaBase } from "@/lib/db/client";
 import { Button } from "@/components/ui/button";
@@ -59,11 +59,7 @@ export default async function PlataformaPage() {
             </Link>
           </Button>
           <NewAcademyForm />
-          <form action={signOutAction}>
-            <Button type="submit" variant="ghost" size="icon" aria-label="Cerrar sesión">
-              <LogOut aria-hidden />
-            </Button>
-          </form>
+          <BotonCerrarSesion />
           </>
         }
       />

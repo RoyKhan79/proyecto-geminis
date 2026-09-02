@@ -10,6 +10,7 @@ import {
   MAX_UPLOAD_BYTES,
   buildStorageKey,
   isAllowedMime,
+  motivoParaNoAceptar,
   resourceTypeForMime,
   storage,
 } from "@/lib/storage";
@@ -319,6 +320,13 @@ export async function uploadResourceAction(
   if (!padre) return { error: "El apartado de destino no existe." };
 
   const buffer = Buffer.from(await file.arrayBuffer());
+
+  // Y ahora los BYTES, que es lo único que no elige quien sube el archivo. El
+  // tipo de arriba lo pone el navegador a partir de la extensión: renombrar un
+  // .html a .pdf basta para que llegue como `application/pdf`.
+  const motivo = motivoParaNoAceptar(buffer, file.type);
+  if (motivo) return { error: motivo };
+
   const key = buildStorageKey(ctx.academy.id, file.name);
   const guardado = await storage().put(key, buffer, file.type);
 

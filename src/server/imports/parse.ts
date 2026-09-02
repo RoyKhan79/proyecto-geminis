@@ -1,5 +1,6 @@
 import ExcelJS from "exceljs";
 import Papa from "papaparse";
+import { ArchivoPeligrosoError, comprobarXlsx } from "./zip-seguro";
 
 /**
  * Lectura de archivos de importación.
@@ -87,7 +88,28 @@ function parseCsv(buffer: ArrayBuffer): ParsedSheet {
   };
 }
 
+/**
+ * Lee un XLSX, **después** de comprobar que se puede abrir sin riesgo.
+ *
+ * El orden importa y es la única razón por la que esta función no es dos
+ * líneas: `workbook.xlsx.load()` descomprime el archivo entero en memoria sin
+ * ningún tope, así que un XLSX de diez megas preparado a mano —una bomba de
+ * descompresión— tumbaba el proceso y con él a todas las academias. La
+ * comprobación va antes de que ExcelJS vea un byte; ver `zip-seguro.ts`.
+ */
 async function parseExcel(buffer: ArrayBuffer): Promise<ParsedSheet> {
+  try {
+    comprobarXlsx(Buffer.from(buffer));
+  } catch (error) {
+    if (error instanceof ArchivoPeligrosoError) {
+      // El motivo técnico va al registro del servidor; a la academia se le
+      // enseña el mensaje corto, que no le dice a nadie qué límite ha tocado.
+      console.warn(`[importación] archivo rechazado · ${error.detalle}`);
+      throw new ImportParseError(error.message);
+    }
+    throw error;
+  }
+
   const workbook = new ExcelJS.Workbook();
   await workbook.xlsx.load(buffer);
 
