@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { MANAGER_NAV, type NavSection } from "./nav-config";
 import { BRAND } from "@/lib/brand";
+import { iconToneText } from "@/components/ui/primitives";
 import { cn } from "@/lib/utils";
 import { MarcaGeminis } from "@/components/marca";
 
@@ -66,7 +67,7 @@ export function ManagerSidebar({
                     <Icon
                       aria-hidden
                       className="size-[1.05rem] shrink-0 text-ink-muted"
-                      strokeWidth={1.6}
+                      strokeWidth={1.7}
                     />
                     <span className="truncate">{item.label}</span>
                     <span className="ml-auto rounded-full bg-surface-muted px-1.5 py-0.5 text-[0.625rem] font-medium">
@@ -114,11 +115,14 @@ export function ManagerSidebar({
                     aria-hidden
                     className={cn(
                       "size-[1.05rem] shrink-0 transition-colors",
-                      active
-                        ? "text-gold"
-                        : "text-ink-muted group-hover:text-ink-soft",
+                      // El icono lleva el color de su área. Sin la pastilla
+                      // detrás el color no grita, pero sigue haciendo su
+                      // trabajo: en una barra de treinta destinos, es lo que
+                      // se busca primero. En gris se perdía y la columna
+                      // entera se leía como una lista de texto.
+                      active ? "text-gold" : iconToneText[item.tone],
                     )}
-                    strokeWidth={active ? 2 : 1.6}
+                    strokeWidth={active ? 2 : 1.7}
                   />
                   <span className="truncate">{item.label}</span>
                 </Link>

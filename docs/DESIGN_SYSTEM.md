@@ -136,8 +136,10 @@ bien cuando encabeza una pantalla o corona una tarjeta; veinte seguidas en una
 columna son veinte manchas y ninguna dice nada. Ahí el trazo fino basta y el oro
 señala dónde estás.
 
-Los ocho tintes de `--icon-*` siguen existiendo y siguen distinguiendo áreas,
-pero con **una cuarta parte del croma** que tenían: son grafitos con un matiz.
+Los ocho tintes de `--icon-*` siguen distinguiendo áreas, con **dos tercios del
+croma** que tenían (0,105 frente a 0,155). Se probó bajarlos a 0,045 y era
+demasiado: la identidad de cada área se perdía y la barra entera se leía como
+una lista de texto gris. Lo que sobraba no era el color, era la caja.
 
 El icono de la aplicación se **genera** con `npm run iconos`
 ([`scripts/iconos.ts`](../scripts/iconos.ts)): el sello —la inicial dentro de un

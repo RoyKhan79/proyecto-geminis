@@ -39,10 +39,10 @@
   --color-brand-50: oklch(0.975 0.008 262);
   --color-brand-100: oklch(0.945 0.018 262);
   --color-brand-200: oklch(0.885 0.036 262);
-  --color-brand-300: oklch(0.8 0.062 263);
-  --color-brand-400: oklch(0.67 0.085 264);
-  --color-brand-500: oklch(0.55 0.1 264);
-  --color-brand-600: oklch(0.44 0.105 265);
+  --color-brand-300: oklch(0.81 0.09 263);
+  --color-brand-400: oklch(0.68 0.115 264);
+  --color-brand-500: oklch(0.56 0.135 264);
+  --color-brand-600: oklch(0.46 0.145 265);
   --color-brand-700: oklch(0.36 0.09 266);
   --color-brand-800: oklch(0.29 0.07 267);
   --color-brand-900: oklch(0.22 0.05 268);
@@ -152,36 +152,35 @@
    * cada área de la aplicación tiene su tinte y se reconoce de un vistazo en
    * una barra lateral de treinta destinos.
    *
-   * TENÍAN CROMA 0.155 Y RECORRÍAN LA RUEDA ENTERA: rosa, esmeralda, ámbar,
-   * violeta. Ocho colores saturados en cinco centímetros de barra lateral, y
-   * ninguno de ellos significando nada. Es lo que hacía que una herramienta
-   * seria pareciera una plantilla de panel de control.
+   * Tenían croma 0.155 y, metidos cada uno en su pastilla de color, convertían la
+   * barra lateral en veinte manchas donde el ojo no sabía dónde mirar.
    *
-   * Ahora conservan su tono pero con una cuarta parte del croma: son grafitos
-   * con un matiz. La función sigue —el área se distingue si uno se fija— y la
-   * estridencia se va. Y sobre todo dejan sitio: con esto apagado, el oro es
-   * lo ÚNICO que brilla en la pantalla, y por eso vuelve a querer decir algo.
+   * Lo que sobraba era la CAJA, no el color. Quitada la pastilla, el mismo tinte
+   * sobre el fondo hace su trabajo sin gritar: en una barra de treinta destinos
+   * el color es lo que se busca primero. Se probó además bajarlos a 0.045 y era
+   * pasarse: la identidad de cada área desaparecía y la columna entera se leía
+   * como una lista de texto gris. 0.105 es el punto.
    *
    * Todos comparten claridad y croma y solo cambian de tono, así que conviven
    * sin que ninguno grite más que los demás. Se usan por su nombre desde
    * `.icon-chip[data-tone]`; ninguna pantalla escribe un color a mano (§79).
    */
-  --icon-brand: oklch(0.44 0.045 265);
-  --icon-brand-soft: oklch(0.965 0.011 265);
-  --icon-indigo: oklch(0.44 0.045 288);
-  --icon-indigo-soft: oklch(0.965 0.011 288);
-  --icon-violet: oklch(0.44 0.045 312);
-  --icon-violet-soft: oklch(0.965 0.011 312);
-  --icon-rose: oklch(0.44 0.045 12);
-  --icon-rose-soft: oklch(0.965 0.011 12);
-  --icon-amber: oklch(0.44 0.045 70);
-  --icon-amber-soft: oklch(0.965 0.011 70);
-  --icon-emerald: oklch(0.44 0.045 150);
-  --icon-emerald-soft: oklch(0.965 0.011 150);
-  --icon-teal: oklch(0.44 0.045 195);
-  --icon-teal-soft: oklch(0.965 0.011 195);
-  --icon-sky: oklch(0.44 0.045 235);
-  --icon-sky-soft: oklch(0.965 0.011 235);
+  --icon-brand: oklch(0.47 0.105 265);
+  --icon-brand-soft: oklch(0.955 0.028 265);
+  --icon-indigo: oklch(0.47 0.105 288);
+  --icon-indigo-soft: oklch(0.955 0.028 288);
+  --icon-violet: oklch(0.47 0.105 312);
+  --icon-violet-soft: oklch(0.955 0.028 312);
+  --icon-rose: oklch(0.47 0.105 12);
+  --icon-rose-soft: oklch(0.955 0.028 12);
+  --icon-amber: oklch(0.47 0.105 70);
+  --icon-amber-soft: oklch(0.955 0.028 70);
+  --icon-emerald: oklch(0.47 0.105 150);
+  --icon-emerald-soft: oklch(0.955 0.028 150);
+  --icon-teal: oklch(0.47 0.105 195);
+  --icon-teal-soft: oklch(0.955 0.028 195);
+  --icon-sky: oklch(0.47 0.105 235);
+  --icon-sky-soft: oklch(0.955 0.028 235);
 
   /* Fondo de las carcasas: un degradado larguísimo y de muy poca saturación.
    * No debe leerse como "un degradado"; debe leerse como papel. */
@@ -199,17 +198,17 @@
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --surface: oklch(0.22 0.018 265);
-    --surface-muted: oklch(0.25 0.02 265);
-    --surface-sunken: oklch(0.18 0.016 265);
+    --surface: oklch(0.275 0.032 264);
+    --surface-muted: oklch(0.315 0.036 264);
+    --surface-sunken: oklch(0.235 0.03 264);
     --surface-inverse: oklch(0.97 0.004 85);
 
-    --border-subtle: oklch(0.31 0.02 265);
-    --border-strong: oklch(0.4 0.025 265);
+    --border-subtle: oklch(0.375 0.032 264);
+    --border-strong: oklch(0.46 0.038 264);
 
     --text-primary: oklch(0.96 0.006 85);
-    --text-secondary: oklch(0.76 0.012 265);
-    --text-muted: oklch(0.63 0.015 265);
+    --text-secondary: oklch(0.79 0.022 264);
+    --text-muted: oklch(0.67 0.026 264);
     --text-inverse: oklch(0.2 0.018 265);
 
     --accent: var(--color-brand-300);
@@ -221,27 +220,27 @@
     --gold-soft: oklch(0.32 0.05 80);
 
     /* Tinta, no el tinte: el adorno no puede ser lo que más brilla. */
-    --chip-solid: linear-gradient(145deg, oklch(0.33 0.028 265), oklch(0.265 0.022 265));
+    --chip-solid: linear-gradient(145deg, oklch(0.42 0.075 264), oklch(0.34 0.06 264));
     --chip-solid-ink: oklch(0.94 0.012 85);
 
     /* En oscuro los tintes suben de claridad y bajan de croma: un color
      * saturado sobre fondo oscuro vibra y cansa a las dos horas. */
-    --icon-brand: oklch(0.79 0.035 265);
-    --icon-brand-soft: oklch(0.285 0.018 265);
-    --icon-indigo: oklch(0.79 0.035 288);
-    --icon-indigo-soft: oklch(0.285 0.018 288);
-    --icon-violet: oklch(0.79 0.035 312);
-    --icon-violet-soft: oklch(0.285 0.018 312);
-    --icon-rose: oklch(0.79 0.035 12);
-    --icon-rose-soft: oklch(0.285 0.018 12);
-    --icon-amber: oklch(0.79 0.035 70);
-    --icon-amber-soft: oklch(0.285 0.018 70);
-    --icon-emerald: oklch(0.79 0.035 150);
-    --icon-emerald-soft: oklch(0.285 0.018 150);
-    --icon-teal: oklch(0.79 0.035 195);
-    --icon-teal-soft: oklch(0.285 0.018 195);
-    --icon-sky: oklch(0.79 0.035 235);
-    --icon-sky-soft: oklch(0.285 0.018 235);
+    --icon-brand: oklch(0.82 0.085 265);
+    --icon-brand-soft: oklch(0.35 0.05 265);
+    --icon-indigo: oklch(0.82 0.085 288);
+    --icon-indigo-soft: oklch(0.35 0.05 288);
+    --icon-violet: oklch(0.82 0.085 312);
+    --icon-violet-soft: oklch(0.35 0.05 312);
+    --icon-rose: oklch(0.82 0.085 12);
+    --icon-rose-soft: oklch(0.35 0.05 12);
+    --icon-amber: oklch(0.82 0.085 70);
+    --icon-amber-soft: oklch(0.35 0.05 70);
+    --icon-emerald: oklch(0.82 0.085 150);
+    --icon-emerald-soft: oklch(0.35 0.05 150);
+    --icon-teal: oklch(0.82 0.085 195);
+    --icon-teal-soft: oklch(0.35 0.05 195);
+    --icon-sky: oklch(0.82 0.085 235);
+    --icon-sky-soft: oklch(0.35 0.05 235);
 
     /* En oscuro la profundidad no la da la sombra —sobre un fondo oscuro
      * apenas se ve— sino el anillo y el brillo superior. Se invierte el peso:
@@ -271,15 +270,15 @@
 }
 
 :root[data-theme="dark"] {
-  --surface: oklch(0.22 0.018 265);
-  --surface-muted: oklch(0.25 0.02 265);
-  --surface-sunken: oklch(0.18 0.016 265);
+  --surface: oklch(0.275 0.032 264);
+  --surface-muted: oklch(0.315 0.036 264);
+  --surface-sunken: oklch(0.235 0.03 264);
   --surface-inverse: oklch(0.97 0.004 85);
-  --border-subtle: oklch(0.31 0.02 265);
-  --border-strong: oklch(0.4 0.025 265);
+  --border-subtle: oklch(0.375 0.032 264);
+  --border-strong: oklch(0.46 0.038 264);
   --text-primary: oklch(0.96 0.006 85);
-  --text-secondary: oklch(0.76 0.012 265);
-  --text-muted: oklch(0.63 0.015 265);
+  --text-secondary: oklch(0.79 0.022 264);
+  --text-muted: oklch(0.67 0.026 264);
   --text-inverse: oklch(0.2 0.018 265);
   --accent: var(--color-brand-300);
   --accent-hover: var(--color-brand-200);
@@ -288,25 +287,25 @@
   --gold: var(--color-gold-300);
   --gold-soft: oklch(0.32 0.05 80);
 
-  --chip-solid: linear-gradient(145deg, oklch(0.33 0.028 265), oklch(0.265 0.022 265));
+  --chip-solid: linear-gradient(145deg, oklch(0.42 0.075 264), oklch(0.34 0.06 264));
   --chip-solid-ink: oklch(0.94 0.012 85);
 
-  --icon-brand: oklch(0.79 0.035 265);
-  --icon-brand-soft: oklch(0.285 0.018 265);
-  --icon-indigo: oklch(0.79 0.035 288);
-  --icon-indigo-soft: oklch(0.285 0.018 288);
-  --icon-violet: oklch(0.79 0.035 312);
-  --icon-violet-soft: oklch(0.285 0.018 312);
-  --icon-rose: oklch(0.79 0.035 12);
-  --icon-rose-soft: oklch(0.285 0.018 12);
-  --icon-amber: oklch(0.79 0.035 70);
-  --icon-amber-soft: oklch(0.285 0.018 70);
-  --icon-emerald: oklch(0.79 0.035 150);
-  --icon-emerald-soft: oklch(0.285 0.018 150);
-  --icon-teal: oklch(0.79 0.035 195);
-  --icon-teal-soft: oklch(0.285 0.018 195);
-  --icon-sky: oklch(0.79 0.035 235);
-  --icon-sky-soft: oklch(0.285 0.018 235);
+  --icon-brand: oklch(0.82 0.085 265);
+  --icon-brand-soft: oklch(0.35 0.05 265);
+  --icon-indigo: oklch(0.82 0.085 288);
+  --icon-indigo-soft: oklch(0.35 0.05 288);
+  --icon-violet: oklch(0.82 0.085 312);
+  --icon-violet-soft: oklch(0.35 0.05 312);
+  --icon-rose: oklch(0.82 0.085 12);
+  --icon-rose-soft: oklch(0.35 0.05 12);
+  --icon-amber: oklch(0.82 0.085 70);
+  --icon-amber-soft: oklch(0.35 0.05 70);
+  --icon-emerald: oklch(0.82 0.085 150);
+  --icon-emerald-soft: oklch(0.35 0.05 150);
+  --icon-teal: oklch(0.82 0.085 195);
+  --icon-teal-soft: oklch(0.35 0.05 195);
+  --icon-sky: oklch(0.82 0.085 235);
+  --icon-sky-soft: oklch(0.35 0.05 235);
 
   /* En oscuro la profundidad no la da la sombra —sobre un fondo oscuro
    * apenas se ve— sino el anillo y el brillo superior. Se invierte el peso:

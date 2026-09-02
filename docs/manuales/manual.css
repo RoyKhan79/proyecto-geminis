@@ -12,9 +12,9 @@
   --tinta: #14181f;
   --tinta-suave: #5b6472;
   --tinta-tenue: #8b94a3;
-  --marca: #2b3552;
-  --marca-oscura: #1b2236;
-  --marca-clara: #eef0f5;
+  --marca: #2f3d6b;
+  --marca-oscura: #202a4a;
+  --marca-clara: #eef1f8;
   --oro: #a8871f;
   --oro-claro: #fbf6e8;
   --verde: #1f7a52;
@@ -80,7 +80,7 @@ body {
 
 .portada {
   justify-content: space-between;
-  background: linear-gradient(158deg, #1b2236 0%, #232c44 58%, #2c3752 100%);
+  background: linear-gradient(158deg, #202a4a 0%, #2c3866 55%, #3a4784 100%);
   color: #fff;
   padding: 26mm 20mm;
 }
