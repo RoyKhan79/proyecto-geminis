@@ -152,7 +152,13 @@ actividad"*, *"🟡 Álvaro Rincón · 14 días sin actividad"*.
 
 > «Decidnos qué oposiciones preparáis.»
 
-Enseña las vigilancias y una convocatoria detectada de verdad en el BOE.
+Enseña las vigilancias y la última revisión: «651 anuncios analizados».
+
+> «La mayoría de días no encuentra nada. Eso ES el producto: alguien ha mirado
+> el Boletín por vosotros. El día que haya algo, no os lo perdéis.»
+
+Si en la demo hay una convocatoria detectada, ábrela. Si no la hay —lo normal—,
+no la busques: enseña la pantalla tal cual, que es más creíble.
 
 > «Cada mañana, a las ocho y media, el servidor mira el Boletín. Vosotros no
 > tenéis que abrir nada. Si sale algo de lo vuestro, os llega un correo.»
