@@ -29,7 +29,9 @@ export default function manifest(): MetadataRoute.Manifest {
     display: "standalone",
     orientation: "portrait",
     background_color: "#f5f3ef",
-    theme_color: "#2956c4",
+    // La tinta de la marca, no el azul de antes: es el color de la barra del
+    // sistema cuando la app está instalada, y tiene que ser el del sello.
+    theme_color: "#232c44",
     lang: "es-ES",
     categories: ["education"],
     icons: [

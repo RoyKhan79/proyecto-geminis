@@ -25,29 +25,36 @@
  */
 
 @theme {
-  /* ── Marca · azul profundo ──────────────────────────────────────────────
-   * Serio sin ser corporativo gris. Es el color de la institución, del sello
-   * y del expediente, que es exactamente el terreno de una oposición.
+  /* ── Marca · tinta azul ─────────────────────────────────────────────────
+   * Era un azul real, de los de botón de aplicación de mensajería: mucha
+   * saturación y mucha luz. Llamaba la atención, que es justo lo que no tiene
+   * que hacer el color de fondo de una herramienta con la que se pasan seis
+   * horas al día.
+   *
+   * Ahora es tinta: la misma familia de tono, bastante menos croma y menos
+   * claridad. Es el color del sello, del expediente y de la toga, que es el
+   * terreno de una oposición. Y al bajar de saturación deja sitio para que el
+   * oro sea LO único que brilla en pantalla.
    */
-  --color-brand-50: oklch(0.97 0.014 260);
-  --color-brand-100: oklch(0.94 0.03 260);
-  --color-brand-200: oklch(0.88 0.06 260);
-  --color-brand-300: oklch(0.79 0.1 261);
-  --color-brand-400: oklch(0.68 0.14 262);
-  --color-brand-500: oklch(0.58 0.17 263);
-  --color-brand-600: oklch(0.49 0.18 264);
-  --color-brand-700: oklch(0.41 0.16 265);
-  --color-brand-800: oklch(0.34 0.13 266);
-  --color-brand-900: oklch(0.27 0.1 267);
+  --color-brand-50: oklch(0.975 0.008 262);
+  --color-brand-100: oklch(0.945 0.018 262);
+  --color-brand-200: oklch(0.885 0.036 262);
+  --color-brand-300: oklch(0.8 0.062 263);
+  --color-brand-400: oklch(0.67 0.085 264);
+  --color-brand-500: oklch(0.55 0.1 264);
+  --color-brand-600: oklch(0.44 0.105 265);
+  --color-brand-700: oklch(0.36 0.09 266);
+  --color-brand-800: oklch(0.29 0.07 267);
+  --color-brand-900: oklch(0.22 0.05 268);
 
   /* ── Dorado · el logro ───────────────────────────────────────────────────
    * Reservado a lo conseguido: una racha, un simulacro aprobado, una plaza.
    * No es un color de aviso ni de adorno.
    */
-  --color-gold-100: oklch(0.95 0.05 85);
-  --color-gold-300: oklch(0.86 0.11 82);
-  --color-gold-500: oklch(0.76 0.14 78);
-  --color-gold-700: oklch(0.6 0.12 75);
+  --color-gold-100: oklch(0.955 0.032 88);
+  --color-gold-300: oklch(0.87 0.075 86);
+  --color-gold-500: oklch(0.775 0.098 84);
+  --color-gold-700: oklch(0.635 0.088 82);
 
   /* Estados */
   --color-positive: oklch(0.58 0.13 158);
@@ -71,10 +78,13 @@
     "Segoe UI", sans-serif;
   --font-mono: var(--font-jetbrains), ui-monospace, "SF Mono", monospace;
 
-  --radius-card: 1.1rem;
-  --radius-control: 0.7rem;
+  /* Menos redondeo que antes (1.1rem). Una esquina muy redonda se lee como
+   * juguete; una casi recta, como documento. El sitio de este producto está
+   * más cerca del documento. */
+  --radius-card: 0.7rem;
+  --radius-control: 0.45rem;
   /* Para lo que se apoya sobre una tarjeta: un chip, un avatar, un contador. */
-  --radius-inner: 0.55rem;
+  --radius-inner: 0.4rem;
 
   /* ── PROFUNDIDAD ─────────────────────────────────────────────────────────
    *
@@ -139,29 +149,39 @@
   /* ── FAMILIAS DE ICONO ───────────────────────────────────────────────────
    * Ocho tintes para los iconos de navegación y de las pastillas. No son
    * estados —eso lo dicen `positive`, `caution`, `critical`— sino identidad:
-   * cada área de la aplicación tiene su color y se reconoce de un vistazo en
+   * cada área de la aplicación tiene su tinte y se reconoce de un vistazo en
    * una barra lateral de treinta destinos.
+   *
+   * TENÍAN CROMA 0.155 Y RECORRÍAN LA RUEDA ENTERA: rosa, esmeralda, ámbar,
+   * violeta. Ocho colores saturados en cinco centímetros de barra lateral, y
+   * ninguno de ellos significando nada. Es lo que hacía que una herramienta
+   * seria pareciera una plantilla de panel de control.
+   *
+   * Ahora conservan su tono pero con una cuarta parte del croma: son grafitos
+   * con un matiz. La función sigue —el área se distingue si uno se fija— y la
+   * estridencia se va. Y sobre todo dejan sitio: con esto apagado, el oro es
+   * lo ÚNICO que brilla en la pantalla, y por eso vuelve a querer decir algo.
    *
    * Todos comparten claridad y croma y solo cambian de tono, así que conviven
    * sin que ninguno grite más que los demás. Se usan por su nombre desde
    * `.icon-chip[data-tone]`; ninguna pantalla escribe un color a mano (§79).
    */
-  --icon-brand: oklch(0.52 0.155 265);
-  --icon-brand-soft: oklch(0.965 0.035 265);
-  --icon-indigo: oklch(0.52 0.155 288);
-  --icon-indigo-soft: oklch(0.965 0.035 288);
-  --icon-violet: oklch(0.52 0.155 312);
-  --icon-violet-soft: oklch(0.965 0.035 312);
-  --icon-rose: oklch(0.52 0.155 12);
-  --icon-rose-soft: oklch(0.965 0.035 12);
-  --icon-amber: oklch(0.52 0.155 70);
-  --icon-amber-soft: oklch(0.965 0.035 70);
-  --icon-emerald: oklch(0.52 0.155 150);
-  --icon-emerald-soft: oklch(0.965 0.035 150);
-  --icon-teal: oklch(0.52 0.155 195);
-  --icon-teal-soft: oklch(0.965 0.035 195);
-  --icon-sky: oklch(0.52 0.155 235);
-  --icon-sky-soft: oklch(0.965 0.035 235);
+  --icon-brand: oklch(0.44 0.045 265);
+  --icon-brand-soft: oklch(0.965 0.011 265);
+  --icon-indigo: oklch(0.44 0.045 288);
+  --icon-indigo-soft: oklch(0.965 0.011 288);
+  --icon-violet: oklch(0.44 0.045 312);
+  --icon-violet-soft: oklch(0.965 0.011 312);
+  --icon-rose: oklch(0.44 0.045 12);
+  --icon-rose-soft: oklch(0.965 0.011 12);
+  --icon-amber: oklch(0.44 0.045 70);
+  --icon-amber-soft: oklch(0.965 0.011 70);
+  --icon-emerald: oklch(0.44 0.045 150);
+  --icon-emerald-soft: oklch(0.965 0.011 150);
+  --icon-teal: oklch(0.44 0.045 195);
+  --icon-teal-soft: oklch(0.965 0.011 195);
+  --icon-sky: oklch(0.44 0.045 235);
+  --icon-sky-soft: oklch(0.965 0.011 235);
 
   /* Fondo de las carcasas: un degradado larguísimo y de muy poca saturación.
    * No debe leerse como "un degradado"; debe leerse como papel. */
@@ -200,24 +220,28 @@
     --gold: var(--color-gold-300);
     --gold-soft: oklch(0.32 0.05 80);
 
+    /* Tinta, no el tinte: el adorno no puede ser lo que más brilla. */
+    --chip-solid: linear-gradient(145deg, oklch(0.33 0.028 265), oklch(0.265 0.022 265));
+    --chip-solid-ink: oklch(0.94 0.012 85);
+
     /* En oscuro los tintes suben de claridad y bajan de croma: un color
      * saturado sobre fondo oscuro vibra y cansa a las dos horas. */
-    --icon-brand: oklch(0.8 0.115 265);
-    --icon-brand-soft: oklch(0.305 0.055 265);
-    --icon-indigo: oklch(0.8 0.115 288);
-    --icon-indigo-soft: oklch(0.305 0.055 288);
-    --icon-violet: oklch(0.8 0.115 312);
-    --icon-violet-soft: oklch(0.305 0.055 312);
-    --icon-rose: oklch(0.8 0.115 12);
-    --icon-rose-soft: oklch(0.305 0.055 12);
-    --icon-amber: oklch(0.8 0.115 70);
-    --icon-amber-soft: oklch(0.305 0.055 70);
-    --icon-emerald: oklch(0.8 0.115 150);
-    --icon-emerald-soft: oklch(0.305 0.055 150);
-    --icon-teal: oklch(0.8 0.115 195);
-    --icon-teal-soft: oklch(0.305 0.055 195);
-    --icon-sky: oklch(0.8 0.115 235);
-    --icon-sky-soft: oklch(0.305 0.055 235);
+    --icon-brand: oklch(0.79 0.035 265);
+    --icon-brand-soft: oklch(0.285 0.018 265);
+    --icon-indigo: oklch(0.79 0.035 288);
+    --icon-indigo-soft: oklch(0.285 0.018 288);
+    --icon-violet: oklch(0.79 0.035 312);
+    --icon-violet-soft: oklch(0.285 0.018 312);
+    --icon-rose: oklch(0.79 0.035 12);
+    --icon-rose-soft: oklch(0.285 0.018 12);
+    --icon-amber: oklch(0.79 0.035 70);
+    --icon-amber-soft: oklch(0.285 0.018 70);
+    --icon-emerald: oklch(0.79 0.035 150);
+    --icon-emerald-soft: oklch(0.285 0.018 150);
+    --icon-teal: oklch(0.79 0.035 195);
+    --icon-teal-soft: oklch(0.285 0.018 195);
+    --icon-sky: oklch(0.79 0.035 235);
+    --icon-sky-soft: oklch(0.285 0.018 235);
 
     /* En oscuro la profundidad no la da la sombra —sobre un fondo oscuro
      * apenas se ve— sino el anillo y el brillo superior. Se invierte el peso:
@@ -264,22 +288,25 @@
   --gold: var(--color-gold-300);
   --gold-soft: oklch(0.32 0.05 80);
 
-  --icon-brand: oklch(0.8 0.115 265);
-  --icon-brand-soft: oklch(0.305 0.055 265);
-  --icon-indigo: oklch(0.8 0.115 288);
-  --icon-indigo-soft: oklch(0.305 0.055 288);
-  --icon-violet: oklch(0.8 0.115 312);
-  --icon-violet-soft: oklch(0.305 0.055 312);
-  --icon-rose: oklch(0.8 0.115 12);
-  --icon-rose-soft: oklch(0.305 0.055 12);
-  --icon-amber: oklch(0.8 0.115 70);
-  --icon-amber-soft: oklch(0.305 0.055 70);
-  --icon-emerald: oklch(0.8 0.115 150);
-  --icon-emerald-soft: oklch(0.305 0.055 150);
-  --icon-teal: oklch(0.8 0.115 195);
-  --icon-teal-soft: oklch(0.305 0.055 195);
-  --icon-sky: oklch(0.8 0.115 235);
-  --icon-sky-soft: oklch(0.305 0.055 235);
+  --chip-solid: linear-gradient(145deg, oklch(0.33 0.028 265), oklch(0.265 0.022 265));
+  --chip-solid-ink: oklch(0.94 0.012 85);
+
+  --icon-brand: oklch(0.79 0.035 265);
+  --icon-brand-soft: oklch(0.285 0.018 265);
+  --icon-indigo: oklch(0.79 0.035 288);
+  --icon-indigo-soft: oklch(0.285 0.018 288);
+  --icon-violet: oklch(0.79 0.035 312);
+  --icon-violet-soft: oklch(0.285 0.018 312);
+  --icon-rose: oklch(0.79 0.035 12);
+  --icon-rose-soft: oklch(0.285 0.018 12);
+  --icon-amber: oklch(0.79 0.035 70);
+  --icon-amber-soft: oklch(0.285 0.018 70);
+  --icon-emerald: oklch(0.79 0.035 150);
+  --icon-emerald-soft: oklch(0.285 0.018 150);
+  --icon-teal: oklch(0.79 0.035 195);
+  --icon-teal-soft: oklch(0.285 0.018 195);
+  --icon-sky: oklch(0.79 0.035 235);
+  --icon-sky-soft: oklch(0.285 0.018 235);
 
   /* En oscuro la profundidad no la da la sombra —sobre un fondo oscuro
    * apenas se ve— sino el anillo y el brillo superior. Se invierte el peso:
@@ -532,17 +559,37 @@
   /* La versión de portada: el tinte lleno, con su propia luz debajo. Para el
    * chip que encabeza una pantalla o corona una tarjeta destacada; en una
    * lista de diez, satura. */
+  /*
+   * La pastilla llena, la que encabeza una pantalla.
+   *
+   * En claro es un bloque del tinte de su área, con el icono en blanco. En
+   * oscuro NO puede serlo: el tinte claro sobre fondo oscuro convierte un
+   * adorno en lo más luminoso de la pantalla, y el ojo se va a un icono
+   * decorativo antes que a las cifras. Por eso el fondo sale de un token que
+   * cada tema define a su manera, en vez de calcularse aquí a partir del
+   * acento.
+   */
   .icon-chip[data-fill="solid"] {
-    background: linear-gradient(
-      145deg,
-      color-mix(in oklab, var(--chip) 82%, white),
-      var(--chip)
+    /*
+     * El valor por defecto va aquí dentro y no en `:root` porque usa `--chip`,
+     * que solo existe en este elemento: resuelto arriba sería un valor
+     * inválido y la pastilla se quedaría sin fondo. Los temas que quieran otra
+     * cosa definen `--chip-solid` con un color literal, sin depender de
+     * `--chip`, y esta declaración lo recoge.
+     */
+    background: var(
+      --chip-solid,
+      linear-gradient(
+        145deg,
+        color-mix(in oklab, var(--chip) 82%, white),
+        var(--chip)
+      )
     );
-    color: var(--accent-contrast);
+    color: var(--chip-solid-ink, var(--accent-contrast));
     box-shadow:
-      inset 0 1px 0 0 oklch(1 0 0 / 0.3),
-      0 1px 2px -1px color-mix(in oklab, var(--chip) 40%, transparent),
-      0 8px 18px -6px color-mix(in oklab, var(--chip) 45%, transparent);
+      inset 0 1px 0 0 oklch(1 0 0 / 0.22),
+      0 1px 2px -1px color-mix(in oklab, var(--chip) 30%, transparent),
+      0 8px 18px -6px color-mix(in oklab, var(--chip) 30%, transparent);
   }
 
   /* Un chip que forma parte de algo pulsable se enciende con la fila entera,

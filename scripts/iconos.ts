@@ -36,45 +36,64 @@
 import { writeFile } from "node:fs/promises";
 import sharp from "sharp";
 
+/*
+ * Los mismos valores que los tokens de `globals.css`, en hexadecimal porque
+ * librsvg no entiende oklch(). El azul es tinta, no el azul encendido de antes:
+ * sobre un azul saturado el oro se pelea con el fondo, y sobre tinta brilla.
+ */
 const MARCA = {
-  fondoA: "#2956c4",
-  fondoB: "#1e409f",
-  brillo: "#6796ee",
-  letra: "#fefdfb",
-  oro: "#e1a536",
+  fondoA: "#232c44",
+  fondoB: "#151b2c",
+  letra: "#f4f1e9",
+  oro: "#c9a227",
+  oroApagado: "#a8871f",
 };
 
 /**
- * EL SIGNO, dibujado.
+ * EL SELLO, dibujado.
  *
- * Todo en proporción a `caja` para que valga igual a 32 px que a 512, y con
- * rectángulos redondeados en vez de un trazado: a tamaño de favicon, un
- * `path` con curvas se emborrona y estos no.
+ * La inicial dentro de un filete doble. Un anillo solo se lee como un borde;
+ * dos, como un sello, y esa es toda la diferencia entre parecer una aplicación
+ * y parecer una institución.
  *
- * @param cx,cy centro del signo.
+ * La letra va en serif genérica y no en Fraunces porque esto se dibuja sin
+ * navegador: `sharp` usa las fuentes del sistema y no se puede contar con que
+ * la del producto esté instalada. A tamaño de icono la diferencia no la ve
+ * nadie; donde sí se nota es en la portada de un manual, y allí se usa la
+ * versión de `src/components/marca.tsx`, que sí lleva la buena.
+ *
+ * @param cx,cy centro del sello.
  * @param caja lado útil del icono, sin el margen.
  */
-function marca(cx: number, cy: number, caja: number): string {
-  const alto = caja * 0.54;
-  const ancho = caja * 0.5; // los remates, más anchos que las columnas
-  const grueso = caja * 0.086;
-  const radio = grueso / 2;
-  const separacion = caja * 0.125; // del eje a cada columna
-  const y0 = cy - alto / 2;
-  const x0 = cx - ancho / 2;
+function sello(cx: number, cy: number, caja: number): string {
+  /*
+   * EL SELLO SE SIMPLIFICA AL ENCOGER, que es lo que hace cualquier identidad
+   * que se haya usado de verdad.
+   *
+   * A 512 px el filete doble es el detalle que lo levanta. A 32 los dos anillos
+   * se funden en un churro y se comen la letra, y lo que llega al usuario es un
+   * borrón dorado. Así que por debajo de cierto tamaño se queda un solo filete
+   * y la letra crece para ocupar el sitio que deja.
+   */
+  const pequeno = caja < 96;
+  const radioExterior = caja * (pequeno ? 0.395 : 0.4);
+  const grueso = Math.max(caja * (pequeno ? 0.03 : 0.018), 1.3);
+  const cuerpo = caja * (pequeno ? 0.44 : 0.4);
 
-  const columna = (x: number) =>
-    `<rect x="${x - grueso / 2}" y="${y0}" width="${grueso}" height="${alto}" rx="${radio}" fill="${MARCA.letra}"/>`;
-  const remate = (y: number, color: string) =>
-    `<rect x="${x0}" y="${y}" width="${ancho}" height="${grueso}" rx="${radio}" fill="${color}"/>`;
+  const anillos = [
+    `<circle cx="${cx}" cy="${cy}" r="${radioExterior}" fill="none" stroke="${MARCA.oro}" stroke-width="${grueso}"/>`,
+  ];
+  if (!pequeno) {
+    anillos.push(
+      `<circle cx="${cx}" cy="${cy}" r="${caja * 0.348}" fill="none" stroke="${MARCA.oro}" stroke-width="${grueso * 0.45}" opacity="0.5"/>`,
+    );
+  }
 
-  // El remate de abajo va el último: tapa el final de las columnas y así el oro
-  // queda limpio en lugar de partido por dos rectángulos blancos encima.
   return [
-    columna(cx - separacion),
-    columna(cx + separacion),
-    remate(y0, MARCA.letra),
-    remate(y0 + alto - grueso, MARCA.oro),
+    ...anillos,
+    `<text x="${cx}" y="${cy}" dy="0.345em" text-anchor="middle"`,
+    `  font-family="Georgia, 'Times New Roman', serif"`,
+    `  font-size="${cuerpo}" font-weight="600" fill="${MARCA.letra}">G</text>`,
   ].join("\n  ");
 }
 
@@ -108,60 +127,63 @@ function svg(tamano: number, zonaSegura: number, conFondoCompleto: boolean): str
          <rect x="${margen}" y="${margen}" width="${caja}" height="${caja}" rx="${radio}" fill="url(#filo)"/>`
   }
 
-  ${marca(tamano / 2, tamano / 2, caja)}
+  ${sello(tamano / 2, tamano / 2, caja)}
 </svg>`;
 }
 
 /**
- * El logotipo horizontal: la pastilla con el signo, y el nombre al lado.
+ * EL LOGOTIPO: la palabra y nada más.
  *
- * El texto va como `<text>` con familias genéricas, no convertido a curvas.
- * Tiene una pega —se dibuja con la serif que haya en la máquina, así que no es
- * idéntico en todas— y una ventaja que aquí pesa más: se puede cambiar el
- * nombre del producto editando una línea, y el nombre todavía es provisional
- * (ver src/lib/brand.ts). El día que deje de serlo, esto se pasa a curvas.
+ * El espaciado entre letras es casi todo el diseño. Con el tracking normal esto
+ * es un nombre escrito; a 0,4 em es un logotipo. Los dos filetes de oro, cortos
+ * y centrados, son lo único que se le añade.
+ *
+ * Va sin el sello al lado a propósito. Poner los dos juntos es la solución
+ * cómoda y es la que hace que ninguna de las dos piezas mande: el sello tiene
+ * su sitio —el favicon, el móvil, la barra lateral— y aquí sobra.
  *
  * @param colorTexto tinta del nombre. Oscuro para fondo claro y al revés.
  */
 function logotipo(colorTexto: string): string {
-  const alto = 128;
-  const pastilla = 96;
-  const y = (alto - pastilla) / 2;
-  const radio = pastilla * 0.235;
-  const hueco = 28;
-  const texto = y + pastilla / 2;
+  const ancho = 680;
+  const alto = 190;
+  const cuerpo = 54;
+  const espaciado = cuerpo * 0.4;
+  const cx = ancho / 2;
 
   /*
-   * El ancho se deja holgado a propósito.
-   *
-   * El texto no va convertido a curvas, así que su anchura real depende de la
-   * serif que tenga instalada la máquina que abra el archivo. Ajustarlo al
-   * milímetro con la de aquí garantizaría que en otra se corte la última letra,
-   * que es exactamente lo que pasó con 520.
+   * El espaciado se añade DESPUÉS de cada letra, también de la última, así que
+   * el bloque queda descentrado hacia la izquierda por medio espacio. Se
+   * compensa aquí. Es el fallo clásico de los logotipos muy espaciados y se ve
+   * a simple vista en cuanto hay algo centrado encima o debajo.
    */
-  const ancho = 680;
+  const centro = cx + espaciado / 2;
+  const filete = 108;
 
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${ancho}" height="${alto}" viewBox="0 0 ${ancho} ${alto}">
-  <defs>
-    <linearGradient id="fondo" x1="0" y1="0" x2="0.35" y2="1">
-      <stop offset="0" stop-color="${MARCA.fondoA}"/>
-      <stop offset="1" stop-color="${MARCA.fondoB}"/>
-    </linearGradient>
-  </defs>
-
-  <rect x="0" y="${y}" width="${pastilla}" height="${pastilla}" rx="${radio}" fill="url(#fondo)"/>
-  ${marca(pastilla / 2, alto / 2, pastilla)}
+  <rect x="${cx - filete / 2}" y="48" width="${filete}" height="1.6" fill="${MARCA.oro}"/>
 
   <text
-    x="${pastilla + hueco}"
-    y="${texto}"
-    dy="0.34em"
+    x="${centro}"
+    y="102"
+    text-anchor="middle"
     font-family="Georgia, 'Times New Roman', serif"
-    font-size="46"
-    font-weight="600"
-    letter-spacing="-0.5"
+    font-size="${cuerpo}"
+    letter-spacing="${espaciado}"
     fill="${colorTexto}"
-  >Proyecto Geminis</text>
+  >GEMINIS</text>
+
+  <rect x="${cx - filete / 2}" y="122" width="${filete}" height="1.6" fill="${MARCA.oro}"/>
+
+  <text
+    x="${cx + 2}"
+    y="152"
+    text-anchor="middle"
+    font-family="Helvetica, Arial, sans-serif"
+    font-size="12"
+    letter-spacing="4"
+    fill="${MARCA.oroApagado}"
+  >ACADEMIAS DE OPOSICIONES</text>
 </svg>`;
 }
 

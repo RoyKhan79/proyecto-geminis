@@ -47,15 +47,24 @@ cada pantalla: una academia que cambie de tipografía la cambia en un sitio.
 
 ### Marca
 
-`--color-brand-50` … `--color-brand-900`, azul profundo (tono 264 en OKLCH).
-Se usa a través de `--accent`, que **cada academia puede sobrescribir**
-(white-label, §60).
+`--color-brand-50` … `--color-brand-900`, **tinta azul** (tono 264 en OKLCH,
+croma bajo). Se usa a través de `--accent`, que **cada academia puede
+sobrescribir** (white-label, §60).
+
+Era un azul real, de los de botón de aplicación de mensajería: croma 0,18 y
+mucha claridad. Llamaba la atención, que es justo lo que no debe hacer el color
+de fondo de una herramienta con la que se pasan seis horas al día. Bajado a
+tinta, además, deja sitio para que el oro sea lo único que brilla.
 
 ### Dorado
 
-`--color-gold-100/300/500/700`, expuesto como `--gold` y `--gold-soft`.
+`--color-gold-100/300/500/700`, expuesto como `--gold` y `--gold-soft`. Oro
+viejo, no ámbar: se le bajó el croma porque a 0,14 era un color de semáforo.
+
 Reservado a lo conseguido: una racha, un simulacro aprobado, una plaza. Existen
-`<Badge tone="gold">` y `<Button variant="gold">` para eso y solo para eso.
+`<Badge tone="gold">` y `<Button variant="gold">` para eso y solo para eso. Y
+marca el destino activo de la barra lateral, que es el único sitio de la
+navegación donde aparece color.
 
 ### Estados
 
@@ -122,14 +131,41 @@ tontos y no lo son:
 [lucide-react](https://lucide.dev), trazo uniforme, `size-4` en interfaz y
 `size-5` en estados vacíos.
 
+**En la barra lateral van desnudos**, sin pastilla. Una pastilla de color queda
+bien cuando encabeza una pantalla o corona una tarjeta; veinte seguidas en una
+columna son veinte manchas y ninguna dice nada. Ahí el trazo fino basta y el oro
+señala dónde estás.
+
+Los ocho tintes de `--icon-*` siguen existiendo y siguen distinguiendo áreas,
+pero con **una cuarta parte del croma** que tenían: son grafitos con un matiz.
+
 El icono de la aplicación se **genera** con `npm run iconos`
-([`scripts/iconos.ts`](../scripts/iconos.ts)): una G serif sobre el azul de
-marca con un punto dorado. Se genera y no se dibuja a mano porque el color es un
-token: si una academia cambia su acento, los iconos se rehacen con un comando.
+([`scripts/iconos.ts`](../scripts/iconos.ts)): el sello —la inicial dentro de un
+filete doble de oro— sobre tinta. Se genera y no se dibuja a mano porque el
+color es un token: si una academia cambia su acento, los iconos se rehacen con
+un comando.
+
+El sello **se simplifica al encoger**: por debajo de 96 px se queda un solo
+filete y la letra crece. Con los dos anillos, a 32 px se funden en un churro y
+se comen la inicial.
 
 Salidas: `icono-192`, `icono-512`, `icono-mascara` (con el 20 % de zona segura
 que Android recorta), `apple-icon` (iOS no usa el manifiesto y sin fondo opaco
-lo pinta negro), `favicon-32` e `icono.svg`.
+lo pinta negro), `favicon-32`, `icono.svg` y el logotipo horizontal `logo.svg` /
+`logo-claro.svg`.
+
+## La identidad
+
+Dos piezas, en [`src/components/marca.tsx`](../src/components/marca.tsx):
+
+- **El logotipo** es la palabra: versales muy espaciadas (0,4 em) de la serif
+  del producto entre dos filetes de oro. Manda donde hay sitio —la pantalla de
+  acceso, la portada de un manual, una factura—. El espaciado se aplica también
+  detrás de la última letra, así que lleva un `text-indent` que lo recentra; sin
+  él los filetes quedan medio carácter descuadrados.
+- **El sello** es la inicial en el filete doble. Existe porque una palabra no
+  cabe en un cuadrado de 32 px: resuelve la pestaña, el icono del móvil y la
+  esquina de la barra lateral.
 
 ---
 

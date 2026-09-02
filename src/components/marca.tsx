@@ -1,90 +1,137 @@
+import { cn } from "@/lib/utils";
+
 /**
- * EL SIGNO DE GÉMINIS
- * ───────────────────
- * Dos columnas iguales unidas por arriba y por abajo. No es una floritura sobre
- * el nombre: es lo que hace el producto. Dos aplicaciones —la de la academia y
- * la del alumnado— sobre un mismo sistema. Las columnas son iguales porque
- * ninguna de las dos es la de verdad y la otra un añadido.
+ * LA IDENTIDAD
+ * ────────────
+ * Dos piezas, y cada una tiene su sitio:
  *
- * La base va en oro, que es el único acento de la identidad: es lo que
- * comparten, los mismos datos por debajo.
+ *   · **El logotipo** (`LogotipoGeminis`) es la palabra. Sin símbolo: versales
+ *     muy espaciadas de la serif del producto entre dos filetes de oro. Manda
+ *     en la portada del manual, en la pantalla de acceso y en una factura, que
+ *     es donde hay sitio y donde interesa que se lea el nombre.
  *
- * Aquí y en `scripts/iconos.ts` está dibujado dos veces, con las mismas
- * proporciones. Se ha preferido eso a importar un SVG: este va en línea y hereda
- * el color del contenedor —lo que permite ponerlo sobre azul, sobre blanco o en
- * un botón sin exportar una variante de cada—, y el del script tiene que poder
- * generar PNG sin pasar por React.
+ *   · **El sello** (`SelloGeminis`) es la inicial dentro de un filete doble.
+ *     Existe porque una palabra no cabe en un cuadrado de 32 píxeles: resuelve
+ *     la pestaña del navegador, el icono del móvil y la esquina de la barra
+ *     lateral.
  *
- * Va con `rect` redondeados y no con un `path`: a tamaño de favicon las curvas
- * de un trazado se emborronan y estos no.
+ * Antes había aquí dos columnas de rectángulos redondeados. El concepto no
+ * estaba mal —dos aplicaciones, un sistema— pero el trazo era de grosor
+ * constante, y eso es lo que separa un símbolo dibujado de uno generado. A
+ * tamaño de favicon acababa siendo un pictograma cualquiera.
+ *
+ * Ahora el peso lo lleva la tipografía: la serif del producto tiene alternancia
+ * de fino y grueso de verdad, y el oro aparece una sola vez, en el filete.
+ *
+ * ── SOBRE LA LETRA ─────────────────────────────────────────────────────────
+ * La G va con `var(--font-display)`, que en la aplicación es Fraunces. En
+ * `scripts/iconos.ts`, que genera los PNG sin navegador, no se puede contar con
+ * ella y se cae a Georgia. La diferencia entre las dos a 32 píxeles no la ve
+ * nadie; a tamaño de portada sí, y por eso ahí se usa siempre esta versión.
  */
 
-/** El signo suelto, sin fondo. Hereda el color del texto para las columnas. */
-export function SignoGeminis({ className }: { className?: string }) {
-  // Proporciones sobre un lienzo de 100: las mismas que en scripts/iconos.ts.
-  const alto = 54;
-  const ancho = 50; // los remates vuelan sobre las columnas
-  const grueso = 8.6;
-  const radio = grueso / 2;
-  const separacion = 12.5;
-  const y0 = 50 - alto / 2;
-  const x0 = 50 - ancho / 2;
-
+/** El sello suelto, sin fondo: filete doble y la inicial. */
+export function SelloGeminis({ className }: { className?: string }) {
   return (
     <svg
       viewBox="0 0 100 100"
       className={className}
       role="presentation"
       aria-hidden="true"
-      fill="none"
     >
-      {[50 - separacion, 50 + separacion].map((cx) => (
-        <rect
-          key={cx}
-          x={cx - grueso / 2}
-          y={y0}
-          width={grueso}
-          height={alto}
-          rx={radio}
-          fill="currentColor"
-        />
-      ))}
-      <rect
-        x={x0}
-        y={y0}
-        width={ancho}
-        height={grueso}
-        rx={radio}
+      {/* El filete doble. Es el detalle que no se produce solo: un anillo
+          único se lee como un borde; dos, como un sello. */}
+      <circle
+        cx="50"
+        cy="50"
+        r="46.5"
+        fill="none"
+        stroke="var(--gold)"
+        strokeWidth="2"
+      />
+      <circle
+        cx="50"
+        cy="50"
+        r="40.5"
+        fill="none"
+        stroke="var(--gold)"
+        strokeWidth="0.9"
+        opacity="0.5"
+      />
+      <text
+        x="50"
+        y="50"
+        dy="0.345em"
+        textAnchor="middle"
+        fontFamily="var(--font-display)"
+        fontSize="47"
+        fontWeight="500"
         fill="currentColor"
-      />
-      {/*
-        El remate de abajo va el último: tapa el final de las columnas y así el
-        oro queda limpio en vez de partido por dos blancos encima.
-      */}
-      <rect
-        x={x0}
-        y={y0 + alto - grueso}
-        width={ancho}
-        height={grueso}
-        rx={radio}
-        fill="var(--color-gold-500)"
-      />
+      >
+        G
+      </text>
     </svg>
   );
 }
 
 /**
- * El signo dentro de su pastilla azul, que es como aparece en la aplicación.
+ * El sello dentro de su pastilla, que es como aparece en la aplicación.
  *
- * El tamaño lo pone quien lo usa con `className` (`size-9`, `size-10`…), igual
- * que hacía la pastilla escrita a mano que había antes en cada pantalla.
+ * La pastilla es tinta, no el azul de antes: sobre un azul encendido el oro se
+ * pelea con el fondo, y sobre tinta brilla.
  */
 export function MarcaGeminis({ className = "size-9" }: { className?: string }) {
   return (
     <span
-      className={`flex shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-accent to-accent-hover text-accent-contrast shadow-[inset_0_1px_0_0_oklch(1_0_0/0.25),var(--shadow-soft)] ${className}`}
+      className={cn(
+        "flex shrink-0 items-center justify-center rounded-[var(--radius-control)]",
+        "bg-linear-to-br from-brand-800 to-brand-900 text-[oklch(0.97_0.01_85)]",
+        "shadow-[var(--shadow-soft)]",
+        className,
+      )}
     >
-      <SignoGeminis className="size-full" />
+      <SelloGeminis className="size-[78%]" />
+    </span>
+  );
+}
+
+/**
+ * EL LOGOTIPO: la palabra y nada más.
+ *
+ * El espaciado entre letras es casi todo el diseño. Con el tracking normal esto
+ * es un nombre escrito; a 0.4em es un logotipo. Por eso va en su propia clase y
+ * no como un `<h1>` con estilos sueltos: quien lo toque tiene que ver que ese
+ * número es la pieza.
+ *
+ * @param descriptor Si se enseña el «academias de oposiciones» de debajo. Fuera
+ *   en la aplicación, donde ya se sabe dónde está uno; dentro en el manual y en
+ *   cualquier cosa que salga de casa.
+ */
+export function LogotipoGeminis({
+  className,
+  descriptor = false,
+}: {
+  className?: string;
+  descriptor?: boolean;
+}) {
+  return (
+    <span className={cn("inline-flex flex-col items-center", className)}>
+      <span aria-hidden className="h-px w-14 bg-gold" />
+      <span
+        className="font-display text-[1.35rem] font-normal uppercase leading-none text-ink"
+        style={{ letterSpacing: "0.4em", textIndent: "0.4em" }}
+      >
+        Geminis
+      </span>
+      <span aria-hidden className="h-px w-14 bg-gold" />
+      {descriptor ? (
+        <span
+          className="mt-2.5 font-sans text-[0.5625rem] uppercase text-ink-muted"
+          style={{ letterSpacing: "0.3em", textIndent: "0.3em" }}
+        >
+          Academias de oposiciones
+        </span>
+      ) : null}
     </span>
   );
 }

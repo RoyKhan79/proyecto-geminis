@@ -1,8 +1,8 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
   <defs>
     <linearGradient id="fondo" x1="0" y1="0" x2="0.35" y2="1">
-      <stop offset="0" stop-color="#2956c4"/>
-      <stop offset="1" stop-color="#1e409f"/>
+      <stop offset="0" stop-color="#232c44"/>
+      <stop offset="1" stop-color="#151b2c"/>
     </linearGradient>
     <linearGradient id="filo" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0" stop-color="#ffffff" stop-opacity="0.28"/>
@@ -13,8 +13,9 @@
   <rect x="30.72" y="30.72" width="450.56" height="450.56" rx="105.88159999999999" fill="url(#fondo)"/>
          <rect x="30.72" y="30.72" width="450.56" height="450.56" rx="105.88159999999999" fill="url(#filo)"/>
 
-  <rect x="180.30592000000001" y="134.34879999999998" width="38.74816" height="243.3024" rx="19.37408" fill="#fefdfb"/>
-  <rect x="292.94592" y="134.34879999999998" width="38.74816" height="243.3024" rx="19.37408" fill="#fefdfb"/>
-  <rect x="143.36" y="134.34879999999998" width="225.28" height="38.74816" rx="19.37408" fill="#fefdfb"/>
-  <rect x="143.36" y="338.90304000000003" width="225.28" height="38.74816" rx="19.37408" fill="#e1a536"/>
+  <circle cx="256" cy="256" r="180.22400000000002" fill="none" stroke="#c9a227" stroke-width="8.11008"/>
+  <circle cx="256" cy="256" r="156.79487999999998" fill="none" stroke="#c9a227" stroke-width="3.649536" opacity="0.5"/>
+  <text x="256" y="256" dy="0.345em" text-anchor="middle"
+    font-family="Georgia, 'Times New Roman', serif"
+    font-size="180.22400000000002" font-weight="600" fill="#f4f1e9">G</text>
 </svg>

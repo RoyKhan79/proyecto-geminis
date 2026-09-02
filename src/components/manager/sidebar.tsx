@@ -4,9 +4,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { MANAGER_NAV, type NavSection } from "./nav-config";
 import { BRAND } from "@/lib/brand";
-import { IconTile } from "@/components/ui/primitives";
 import { cn } from "@/lib/utils";
-import { SignoGeminis } from "@/components/marca";
+import { MarcaGeminis } from "@/components/marca";
 
 /**
  * Barra lateral de Manager. Recibe ya filtrados los elementos que la persona
@@ -34,9 +33,7 @@ export function ManagerSidebar({
       className="flex h-full w-[16.5rem] shrink-0 flex-col gap-7 overflow-y-auto border-r border-line/70 bg-surface/70 px-3.5 py-6 backdrop-blur-2xl"
     >
       <div className="flex items-center gap-3 px-2">
-        <span className="flex size-9 items-center justify-center rounded-xl bg-linear-to-br from-accent to-accent-hover text-sm font-bold text-accent-contrast shadow-[inset_0_1px_0_0_oklch(1_0_0/0.25),var(--shadow-soft)]">
-          <SignoGeminis className="size-full" />
-        </span>
+        <MarcaGeminis className="size-9" />
         <div className="min-w-0">
           <p className="line-clamp-2 font-display text-[0.9375rem] font-semibold leading-tight text-ink">
             {academyName}
@@ -66,9 +63,11 @@ export function ManagerSidebar({
                     title={`Disponible en ${item.phase ?? "una próxima fase"}`}
                     className="flex cursor-not-allowed items-center gap-2.5 rounded-[var(--radius-control)] px-2 py-1.5 text-sm text-ink-muted opacity-50 grayscale"
                   >
-                    <IconTile tone={item.tone} size="sm">
-                      <Icon />
-                    </IconTile>
+                    <Icon
+                      aria-hidden
+                      className="size-[1.05rem] shrink-0 text-ink-muted"
+                      strokeWidth={1.6}
+                    />
                     <span className="truncate">{item.label}</span>
                     <span className="ml-auto rounded-full bg-surface-muted px-1.5 py-0.5 text-[0.625rem] font-medium">
                       Pronto
@@ -87,7 +86,7 @@ export function ManagerSidebar({
                     // media barra: se lee de un vistazo y no compite con el
                     // contenido.
                     "group relative flex items-center gap-2.5 rounded-[var(--radius-control)] px-2 py-1.5 text-[0.875rem] transition-all duration-150",
-                    "before:absolute before:left-0 before:top-1/2 before:h-[1.15rem] before:w-[3px] before:-translate-y-1/2 before:rounded-r-full before:bg-accent before:transition-opacity",
+                    "before:absolute before:left-0 before:top-1/2 before:h-[1.15rem] before:w-[3px] before:-translate-y-1/2 before:rounded-r-full before:bg-gold before:transition-opacity",
                     active
                       ? // Lo activo va sobre su propia superficie, con anillo y
                         // filo de luz: se lee como una pieza levantada, no como
@@ -97,22 +96,30 @@ export function ManagerSidebar({
                   )}
                 >
                   {/*
-                    El icono lleva el color de su área y el destino en el que
-                    estás lo lleva lleno. Con la barra entera a la vista, el
-                    color es lo que se busca primero; el relleno es lo que
-                    contesta «estás aquí» sin repintar media columna.
+                    EL ICONO VA DESNUDO, sin pastilla.
+                    
+                    Cada destino llevaba su icono dentro de un cuadrado de
+                    color. Uno solo queda bien; veinte seguidos son veinte
+                    manchas de color en cinco centímetros, y el ojo no sabe
+                    dónde mirar porque ninguna de ellas dice nada.
+                    
+                    La pastilla sigue existiendo y sigue estando bien donde
+                    encabeza una pantalla o corona una tarjeta: ahí es una pieza
+                    sola y se lee como un adorno cuidado. En una lista es ruido.
+                    
+                    Aquí el trazo fino basta, y lo que señala dónde estás es el
+                    oro del icono más la barrita de la izquierda.
                   */}
-                  <IconTile
-                    tone={item.tone}
-                    fill={active ? "solid" : "soft"}
-                    size="sm"
+                  <Icon
+                    aria-hidden
                     className={cn(
-                      "transition-shadow",
-                      !active && "opacity-90 group-hover:opacity-100",
+                      "size-[1.05rem] shrink-0 transition-colors",
+                      active
+                        ? "text-gold"
+                        : "text-ink-muted group-hover:text-ink-soft",
                     )}
-                  >
-                    <Icon className={cn(active && "stroke-[2.2]")} />
-                  </IconTile>
+                    strokeWidth={active ? 2 : 1.6}
+                  />
                   <span className="truncate">{item.label}</span>
                 </Link>
               );

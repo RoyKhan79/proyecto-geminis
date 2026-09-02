@@ -9,7 +9,7 @@ import { moduloDelPermiso } from "@/lib/modules/catalogo";
 import { ManagerSidebar } from "@/components/manager/sidebar";
 import { Button } from "@/components/ui/button";
 import { initials } from "@/lib/utils";
-import { SignoGeminis } from "@/components/marca";
+import { MarcaGeminis } from "@/components/marca";
 
 /**
  * El armazón de Manager: barra lateral, cabecera y aviso de soporte.
@@ -53,9 +53,7 @@ export default async function ManagerLayout({
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-20 flex h-16 items-center gap-3 border-b border-line/70 bg-surface/70 px-5 backdrop-blur-2xl">
           <Link href="/gestion" className="lg:hidden">
-            <span className="flex size-9 items-center justify-center rounded-xl bg-linear-to-br from-accent to-accent-hover text-sm font-bold text-accent-contrast shadow-[inset_0_1px_0_0_oklch(1_0_0/0.25),var(--shadow-soft)]">
-              <SignoGeminis className="size-full" />
-            </span>
+            <MarcaGeminis className="size-9" />
           </Link>
 
           <div className="min-w-0 flex-1">

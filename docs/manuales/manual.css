@@ -12,11 +12,11 @@
   --tinta: #14181f;
   --tinta-suave: #5b6472;
   --tinta-tenue: #8b94a3;
-  --marca: #2b3fa8;
-  --marca-oscura: #1e2c7a;
-  --marca-clara: #eef1fb;
-  --oro: #9a7213;
-  --oro-claro: #fdf5e3;
+  --marca: #2b3552;
+  --marca-oscura: #1b2236;
+  --marca-clara: #eef0f5;
+  --oro: #a8871f;
+  --oro-claro: #fbf6e8;
   --verde: #1f7a52;
   --verde-claro: #e9f6f0;
   --rojo: #b4342a;
@@ -80,7 +80,7 @@ body {
 
 .portada {
   justify-content: space-between;
-  background: linear-gradient(160deg, #1b2559 0%, #2b3fa8 55%, #3d55c8 100%);
+  background: linear-gradient(158deg, #1b2236 0%, #232c44 58%, #2c3752 100%);
   color: #fff;
   padding: 26mm 20mm;
 }
@@ -99,27 +99,47 @@ body {
   max-width: 130mm;
   margin: 0;
 }
+
+/*
+ * EL LOGOTIPO: la palabra y nada más.
+ *
+ * El espaciado entre letras es casi todo el diseño. Con el tracking normal esto
+ * es un nombre escrito; a 0,4 em es un logotipo. Los dos filetes de oro, cortos
+ * y centrados, son lo único que se le añade.
+ *
+ * El espaciado se aplica DESPUÉS de cada letra, también de la última, así que
+ * el bloque queda descentrado media letra a la izquierda. El `text-indent` lo
+ * compensa. Es el fallo clásico de los logotipos muy espaciados y se ve a
+ * simple vista en cuanto hay un filete centrado encima.
+ */
 .marca-portada {
   display: flex;
-  align-items: center;
-  gap: 4mm;
-  font-size: 12pt;
-  font-weight: 700;
-  letter-spacing: 0.02em;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3mm;
 }
-/*
- * El signo de Géminis: dos columnas iguales sobre una base dorada. La academia
- * y el alumnado sobre el mismo sistema.
- *
- * Va suelto sobre el azul de la portada, sin pastilla. La pastilla existe en la
- * aplicación para despegar la marca de un fondo claro cualquiera; aquí el fondo
- * ya es el azul de la marca y meter un cuadrado blanco en medio solo la ensucia.
- */
-.logo {
-  width: 11mm;
-  height: 11mm;
-  display: block;
-  flex: 0 0 auto;
+.marca-portada .filete {
+  width: 22mm;
+  height: 0.35mm;
+  background: var(--oro);
+}
+.marca-portada .palabra {
+  font-family: "Fraunces", ui-serif, Georgia, serif;
+  font-size: 15pt;
+  font-weight: 400;
+  text-transform: uppercase;
+  letter-spacing: 0.4em;
+  text-indent: 0.4em;
+  line-height: 1;
+  color: #fff;
+}
+.marca-portada .descriptor {
+  font-size: 7pt;
+  letter-spacing: 0.28em;
+  text-indent: 0.28em;
+  text-transform: uppercase;
+  color: #c3b183;
+  margin-top: 1mm;
 }
 .portada .pie {
   font-size: 9.5pt;
