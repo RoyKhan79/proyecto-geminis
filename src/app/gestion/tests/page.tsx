@@ -81,8 +81,18 @@ export default async function GestionTestsPage({
       {pendientes > 0 ? (
         <Card className="border-caution">
           <CardContent className="p-4 pt-4 text-sm text-ink">
-            Hay <strong>{pendientes}</strong> preguntas en borrador o pendientes de
-            revisión. Nada llega al alumnado hasta que alguien las aprueba.
+            {pendientes === 1 ? (
+              <>
+                Hay <strong>1</strong> pregunta en borrador o pendiente de
+                revisión. No llega al alumnado hasta que alguien la aprueba.
+              </>
+            ) : (
+              <>
+                Hay <strong>{pendientes}</strong> preguntas en borrador o
+                pendientes de revisión. Nada llega al alumnado hasta que alguien
+                las aprueba.
+              </>
+            )}
           </CardContent>
         </Card>
       ) : null}

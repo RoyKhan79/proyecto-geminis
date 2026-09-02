@@ -1,0 +1,1036 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<title>Proyecto Geminis · manual para academias</title>
+<link rel="stylesheet" href="manual.css">
+</head>
+<body>
+
+<!-- ── PORTADA ──────────────────────────────────────────────────────────── -->
+<section class="pagina portada">
+  <div class="marca-portada"><span class="logo">G</span> Proyecto Geminis</div>
+  <div>
+    <h1>El sistema operativo<br>de una academia<br>de oposiciones.</h1>
+    <p class="bajada">
+      La gestión, el temario, los tests, los cobros y la app del alumnado en un
+      solo sitio. Con la inteligencia artificial trabajando sobre vuestro
+      material, y solo sobre el vuestro.
+    </p>
+  </div>
+  <div class="pie">
+    <strong>Manual de presentación</strong> · septiembre de 2026<br>
+    Todas las pantallas de este documento son capturas reales del programa
+    funcionando. Ninguna es un montaje.
+  </div>
+</section>
+
+<!-- ── ÍNDICE ───────────────────────────────────────────────────────────── -->
+<section class="pagina" data-seccion="Proyecto Geminis" data-pag="2">
+  <p class="rotulo">Qué hay dentro</p>
+  <h2>Índice</h2>
+  <p class="entradilla">
+    Se puede leer entero en veinte minutos, o ir directamente al apartado que
+    interese. Los precios están al final, en la página&nbsp;19.
+  </p>
+
+  <div class="indice">
+    <div><span>El problema que resuelve</span><span>3</span></div>
+    <div><span>Traer vuestros alumnos</span><span>4</span></div>
+    <div><span>Vuestro temario, con vuestros nombres</span><span>5</span></div>
+    <div><span>El ritmo del temario</span><span>6</span></div>
+    <div><span>Cada alumno ve lo que ha pagado</span><span>7</span></div>
+    <div><span>Tests, simulacros y exámenes</span><span>8</span></div>
+    <div><span>La app del alumnado</span><span>9</span></div>
+    <div><span>Geminis IA</span><span>10</span></div>
+    <div><span>Quién se está desenganchando</span><span>12</span></div>
+    <div><span>El radar del BOE</span><span>13</span></div>
+    <div><span>Cuando cambia una ley</span><span>14</span></div>
+    <div><span>Cobros, remesas y facturas</span><span>15</span></div>
+    <div><span>Agenda, clases y comunicación</span><span>16</span></div>
+    <div><span>Vuestros datos son vuestros</span><span>17</span></div>
+    <div><span>Preguntas que nos hacen siempre</span><span>18</span></div>
+    <div><span>Precios</span><span>19</span></div>
+    <div><span>Cómo empezar</span><span>22</span></div>
+  </div>
+
+  <div class="crece"></div>
+
+  <div class="cifras">
+    <div class="cifra"><b>12</b><span>módulos que se contratan por separado</span></div>
+    <div class="cifra"><b>60</b><span>pantallas</span></div>
+    <div class="cifra"><b>432</b><span>pruebas automáticas</span></div>
+    <div class="cifra"><b>0</b><span>vulnerabilidades conocidas</span></div>
+  </div>
+  <p style="font-size:8.5pt;color:var(--tinta-tenue);margin:0">
+    Cifras de la auditoría de seguridad de septiembre de 2026, disponible
+    íntegra para cualquier academia que la pida.
+  </p>
+</section>
+
+<!-- ── EL PROBLEMA ──────────────────────────────────────────────────────── -->
+<section class="pagina" data-seccion="El problema" data-pag="3">
+  <p class="rotulo">Por qué existe</p>
+  <h2>Una academia no cabe en un programa de colegios</h2>
+  <p class="entradilla">
+    Casi todo el software educativo está pensado para centros reglados: cursos
+    que empiezan en septiembre, familias, boletines de notas. Una academia de
+    oposiciones funciona de otra manera.
+  </p>
+
+  <p>
+    Vosotros tenéis alumnado que entra en cualquier mes, temarios que cambian
+    cuando cambia una ley, convocatorias que salen sin avisar, y gente que se
+    matricula de una parte y no de otra. Y tenéis un problema que ningún
+    programa de colegios contempla: <strong>el alumno que deja de entrar y no
+    dice nada.</strong>
+  </p>
+
+  <p>
+    Por eso casi todas las academias acaban con dos o tres herramientas mal
+    pegadas: una para la gestión, un campus virtual por otro lado, y una hoja de
+    cálculo en medio que sabe manejar una sola persona.
+  </p>
+
+  <div class="destacado">
+    <p class="cita">
+      Geminis hace las dos cosas: lleva la academia y da clase. Y las dos con
+      los mismos datos, de modo que la matrícula que firma hoy la secretaria es
+      el acceso que tiene esta tarde el alumno en el móvil.
+    </p>
+  </div>
+
+  <h3>Lo que vais a ver en las páginas siguientes</h3>
+  <ul class="limpia">
+    <li><b>Traer lo que ya tenéis</b> sin miedo, porque se puede deshacer.</li>
+    <li><b>Vuestro temario organizado como trabajáis vosotros</b>, no como se le
+      ocurrió a un programador.</li>
+    <li><b>Abrir los temas al ritmo de la clase</b>, distinto para el grupo de
+      mañana y el de tarde.</li>
+    <li><b>Que cada alumno vea exactamente lo que ha pagado</b>, ni un PDF más.</li>
+    <li><b>Una IA que responde con vuestro material</b> y que no se salta esa
+      barrera.</li>
+    <li><b>Un aviso cuando alguien lleva un mes sin aparecer</b>, mientras
+      todavía se puede recuperar.</li>
+    <li><b>El BOE revisado cada mañana</b> por si sale lo vuestro.</li>
+  </ul>
+
+  <div class="crece"></div>
+  <div class="aviso">
+    <p><strong>Una advertencia sobre este manual.</strong> Las capturas están
+    tomadas de una academia de demostración con datos inventados pero reales de
+    verdad: alumnos, temario, preguntas y normativa. Nada está retocado. Si algo
+    aparece vacío es porque en esa demo está vacío, y preferimos enseñarlo así.</p>
+  </div>
+</section>
+
+<!-- ── IMPORTAR ─────────────────────────────────────────────────────────── -->
+<section class="pagina" data-seccion="Traer vuestros alumnos" data-pag="4">
+  <p class="rotulo">Lo primero de todo</p>
+  <h2>Tengo 400 alumnos en otro sitio</h2>
+  <p class="entradilla">
+    Es la primera pregunta que nos hace todo el mundo, y es la correcta. Cambiar
+    de programa da miedo porque casi siempre significa perder cosas.
+  </p>
+
+  <figure>
+    <img src="capturas/a-importar.png" alt="Pantalla de importación">
+    <figcaption><b>Manager · Importar.</b> Se arrastra el Excel que ya tenéis.
+    No hace falta prepararlo con un formato concreto.</figcaption>
+  </figure>
+
+  <div class="paso"><div class="num">1</div><div class="texto">
+    <b>Arrastráis vuestro Excel o CSV</b>
+    <p>El que tengáis. Con las columnas que tengáis y en el orden que tengáis.</p>
+  </div></div>
+
+  <div class="paso"><div class="num">2</div><div class="texto">
+    <b>El programa propone qué es cada columna</b>
+    <p>Reconoce nombre, apellidos, DNI, teléfono, correo y fecha de alta. Si se
+    equivoca, lo corregís vosotros con un desplegable.</p>
+  </div></div>
+
+  <div class="paso"><div class="num">3</div><div class="texto">
+    <b>Se simula antes de tocar nada</b>
+    <p>Os dice exactamente: <em>«se crearán 4, se actualizará 1, hay 2 con
+    errores»</em>, y cuáles son los dos que fallan y por qué. En este momento
+    todavía no se ha escrito nada en la base de datos.</p>
+  </div></div>
+
+  <div class="paso"><div class="num">4</div><div class="texto">
+    <b>Y si sale mal, se deshace</b>
+    <p>Un botón. Vuelve todo al estado anterior, incluidas las matrículas que se
+    hubieran creado.</p>
+  </div></div>
+
+  <div class="destacado">
+    <p class="cita">Podéis probar sin miedo. Si el archivo venía mal, se deshace
+    y la academia queda como estaba.</p>
+  </div>
+
+  <p>
+    Lo mismo sirve para el <strong>banco de preguntas</strong>. Si tenéis veinte
+    años de tests en hojas de cálculo, se importan igual: se avisa de las
+    repetidas —que en un banco viejo son muchas— y entran en borrador para que
+    las reviséis antes de que las vea nadie.
+  </p>
+
+  <div class="crece"></div>
+  <div class="aviso">
+    <p><strong>La migración va incluida.</strong> No es un servicio aparte que
+    se cobra: si vuestros datos vienen de un programa raro, los preparamos
+    nosotros. Es el único momento difícil de cambiar de sistema y no nos parece
+    razonable cobrarlo.</p>
+  </div>
+</section>
+
+<!-- ── TEMARIO ──────────────────────────────────────────────────────────── -->
+<section class="pagina" data-seccion="Vuestro temario" data-pag="5">
+  <p class="rotulo">El contenido</p>
+  <h2>Vuestro temario, con vuestros nombres</h2>
+  <p class="entradilla">
+    Cada academia organiza el material a su manera y le pone los nombres que usa
+    en clase. Un programa que imponga su estructura obliga a trabajar de una
+    forma que no es la vuestra.
+  </p>
+
+  <figure>
+    <img src="capturas/a-arbol-temario.png" alt="Árbol del temario">
+    <figcaption><b>Manager · Contenido.</b> El árbol lo montáis vosotros:
+    bloques, temas, apartados y los nombres que uséis.</figcaption>
+  </figure>
+
+  <p>
+    En la demo hay apartados llamados <em>«Programación de aula»</em> y
+    <em>«Situaciones de aprendizaje»</em>. No los hemos puesto nosotros: los
+    escribe la academia. Hasta hace poco se llamaban de otra forma y volverán a
+    cambiar. Si esos nombres estuvieran dentro del programa tendríais que
+    esperar a que los actualizáramos.
+  </p>
+
+  <h3>Lo que se decide rama por rama</h3>
+  <ul class="limpia">
+    <li><b>Si se puede descargar o solo leer en pantalla.</b> Con marca de agua
+      opcional con el nombre del alumno.</li>
+    <li><b>Quién lo ve.</b> Por curso, por grupo o por alumno concreto.</li>
+    <li><b>Versiones.</b> Cuando subís un PDF corregido, el anterior no se
+      pierde: queda como versión antigua.</li>
+  </ul>
+
+  <h3>Subir una carpeta entera de una vez</h3>
+  <p>
+    Hay un asistente al que se le suelta la carpeta con los cincuenta PDF del
+    temario. Lee los nombres de los archivos, propone el árbol y os lo enseña
+    para que lo corrijáis antes de crear nada.
+  </p>
+
+  <div class="aviso">
+    <p><strong>Con honestidad, sobre la descarga.</strong> Ninguna web del mundo
+    impide una captura de pantalla, y quien os diga lo contrario os está
+    engañando. Lo que se consigue con la lectura en pantalla y la marca de agua
+    es que compartir el material cueste trabajo y deje rastro de quién lo hizo.</p>
+  </div>
+</section>
+
+<!-- ── RITMO ────────────────────────────────────────────────────────────── -->
+<section class="pagina" data-seccion="El ritmo del temario" data-pag="6">
+  <p class="rotulo">Lo que más se usa</p>
+  <h2>El profesor marca el ritmo</h2>
+  <p class="entradilla">
+    Subís el temario entero el primer día. Pero el alumnado solo ve por dónde va
+    la clase.
+  </p>
+
+  <figure>
+    <img src="capturas/a-ritmo.png" alt="Ritmo del temario">
+    <figcaption><b>Manager · Contenido · Ritmo del temario.</b> Un botón
+    «Hasta aquí» en cada tema, y un contador de cuántos hay abiertos.</figcaption>
+  </figure>
+
+  <p>
+    Se pulsa <strong>«Hasta aquí»</strong> en el tema por el que va la clase y
+    el alumnado ve hasta ahí. Cuando avanzáis, abrís el siguiente. Si el grupo
+    de mañana va más adelantado que el de tarde, <strong>cada grupo ve el
+    suyo</strong>: el mismo material, sin duplicar cursos ni mantener dos
+    copias.
+  </p>
+
+  <div class="destacado">
+    <p class="cita">
+      Y si un alumno se sabe la dirección de un tema todavía cerrado y la
+      escribe a mano en el navegador, no existe para él. No está escondido: no
+      está.
+    </p>
+  </div>
+
+  <p>
+    Esa distinción importa más de lo que parece. Muchos programas ocultan el
+    enlace en el menú pero sirven el archivo a quien lo pida. Aquí la
+    comprobación está en el servidor, en el mismo punto por el que pasa todo lo
+    demás, y hay pruebas automáticas que lo verifican en cada cambio del
+    programa.
+  </p>
+
+  <h3>Los tests siguen el mismo ritmo</h3>
+  <p>
+    Un alumno con tres temas abiertos solo puede examinarse de esos tres. No
+    aparecen las preguntas de los que todavía no habéis dado, ni siquiera en el
+    test aleatorio.
+  </p>
+</section>
+
+<!-- ── ACCESO ───────────────────────────────────────────────────────────── -->
+<section class="pagina" data-seccion="Quién ve qué" data-pag="7">
+  <p class="rotulo">Los packs los inventáis vosotros</p>
+  <h2>Cada alumno ve lo que ha pagado</h2>
+  <p class="entradilla">
+    Curso completo, solo temario, solo tests, temario más clases presenciales.
+    Cada academia vende como quiere, y el programa no os obliga a vender de una
+    forma concreta.
+  </p>
+
+  <figure>
+    <img src="capturas/a-ficha-alumno.png" alt="Ficha de un alumno">
+    <figcaption><b>Manager · Alumnos · ficha.</b> De un vistazo, qué tiene
+    contratado cada persona.</figcaption>
+  </figure>
+
+  <p>
+    Desde la ficha se le da o se le quita acceso a una parte concreta
+    <strong>sin tocar su matrícula</strong>. Sirve para el alumno que amplía a
+    mitad de curso, para el que se descuelga de una parte, y para el que os pide
+    probar una semana.
+  </p>
+
+  <h3>Y la barrera es de verdad</h3>
+  <p>
+    Un alumno que ha comprado solo el pack de tests <strong>no ve el
+    temario</strong>: ni la sección en el menú, ni los PDF, ni el buscador se lo
+    devuelve. Y —esto es lo que casi nadie comprueba— <strong>tampoco lo
+    consigue preguntándole a la inteligencia artificial</strong>. Es la misma
+    barrera, no una segunda barrera puesta después.
+  </p>
+
+  <div class="aviso">
+    <p><strong>Comprobado, no prometido.</strong> Hay una prueba automática que
+    coge un alumno con acceso restringido, le hace preguntas sobre el material
+    que no ha pagado y verifica que recupera <strong>cero</strong> fragmentos.
+    Se ejecuta sobre los 32 apartados del temario de la demo, uno por uno, en
+    cada cambio del programa.</p>
+  </div>
+
+  <h3>Además</h3>
+  <ul class="limpia">
+    <li><b>Límite de dispositivos por alumno.</b> Vosotros ponéis cuántos. Sirve
+      contra la cuenta compartida entre seis personas.</li>
+    <li><b>Suspensión automática al devolver un recibo</b>, si queréis activarla.</li>
+  </ul>
+</section>
+
+<!-- ── TESTS ────────────────────────────────────────────────────────────── -->
+<section class="pagina" data-seccion="Tests y simulacros" data-pag="8">
+  <p class="rotulo">Evaluación</p>
+  <h2>Tests que se corrigen solos, y exámenes que no</h2>
+  <p class="entradilla">
+    El tipo test se corrige solo. El supuesto y el desarrollo los corrige una
+    persona, porque no hay otra manera de hacerlo bien.
+  </p>
+
+  <figure class="corta">
+    <img src="capturas/a-tests.png" alt="Banco de preguntas">
+    <figcaption><b>Manager · Tests.</b> El banco de preguntas por tema, con su
+    estado y su revisión.</figcaption>
+  </figure>
+
+  <h3>Lo que hace el programa</h3>
+  <ul class="limpia">
+    <li><b>Test por tema, aleatorio y de mis errores.</b> El sistema se acuerda
+      de lo que cada alumno falla y se lo devuelve.</li>
+    <li><b>Simulacros con reloj y penalización</b> del examen real, y el
+      percentil frente al resto.</li>
+    <li><b>Repaso programado.</b> Cada pregunta vuelve justo antes de que se
+      olvide. El alumno no organiza nada.</li>
+    <li><b>Estadísticas por pregunta.</b> Si una la falla el 90 %, a lo mejor
+      no es el tema: es la pregunta.</li>
+    <li><b>Exámenes de desarrollo con reloj</b> y guardado automático.</li>
+  </ul>
+
+  <figure>
+    <img src="capturas/c-test-correccion.png" alt="Corrección de un test">
+    <figcaption><b>Lo que ve el alumno al entregar.</b> En verde la correcta,
+    en rojo la que marcó. Debajo de cada fallo, la explicación del preparador y
+    el botón «¿Por qué he fallado?». Sin que la academia corrija nada.</figcaption>
+  </figure>
+
+</section>
+
+<!-- ── CAMPUS ───────────────────────────────────────────────────────────── -->
+<section class="pagina" data-seccion="La app del alumnado" data-pag="9">
+  <p class="rotulo">El otro lado</p>
+  <h2>La app del alumnado</h2>
+  <p class="entradilla">
+    Se instala desde el navegador, se añade a la pantalla de inicio del teléfono
+    y se abre como una aplicación. Sin pasar por ninguna tienda de apps, sin
+    esperar aprobaciones y sin pagar comisión a nadie.
+  </p>
+
+  <div class="moviles">
+    <img src="capturas/m-inicio.png" alt="Inicio en el móvil">
+    <img src="capturas/m-estudiar.png" alt="Estudiar en el móvil">
+    <img src="capturas/m-tests.png" alt="Tests en el móvil">
+    <img src="capturas/m-ia.png" alt="La IA en el móvil">
+  </div>
+
+  <figure>
+    <img src="capturas/c-inicio.png" alt="Campus del alumno">
+    <figcaption><b>Campus · inicio.</b> Lo primero que ve el alumno: qué le toca
+    hoy y por qué, su progreso y la próxima clase.</figcaption>
+  </figure>
+
+  <h3>Lo que puede hacer desde el teléfono</h3>
+  <ul class="limpia">
+    <li>Estudiar lo que tiene contratado y <b>descargarlo para el metro</b>.</li>
+    <li>Hacer tests, simulacros y exámenes con reloj.</li>
+    <li>Ver el calendario, entrar a las salas online y leer el muro.</li>
+    <li>Preguntarle a la IA sobre el temario.</li>
+  </ul>
+
+  <div class="aviso">
+    <p><strong>Funciona sin cobertura.</strong> Los temas descargados se leen
+    en el metro. Es una hora de estudio ganada al día en vez de perdida.</p>
+  </div>
+</section>
+
+<!-- ── IA 1 ─────────────────────────────────────────────────────────────── -->
+<section class="pagina" data-seccion="Geminis IA" data-pag="10">
+  <p class="rotulo">Inteligencia artificial</p>
+  <h2>Una IA que no os contradice</h2>
+  <p class="entradilla">
+    El problema de poner un chatbot en una academia no es que no sepa: es que
+    sabe demasiado, y lo que sabe no es lo que vosotros enseñáis.
+  </p>
+
+  <figure>
+    <img src="capturas/c-ia.png" alt="La IA del alumno">
+    <figcaption><b>Campus · Geminis IA.</b> Responde con el material de la
+    academia y cita el documento y el fragmento de donde lo saca.</figcaption>
+  </figure>
+
+  <p>
+    Geminis IA <strong>solo lee vuestro material</strong>. No busca en internet,
+    no completa con lo que recuerda y no mezcla la ley de otra comunidad
+    autónoma. Y cita siempre de dónde sale cada dato, para que el alumno pueda
+    ir al tema y comprobarlo.
+  </p>
+
+  <p>
+    Si no encuentra la respuesta en vuestro temario, lo dice. Preferimos un
+    «no lo sé» a una respuesta inventada que luego tenéis que desmentir en
+    clase.
+  </p>
+
+  <div class="destacado">
+    <p class="cita">
+      Y cuando la IA genera preguntas para vosotros, entran siempre como
+      borrador. Nunca publica nada. La última palabra es del preparador,
+      siempre.
+    </p>
+  </div>
+
+  <h3>No cuesta nada al mes</h3>
+  <p>
+    Geminis lleva su propio motor dentro del servidor. <strong>No hay que
+    contratar ninguna API</strong> ni pagar por consulta, y con esa
+    configuración <strong>vuestro temario no sale del servidor</strong>: no se
+    envía a ninguna empresa de fuera.
+  </p>
+  <p>
+    Si algún día queréis respuestas más redactadas, se conecta un modelo externo
+    y la barrera de permisos es exactamente la misma. En ese caso el consumo se
+    mide por academia, por persona y por funcionalidad, y lo veis en euros.
+  </p>
+</section>
+
+<!-- ── IA 2 ─────────────────────────────────────────────────────────────── -->
+<section class="pagina" data-seccion="Geminis IA" data-pag="11">
+  <p class="rotulo">Inteligencia artificial</p>
+  <h2>La parte que sorprende: os conoce</h2>
+  <p class="entradilla">
+    Responder preguntas lo hace cualquiera. Lo que separa a Geminis de un
+    buscador es que sabe cómo va cada alumno.
+  </p>
+
+  <h3>«Geminis te propone»</h3>
+  <p>
+    En la portada del Campus, cada mañana, una propuesta concreta. Y nunca sin
+    el motivo delante: no dice <em>«estudia el tema 4»</em>, dice <em>«llevas
+    doce fallos de veinte en el tema 4»</em>.
+  </p>
+  <div class="destacado">
+    <p class="cita">Una recomendación sin el dato delante no la sigue nadie.</p>
+  </div>
+
+  <h3>«¿Por qué he fallado?»</h3>
+  <p>
+    En la corrección de un test, en cada pregunta fallada, hay un botón. El
+    momento en que más se aprende es justo después de equivocarse, y es
+    justo cuando no tenéis a nadie delante para explicárselo. Ahí le da la
+    explicación del preparador y la refuerza con lo que dice vuestro temario,
+    citando la página.
+  </p>
+
+  <figure>
+    <img src="capturas/a-ia.png" alt="Panel de IA de la academia">
+    <figcaption><b>Manager · IA.</b> El copiloto del preparador y el consumo,
+    medido por persona y por funcionalidad.</figcaption>
+  </figure>
+
+  <h3>El copiloto del preparador</h3>
+  <ul class="limpia">
+    <li><b>Genera preguntas</b> a partir de un tema vuestro. En borrador.</li>
+    <li><b>Resume y esquematiza</b> un documento largo.</li>
+    <li><b>Propone la explicación</b> de una pregunta que no la tiene.</li>
+  </ul>
+  <p>
+    Todo entra como propuesta. Nada se publica sin que alguien de la academia lo
+    haya leído y aceptado.
+  </p>
+</section>
+
+<!-- ── ANALÍTICA ────────────────────────────────────────────────────────── -->
+<section class="pagina" data-seccion="Analítica" data-pag="12">
+  <p class="rotulo">Lo que ahorra dinero</p>
+  <h2>Quién se está desenganchando</h2>
+  <p class="entradilla">
+    Un alumno no se da de baja de golpe. Deja de entrar, deja de hacer tests,
+    falta dos veces, y un mes después pide la baja. Para entonces ya no hay nada
+    que hacer.
+  </p>
+
+  <figure>
+    <img src="capturas/a-analitica.png" alt="Analítica y alumnos en riesgo">
+    <figcaption><b>Manager · Analítica.</b> «Alumnos que requieren atención»,
+    con el motivo de cada uno y su última actividad.</figcaption>
+  </figure>
+
+  <p>
+    No es un algoritmo que no podáis discutir. Os dice exactamente por qué sale
+    cada persona: <strong>días sin entrar, tests sin hacer, material sin abrir,
+    faltas a clase, resultados que bajan</strong>. Vosotros decidís a quién
+    llamáis y qué le decís.
+  </p>
+
+  <div class="destacado">
+    <p class="cita">
+      Un solo alumno que no se da de baja paga el programa entero. Si con esto
+      recuperáis uno al mes, ya está amortizado.
+    </p>
+  </div>
+
+  <h3>Y lo demás</h3>
+  <ul class="limpia">
+    <li><b>Rendimiento por tema y por grupo.</b> Dónde se atraganta la gente.</li>
+    <li><b>Preguntas que más se fallan.</b> A veces es el tema; a veces es la
+      pregunta.</li>
+    <li><b>Actividad y uso del material.</b> Qué se abre y qué no lo abre nadie.</li>
+  </ul>
+</section>
+
+<!-- ── BOE ──────────────────────────────────────────────────────────────── -->
+<section class="pagina" data-seccion="El radar del BOE" data-pag="13">
+  <p class="rotulo">Mientras dormís</p>
+  <h2>El BOE, cada mañana</h2>
+  <p class="entradilla">
+    Nos decís qué oposiciones preparáis. El servidor mira el Boletín todas las
+    mañanas. Vosotros no tenéis que abrir nada.
+  </p>
+
+  <figure>
+    <img src="capturas/a-convocatorias.png" alt="Radar de convocatorias">
+    <figcaption><b>Manager · Convocatorias.</b> Las vigilancias activas y lo que
+    el radar ha encontrado.</figcaption>
+  </figure>
+
+  <p>
+    Si sale algo de lo vuestro, os llega un correo. Y con un clic en
+    <strong>«Aceptar y crear»</strong> tenéis la convocatoria dada de alta, con
+    sus apartados, lista para subir el temario.
+  </p>
+
+  <div class="destacado">
+    <p class="cita">
+      Podéis convocar a vuestros alumnos el mismo día que sale la convocatoria,
+      no tres días después cuando ya lo han visto en otro sitio.
+    </p>
+  </div>
+
+  <p>
+    En una academia de oposiciones esto no es una comodidad. El día que sale una
+    convocatoria grande es el día que más matrículas se firman en todo el año, y
+    llegar el primero cambia la cifra.
+  </p>
+</section>
+
+<!-- ── NORMATIVA ────────────────────────────────────────────────────────── -->
+<section class="pagina" data-seccion="Normativa" data-pag="14">
+  <p class="rotulo">El temario que se queda viejo</p>
+  <h2>Cuando cambia una ley</h2>
+  <p class="entradilla">
+    Cambia un artículo y, de repente, no sabéis cuántos temas y cuántas
+    preguntas de vuestro banco han quedado mal. Normalmente se descubre porque
+    un alumno lo dice en clase.
+  </p>
+
+  <figure>
+    <img src="capturas/a-normativa.png" alt="Normativa">
+    <figcaption><b>Manager · Normativa.</b> Las normas y sus artículos,
+    enlazados con los temas y las preguntas que los explican.</figcaption>
+  </figure>
+
+  <p>
+    Cuando registráis que un artículo ha cambiado, el sistema os dice
+    <strong>qué temas y qué preguntas dependen de él</strong> y los marca para
+    que los reviséis.
+  </p>
+
+  <div class="aviso">
+    <p><strong>No toca vuestro contenido.</strong> Marca, avisa y lista. La
+    decisión de qué se reescribe y cómo es vuestra, siempre. Un programa que
+    corrigiera el temario por su cuenta sería mucho peor que uno que no avisa.</p>
+  </div>
+
+  <p>
+    Es de las cosas que menos se enseñan en una demostración y más agradecen las
+    academias al cabo de un año, cuando llega la primera reforma.
+  </p>
+</section>
+
+<!-- ── COBROS ───────────────────────────────────────────────────────────── -->
+<section class="pagina" data-seccion="Cobros y facturas" data-pag="15">
+  <p class="rotulo">El dinero</p>
+  <h2>Quién ha pagado y quién debe</h2>
+
+  <div class="dos">
+    <figure>
+      <img src="capturas/a-pagos.png" alt="Pagos">
+      <figcaption><b>Manager · Pagos.</b></figcaption>
+    </figure>
+    <figure>
+      <img src="capturas/a-remesas.png" alt="Remesas SEPA">
+      <figcaption><b>Manager · Remesas.</b></figcaption>
+    </figure>
+  </div>
+
+  <ul class="limpia">
+    <li><b>Recibos en efectivo, tarjeta y transferencia.</b></li>
+    <li><b>Cargo mensual en cuenta.</b> Se genera la remesa SEPA y se sube al
+      banco tal cual.</li>
+    <li><b>Las transferencias se casan solas</b> contra el extracto del banco.</li>
+    <li><b>Morosidad.</b> Quién debe, cuánto y desde cuándo.</li>
+    <li><b>Suspensión automática</b> del acceso al devolver un recibo, si la
+      activáis.</li>
+  </ul>
+
+  <h3>Facturas como pide la ley</h3>
+  <figure>
+    <img src="capturas/a-facturas.png" alt="Facturas">
+    <figcaption><b>Manager · Facturas.</b> Series con numeración correlativa e
+    inmutable.</figcaption>
+  </figure>
+  <p>
+    IVA por línea, exención del artículo 20.Uno.9º para la enseñanza,
+    rectificativas y exportación para la gestoría.
+  </p>
+
+  <div class="aviso">
+    <p><strong>El IBAN va cifrado.</strong> Se guarda cifrado en la base de
+    datos y <strong>nunca se envía entero al navegador</strong>: en pantalla se
+    ven los últimos cuatro dígitos. Tampoco queda escrito en el registro de
+    auditoría.</p>
+  </div>
+</section>
+
+<!-- ── AGENDA ───────────────────────────────────────────────────────────── -->
+<section class="pagina" data-seccion="Agenda y comunicación" data-pag="16">
+  <p class="rotulo">El día a día</p>
+  <h2>Agenda, clases y comunicación</h2>
+
+  <div class="dos">
+    <figure>
+      <img src="capturas/a-agenda.png" alt="Agenda">
+      <figcaption><b>Manager · Agenda.</b> Mes y semana.</figcaption>
+    </figure>
+    <figure>
+      <img src="capturas/a-comunicaciones.png" alt="Comunicaciones">
+      <figcaption><b>Manager · Comunicaciones.</b></figcaption>
+    </figure>
+  </div>
+
+  <h3>Agenda y asistencia</h3>
+  <ul class="limpia">
+    <li>Clases con su tema, su profesor y su aula.</li>
+    <li><b>Asistencia con cinco estados</b>, no solo «vino / no vino».</li>
+    <li><b>Salas online permanentes</b> con entrada controlada: el enlace no
+      sirve para quien no esté matriculado.</li>
+  </ul>
+
+  <h3>Hablar con el alumnado</h3>
+  <ul class="limpia">
+    <li><b>Muro de clase</b> con comentarios. El profesor escribe a su gente y
+      el alumnado se ayuda entre sí.</li>
+    <li><b>Mensajes uno a uno</b>, privados, dentro del sistema. Se acaba el
+      grupo de WhatsApp con el móvil personal del preparador.</li>
+    <li><b>Envíos a muchos</b>: a un grupo, a un curso o a quien deba dinero.</li>
+    <li><b>Avisos automáticos</b> de tareas nuevas y correcciones publicadas.</li>
+  </ul>
+
+  <div class="destacado">
+    <p class="cita">
+      Que la conversación con el alumnado esté dentro del sistema no es solo
+      comodidad: es que cuando un preparador se va, la conversación se queda en
+      la academia.
+    </p>
+  </div>
+</section>
+
+<!-- ── SEGURIDAD ────────────────────────────────────────────────────────── -->
+<section class="pagina" data-seccion="Vuestros datos" data-pag="17">
+  <p class="rotulo">La pregunta incómoda</p>
+  <h2>¿Y si otra academia ve mi temario?</h2>
+  <p class="entradilla">
+    Es la pregunta que más nos hacen y la que más en serio nos tomamos. La
+    respuesta corta: no puede. La larga merece esta página.
+  </p>
+
+  <p>
+    Geminis guarda a todas las academias en la misma base de datos, como casi
+    todo el software de este tipo. La diferencia está en cómo se separan.
+    <strong>No es que el temario de otra academia esté oculto: es que la base de
+    datos no lo devuelve.</strong> La separación está en el motor de la base de
+    datos, por debajo del programa, de modo que un fallo de programación no
+    puede saltársela.
+  </p>
+
+  <div class="cifras">
+    <div class="cifra"><b>57</b><span>políticas de aislamiento activas y forzadas</span></div>
+    <div class="cifra"><b>432</b><span>pruebas automáticas en cada cambio</span></div>
+    <div class="cifra"><b>43</b><span>ataques lanzados contra el sistema</span></div>
+    <div class="cifra"><b>0</b><span>que consiguieron entrar</span></div>
+  </div>
+
+  <p>
+    En septiembre de 2026 el sistema pasó una auditoría de seguridad completa:
+    se buscaron fallos reales, se corrigieron y se añadió una prueba por cada
+    uno para que no puedan volver. <strong>El informe está a disposición de
+    cualquier academia que lo pida</strong>, con lo que funciona y con lo que
+    queda pendiente. Un informe que solo dijera cosas buenas no valdría nada.
+  </p>
+
+  <h3>Y además</h3>
+  <ul class="limpia">
+    <li><b>Nadie de la academia puede ver la contraseña de un alumno.</b> Ni
+      nosotros. Se guardan de forma que no se pueden deshacer.</li>
+    <li><b>El alumno se cambia la contraseña solo</b>, con un enlace que caduca
+      en una hora y sirve una sola vez.</li>
+    <li><b>Registro de auditoría</b>: quién hizo qué y cuándo.</li>
+    <li><b>Soporte auditado</b>: si necesitamos entrar a ayudaros, queda
+      registrado, y vosotros lo veis.</li>
+  </ul>
+
+  <div class="destacado">
+    <p class="cita">
+      Y si algún día queréis iros, os lleváis todos vuestros datos en un clic.
+      Un programa del que no se puede salir no merece confianza.
+    </p>
+  </div>
+</section>
+
+<!-- ── FAQ ──────────────────────────────────────────────────────────────── -->
+<section class="pagina" data-seccion="Preguntas frecuentes" data-pag="18">
+  <p class="rotulo">Sin rodeos</p>
+  <h2>Preguntas que nos hacen siempre</h2>
+
+  <h4>¿Cuánto tardo en tenerlo funcionando?</h4>
+  <p>Importar el alumnado: minutos. Subir el temario: lo que tardéis en
+  arrastrarlo. Podéis empezar con una oposición y crecer.</p>
+
+  <h4>¿Tengo que cambiarlo todo de golpe?</h4>
+  <p>No. Lo habitual es empezar por la gestión y el cobro, y añadir el campus
+  cuando el temario esté subido. Los módulos se contratan cuando hacen falta.</p>
+
+  <h4>¿Y si mis profesores no son de ordenadores?</h4>
+  <p>El profesor solo necesita tres cosas: abrir temas según avanza, poner las
+  notas y escribir en el muro. Hay un manual dentro del propio programa, y
+  formación incluida en la puesta en marcha.</p>
+
+  <h4>¿La IA se va a inventar cosas?</h4>
+  <p>Si no encuentra la respuesta en vuestro material, lo dice. Y no puede
+  publicar nada por su cuenta: todo lo que genera entra como borrador.</p>
+
+  <h4>¿Puedo evitar que se descarguen mis PDF?</h4>
+  <p>Sí, rama por rama, con marca de agua opcional. Y con la honestidad de la
+  página 5: nadie impide una captura de pantalla.</p>
+
+  <h4>¿Qué pasa si cambia una ley?</h4>
+  <p>El sistema os dice qué temas y qué preguntas dependen del artículo que ha
+  cambiado y los marca para revisión. No toca vuestro contenido.</p>
+
+  <h4>¿Y si tengo veinte años de preguntas en un Excel?</h4>
+  <p>Se importan, se avisa de las repetidas, se simula antes de tocar nada y
+  entran en borrador para que las reviséis.</p>
+
+  <h4>¿Hay permanencia?</h4>
+  <p>No. Ni permanencia ni coste de alta. Si el programa no os sirve, lo dejáis
+  y os lleváis vuestros datos.</p>
+
+  <h4>¿Dónde están alojados los datos?</h4>
+  <p>En servidores en la Unión Europea, con copias de seguridad diarias.
+  Contrato de encargado del tratamiento incluido, como exige el RGPD.</p>
+
+</section>
+
+<!-- ── PRECIOS 1 ────────────────────────────────────────────────────────── -->
+<section class="pagina" data-seccion="Precios" data-pag="19">
+  <p class="rotulo">Tarifa</p>
+  <h2>Se paga por lo que se usa</h2>
+  <p class="entradilla">
+    Una academia no compra «Geminis»: compra las partes que necesita. Si vuestra
+    gestoría ya hace las facturas, no compréis la facturación.
+  </p>
+
+  <table class="compacta">
+    <thead>
+      <tr>
+        <th style="width:52%">Módulo</th>
+        <th class="precio">Al mes</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr class="nucleo">
+        <td><strong>Núcleo</strong> <span class="que">Alumnado, matrículas, oposiciones, cursos y grupos, profesorado y permisos, importación, auditoría y copias. Es la base y no se puede quitar.</span></td>
+        <td class="precio">49 €</td>
+      </tr>
+      <tr>
+        <td><strong>Temario</strong> <span class="que">Árbol de contenido, asistente de subida, ritmo del temario, descarga y marca de agua, versiones.</span></td>
+        <td class="precio">39 €</td>
+      </tr>
+      <tr>
+        <td><strong>Tests y simulacros</strong> <span class="que">Banco de preguntas, importación con detección de repetidas, simulacros con reloj y penalización, repaso programado.</span></td>
+        <td class="precio">39 €</td>
+      </tr>
+      <tr>
+        <td><strong>Tareas y exámenes de desarrollo</strong> <span class="que">Supuestos y trabajos con plazo, exámenes escritos con reloj, corrección con nota y comentario.</span></td>
+        <td class="precio">29 €</td>
+      </tr>
+      <tr>
+        <td><strong>Agenda y clases</strong> <span class="que">Calendario, clases, asistencia con cinco estados, salas online permanentes.</span></td>
+        <td class="precio">24 €</td>
+      </tr>
+      <tr>
+        <td><strong>Cobros</strong> <span class="que">Recibos, cargo mensual en cuenta con el IBAN cifrado, remesas SEPA, suspensión por impago.</span></td>
+        <td class="precio">34 €</td>
+      </tr>
+      <tr>
+        <td><strong>Facturación</strong> <span class="que">Numeración correlativa, IVA por línea, exención del 20.Uno.9º, rectificativas, exportación para la gestoría. <em>Necesita Cobros.</em></span></td>
+        <td class="precio">24 €</td>
+      </tr>
+      <tr>
+        <td><strong>Comunicación</strong> <span class="que">Muro de clase, mensajes uno a uno, envíos a grupos, avisos automáticos.</span></td>
+        <td class="precio">19 €</td>
+      </tr>
+      <tr>
+        <td><strong>App del alumnado</strong> <span class="que">La aplicación instalable, estudio sin cobertura, tests y exámenes, calendario, muro, límite de dispositivos.</span></td>
+        <td class="precio">49 €</td>
+      </tr>
+      <tr>
+        <td><strong>Geminis IA</strong> <span class="que">Respuestas con vuestro material y citas, «¿por qué he fallado?», copiloto del preparador, plan diario. Sin contratar ninguna API. <em>Necesita Temario.</em></span></td>
+        <td class="precio">49 €</td>
+      </tr>
+      <tr>
+        <td><strong>Analítica</strong> <span class="que">Riesgo de abandono con su motivo, rendimiento por tema y grupo, preguntas más falladas.</span></td>
+        <td class="precio">19 €</td>
+      </tr>
+      <tr>
+        <td><strong>Normativa y radar del BOE</strong> <span class="que">Normas enlazadas con los temas, aviso de cambio legislativo, radar de convocatorias.</span></td>
+        <td class="precio">19 €</td>
+      </tr>
+      <tr class="total">
+        <td>Los doce módulos</td>
+        <td class="precio">393 €</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p style="font-size:9pt;color:var(--tinta-suave)">
+    Precios sin IVA, por academia y mes. Los módulos se añaden o se quitan
+    cuando queráis.
+  </p>
+</section>
+
+<!-- ── PRECIOS 2 ────────────────────────────────────────────────────────── -->
+<section class="pagina" data-seccion="Precios" data-pag="20">
+  <p class="rotulo">Tarifa</p>
+  <h2>Tres montajes para no elegir doce casillas</h2>
+  <p class="entradilla">
+    Nadie quiere configurar doce módulos el primer día. Estos tres cubren casi
+    todas las academias, y a partir de ahí se ajusta.
+  </p>
+
+  <div class="packs">
+    <div class="pack">
+      <h4>Esencial</h4>
+      <div class="euros">126 €</div>
+      <div class="mes">al mes, sin IVA</div>
+      <div class="para">Academia presencial que quiere dejar de llevar las matrículas y los cobros en hojas de cálculo.</div>
+      <ul>
+        <li>Núcleo</li>
+        <li>Agenda y clases</li>
+        <li>Cobros</li>
+        <li>Comunicación</li>
+      </ul>
+    </div>
+    <div class="pack destacada">
+      <h4>Online</h4>
+      <div class="euros">229 €</div>
+      <div class="mes">al mes, sin IVA</div>
+      <div class="para">Academia que vende temario y tests, con su app para el alumnado. El más contratado.</div>
+      <ul>
+        <li>Núcleo</li>
+        <li>Temario</li>
+        <li>Tests y simulacros</li>
+        <li>App del alumnado</li>
+        <li>Comunicación</li>
+        <li>Cobros</li>
+      </ul>
+    </div>
+    <div class="pack">
+      <h4>Completo</h4>
+      <div class="euros">393 €</div>
+      <div class="mes">al mes, sin IVA</div>
+      <div class="para">Todo, incluida la IA, la analítica de abandono y el radar del BOE.</div>
+      <ul>
+        <li>Los doce módulos</li>
+        <li>Geminis IA</li>
+        <li>Analítica</li>
+        <li>Normativa y BOE</li>
+        <li>Tareas y exámenes</li>
+        <li>Facturación</li>
+      </ul>
+    </div>
+  </div>
+
+  <h3>Y el tamaño de la academia</h3>
+  <p>
+    Los precios de arriba son para una academia de <strong>51 a 150 alumnos
+    activos</strong>. No nos parece razonable cobrarle lo mismo a una academia
+    de treinta personas que a una de quinientas, así que el precio se ajusta por
+    tramo:
+  </p>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Alumnado activo</th>
+        <th class="precio">Esencial</th>
+        <th class="precio">Online</th>
+        <th class="precio">Completo</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>Hasta 50</td><td class="precio">76 €</td><td class="precio">137 €</td><td class="precio">236 €</td></tr>
+      <tr><td>De 51 a 150</td><td class="precio">126 €</td><td class="precio">229 €</td><td class="precio">393 €</td></tr>
+      <tr><td>De 151 a 350</td><td class="precio">189 €</td><td class="precio">344 €</td><td class="precio">590 €</td></tr>
+      <tr><td>De 351 a 700</td><td class="precio">265 €</td><td class="precio">481 €</td><td class="precio">825 €</td></tr>
+      <tr><td>Más de 700</td><td class="precio" colspan="3">a convenir</td></tr>
+    </tbody>
+  </table>
+
+  <div class="aviso">
+    <p><strong>«Alumnado activo» es el que tiene matrícula viva ese mes.</strong>
+    El que se dio de baja en marzo no se paga en abril. No se cuentan las fichas
+    guardadas de años anteriores, que si no todo el mundo acabaría pagando por
+    su histórico.</p>
+  </div>
+</section>
+
+<!-- ── PRECIOS 3 ────────────────────────────────────────────────────────── -->
+<section class="pagina" data-seccion="Precios" data-pag="21">
+  <p class="rotulo">Tarifa</p>
+  <h2>Lo que va incluido siempre</h2>
+
+  <ul class="limpia">
+    <li><b>Alta e implantación: 0 €.</b> Sin cuota de entrada.</li>
+    <li><b>Migración de vuestros datos incluida.</b> Si vienen de un programa
+      raro, los preparamos nosotros.</li>
+    <li><b>Formación del equipo</b> en la puesta en marcha.</li>
+    <li><b>Sin permanencia.</b> Se da de baja cuando queráis.</li>
+    <li><b>Exportación completa de vuestros datos en un clic</b>, también el día
+      que os vayáis.</li>
+    <li><b>Actualizaciones y funciones nuevas</b>, sin coste añadido.</li>
+    <li><b>Copias de seguridad diarias</b> en la Unión Europea.</li>
+    <li><b>Soporte</b> por correo y teléfono en horario de oficina.</li>
+    <li><b>Vuestra marca</b> en lo que ve el alumnado.</li>
+  </ul>
+
+  <h3>Descuentos</h3>
+  <table>
+    <tbody>
+      <tr>
+        <td><strong>Pago anual</strong> <span class="que">Se pagan diez meses en lugar de doce.</span></td>
+        <td class="precio">−17 %</td>
+      </tr>
+      <tr>
+        <td><strong>Primeras academias</strong> <span class="que">Para las diez primeras, a cambio de poder contar que trabajáis con nosotros.</span></td>
+        <td class="precio">−50 % el primer año</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <h3>Puesto en perspectiva</h3>
+  <p>
+    Una academia de 150 alumnos que cobre 100 € al mes factura 15.000 € al mes.
+    El pack Completo son <strong>393 €</strong>: un <strong>2,6 %</strong> de lo
+    que ingresa, o <strong>2,62 € por alumno y mes</strong>.
+  </p>
+
+  <div class="destacado">
+    <p class="cita">
+      Dicho de otra manera: si la Analítica os avisa a tiempo de un solo alumno
+      que iba a dejarlo, y lo recuperáis, el programa ya se ha pagado ese mes.
+    </p>
+  </div>
+
+  <div class="crece"></div>
+
+  <div class="aviso">
+    <p><strong>Sobre la IA.</strong> Los 49 € del módulo son todo lo que cuesta:
+    el motor va dentro y no se paga por consulta. Si preferís conectar un modelo
+    externo más potente, ese consumo se factura aparte y a precio de coste, y lo
+    veis desglosado en euros por persona y por funcionalidad.</p>
+  </div>
+</section>
+
+<!-- ── CIERRE ───────────────────────────────────────────────────────────── -->
+<section class="pagina portada">
+  <div class="marca-portada"><span class="logo">G</span> Proyecto Geminis</div>
+  <div>
+    <h1>¿Lo vemos<br>funcionando?</h1>
+    <p class="bajada">
+      Veinte minutos, dos pantallas: la vuestra y la de vuestro alumno. Todo lo
+      que se toca en una aparece en la otra. Sin diapositivas.
+    </p>
+    <p class="bajada" style="margin-top:8mm">
+      Y si preferís probarlo vosotros, os montamos una academia de prueba con
+      vuestro propio temario, sin compromiso y sin pedir datos de pago.
+    </p>
+  </div>
+  <div class="pie">
+    <strong>Proyecto Geminis</strong><br>
+    Manual de presentación · septiembre de 2026<br>
+    Las cifras de seguridad citadas proceden de la auditoría de septiembre de
+    2026, disponible íntegra a petición.
+  </div>
+</section>
+
+</body>
+</html>

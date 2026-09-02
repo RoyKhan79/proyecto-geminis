@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { ArrowRight, CalendarClock, Sparkles, Video } from "lucide-react";
+import { ArrowRight, CalendarClock, Video } from "lucide-react";
 import { requireAcademy } from "@/lib/auth/context";
 import {
   loadGrants,
@@ -172,17 +172,6 @@ export default async function CampusHomePage() {
             )}
           </section>
 
-          <Card className="border-dashed">
-            <CardContent className="flex items-center gap-3 p-4 pt-4">
-              <IconTile tone="violet" size="sm">
-                <Sparkles />
-              </IconTile>
-              <p className="text-sm text-ink-muted">
-                La IA de Proyecto Geminis llegará en una próxima fase y responderá con el
-                material de tu academia, citando siempre de dónde sale cada dato.
-              </p>
-            </CardContent>
-          </Card>
         </>
       )}
     </>

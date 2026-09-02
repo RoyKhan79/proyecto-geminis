@@ -1,0 +1,425 @@
+/*
+ * ESTILO DE LOS MANUALES IMPRESOS
+ * ───────────────────────────────
+ * Se reutilizan los colores y las tipografías de la aplicación (Fraunces para
+ * los títulos, Manrope para el texto) para que el manual y el producto se
+ * parezcan. Si no hay conexión al generar el PDF, las alternativas locales
+ * mantienen el mismo carácter: una serif para titular y una sans para leer.
+ */
+@import url("https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Manrope:wght@400;500;600;700&display=swap");
+
+:root {
+  --tinta: #14181f;
+  --tinta-suave: #5b6472;
+  --tinta-tenue: #8b94a3;
+  --marca: #2b3fa8;
+  --marca-oscura: #1e2c7a;
+  --marca-clara: #eef1fb;
+  --oro: #9a7213;
+  --oro-claro: #fdf5e3;
+  --verde: #1f7a52;
+  --verde-claro: #e9f6f0;
+  --rojo: #b4342a;
+  --linea: #e3e6ec;
+  --papel: #ffffff;
+  --papel-suave: #f7f8fa;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: "Manrope", ui-sans-serif, system-ui, "Segoe UI", sans-serif;
+  color: var(--tinta);
+  font-size: 10.5pt;
+  line-height: 1.55;
+  background: var(--papel);
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+/* ── La página ─────────────────────────────────────────────────────────── */
+
+.pagina {
+  width: 210mm;
+  min-height: 297mm;
+  padding: 17mm 18mm 14mm;
+  position: relative;
+  page-break-after: always;
+  break-after: page;
+  display: flex;
+  flex-direction: column;
+  background: var(--papel);
+}
+.pagina:last-child { page-break-after: auto; break-after: auto; }
+
+/* Pie con el número, puesto a mano: el pie nativo de Chromium no admite
+   tipografía ni color, y aquí importa que case con el resto. */
+.pagina::after {
+  content: attr(data-pag);
+  position: absolute;
+  bottom: 9mm;
+  right: 18mm;
+  font-size: 8pt;
+  color: var(--tinta-tenue);
+  letter-spacing: 0.04em;
+}
+.pagina::before {
+  content: attr(data-seccion);
+  position: absolute;
+  bottom: 9mm;
+  left: 18mm;
+  font-size: 8pt;
+  color: var(--tinta-tenue);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.pagina.portada::before, .pagina.portada::after { content: none; }
+
+/* ── Portada ───────────────────────────────────────────────────────────── */
+
+.portada {
+  justify-content: space-between;
+  background: linear-gradient(160deg, #1b2559 0%, #2b3fa8 55%, #3d55c8 100%);
+  color: #fff;
+  padding: 26mm 20mm;
+}
+.portada h1 {
+  font-family: "Fraunces", ui-serif, Georgia, serif;
+  font-size: 40pt;
+  line-height: 1.05;
+  margin: 0 0 6mm;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+.portada .bajada {
+  font-size: 13pt;
+  line-height: 1.5;
+  color: #d6ddf7;
+  max-width: 130mm;
+  margin: 0;
+}
+.marca-portada {
+  display: flex;
+  align-items: center;
+  gap: 4mm;
+  font-size: 12pt;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+.logo {
+  width: 13mm; height: 13mm;
+  border-radius: 3.4mm;
+  background: #fff;
+  color: var(--marca);
+  display: flex; align-items: center; justify-content: center;
+  font-family: "Fraunces", serif;
+  font-size: 19pt; font-weight: 700;
+}
+.portada .pie {
+  font-size: 9.5pt;
+  color: #b9c4ee;
+  border-top: 1px solid rgba(255,255,255,.25);
+  padding-top: 5mm;
+}
+.portada .pie strong { color: #fff; }
+
+/* ── Títulos ───────────────────────────────────────────────────────────── */
+
+h2 {
+  font-family: "Fraunces", ui-serif, Georgia, serif;
+  font-size: 23pt;
+  font-weight: 600;
+  line-height: 1.15;
+  margin: 0 0 2mm;
+  letter-spacing: -0.015em;
+}
+h3 {
+  font-family: "Fraunces", ui-serif, Georgia, serif;
+  font-size: 14pt;
+  font-weight: 600;
+  margin: 5.5mm 0 2mm;
+  letter-spacing: -0.01em;
+}
+h4 {
+  font-size: 10.5pt;
+  font-weight: 700;
+  margin: 5mm 0 1.5mm;
+  color: var(--tinta);
+}
+.rotulo {
+  font-size: 8pt;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--marca);
+  margin: 0 0 2.5mm;
+}
+.entradilla {
+  font-size: 11.5pt;
+  line-height: 1.5;
+  color: var(--tinta-suave);
+  margin: 0 0 5mm;
+  max-width: 155mm;
+}
+
+p { margin: 0 0 3.5mm; }
+strong { font-weight: 700; }
+em { font-style: italic; }
+a { color: var(--marca); text-decoration: none; }
+
+/* ── Capturas ──────────────────────────────────────────────────────────── */
+
+figure {
+  margin: 0 0 4mm;
+  break-inside: avoid;
+}
+/*
+ * Las capturas son de 1440x900, que a lo ancho de la caja de texto salen a
+ * 109 mm de alto. Con dos por página no cabe nada más, así que se recortan por
+ * abajo: la parte de arriba de una pantalla es la que se entiende sin leerla
+ * entera, y es la que interesa enseñar.
+ */
+figure img {
+  width: 100%;
+  display: block;
+  border: 1px solid var(--linea);
+  border-radius: 2.5mm;
+  max-height: 72mm;
+  object-fit: cover;
+  object-position: top;
+}
+figure.entera img { max-height: none; object-fit: contain; }
+.dos figure img { max-height: 52mm; }
+figcaption {
+  font-size: 8.5pt;
+  color: var(--tinta-tenue);
+  margin-top: 1.8mm;
+  line-height: 1.4;
+}
+figcaption b { color: var(--tinta-suave); font-weight: 600; }
+
+.moviles {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4mm;
+  margin-bottom: 4mm;
+}
+.moviles img {
+  width: 100%;
+  display: block;
+  border: 1px solid var(--linea);
+  border-radius: 3mm;
+  max-height: 62mm;
+  object-fit: cover;
+  object-position: top;
+}
+
+.dos {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 5mm;
+}
+
+/* ── Piezas ────────────────────────────────────────────────────────────── */
+
+.destacado {
+  background: var(--marca-clara);
+  border-left: 3px solid var(--marca);
+  border-radius: 0 2mm 2mm 0;
+  padding: 3.5mm 5mm;
+  margin: 0 0 4mm;
+  break-inside: avoid;
+}
+.destacado p:last-child { margin-bottom: 0; }
+.destacado .cita {
+  font-family: "Fraunces", serif;
+  font-size: 12pt;
+  line-height: 1.4;
+  color: var(--marca-oscura);
+}
+
+.aviso {
+  background: var(--oro-claro);
+  border-left: 3px solid var(--oro);
+  border-radius: 0 2mm 2mm 0;
+  padding: 3.5mm 5mm;
+  margin: 0 0 4mm;
+  font-size: 9.5pt;
+  break-inside: avoid;
+}
+.aviso p:last-child { margin-bottom: 0; }
+
+ul, ol { margin: 0 0 4mm; padding-left: 5mm; }
+li { margin-bottom: 1.4mm; }
+ul.limpia { list-style: none; padding-left: 0; }
+ul.limpia li {
+  padding-left: 6mm;
+  position: relative;
+  margin-bottom: 2mm;
+}
+ul.limpia li::before {
+  content: "";
+  position: absolute;
+  left: 0; top: 2.1mm;
+  width: 2.6mm; height: 2.6mm;
+  border-radius: 50%;
+  background: var(--marca);
+}
+
+.cifras {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 3mm;
+  margin: 0 0 5mm;
+}
+.cifra {
+  border: 1px solid var(--linea);
+  border-radius: 2.5mm;
+  padding: 3.5mm;
+  text-align: center;
+  background: var(--papel-suave);
+}
+.cifra b {
+  display: block;
+  font-family: "Fraunces", serif;
+  font-size: 19pt;
+  line-height: 1.1;
+  color: var(--marca);
+  font-weight: 600;
+}
+.cifra span {
+  font-size: 8pt;
+  color: var(--tinta-suave);
+  line-height: 1.3;
+  display: block;
+  margin-top: 1mm;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 9.5pt;
+  margin: 0 0 5mm;
+  break-inside: avoid;
+}
+th {
+  text-align: left;
+  font-size: 8pt;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--tinta-tenue);
+  border-bottom: 1.5px solid var(--linea);
+  padding: 0 2mm 2mm 0;
+  font-weight: 700;
+}
+td {
+  padding: 2.4mm 2mm 2.4mm 0;
+  border-bottom: 1px solid var(--linea);
+  vertical-align: top;
+}
+td.precio, th.precio { text-align: right; padding-right: 0; white-space: nowrap; }
+td.precio { font-weight: 700; font-variant-numeric: tabular-nums; }
+tr.total td {
+  border-top: 1.5px solid var(--tinta);
+  border-bottom: none;
+  font-weight: 700;
+  padding-top: 3mm;
+}
+tr.nucleo td { background: var(--marca-clara); }
+td .que { color: var(--tinta-suave); font-size: 8.5pt; display: block; line-height: 1.35; }
+
+.packs {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4mm;
+  margin: 0 0 5mm;
+}
+.pack {
+  border: 1px solid var(--linea);
+  border-radius: 3mm;
+  padding: 4.5mm;
+  display: flex;
+  flex-direction: column;
+}
+.pack.destacada { border: 2px solid var(--marca); background: var(--marca-clara); }
+.pack h4 {
+  font-family: "Fraunces", serif;
+  font-size: 14pt;
+  margin: 0 0 1mm;
+  font-weight: 600;
+}
+.pack .euros {
+  font-family: "Fraunces", serif;
+  font-size: 24pt;
+  font-weight: 600;
+  color: var(--marca);
+  line-height: 1;
+  margin: 1.5mm 0 0.5mm;
+}
+.pack .mes { font-size: 8.5pt; color: var(--tinta-tenue); margin-bottom: 3mm; }
+.pack .para { font-size: 8.5pt; color: var(--tinta-suave); margin-bottom: 3mm; line-height: 1.4; }
+.pack ul { font-size: 8.5pt; padding-left: 4mm; margin: 0; }
+.pack li { margin-bottom: 1mm; }
+
+.indice { column-count: 2; column-gap: 10mm; font-size: 10pt; }
+.indice div {
+  display: flex;
+  justify-content: space-between;
+  gap: 3mm;
+  padding: 1.6mm 0;
+  border-bottom: 1px dotted var(--linea);
+  break-inside: avoid;
+}
+.indice span:last-child { color: var(--tinta-tenue); font-variant-numeric: tabular-nums; }
+
+.paso {
+  display: flex;
+  gap: 4mm;
+  margin-bottom: 4mm;
+  break-inside: avoid;
+}
+.paso .num {
+  flex: 0 0 7mm;
+  height: 7mm;
+  border-radius: 50%;
+  background: var(--marca);
+  color: #fff;
+  font-weight: 700;
+  font-size: 10pt;
+  display: flex; align-items: center; justify-content: center;
+}
+.paso .texto { flex: 1; }
+.paso .texto p { margin: 0; }
+.paso .texto b { display: block; margin-bottom: 0.8mm; }
+
+.ruta {
+  font-family: ui-monospace, "SF Mono", "Cascadia Mono", monospace;
+  font-size: 8.5pt;
+  background: var(--papel-suave);
+  border: 1px solid var(--linea);
+  border-radius: 1.5mm;
+  padding: 0.4mm 1.5mm;
+  white-space: nowrap;
+}
+
+.cierre {
+  margin-top: auto;
+  border-top: 1px solid var(--linea);
+  padding-top: 5mm;
+  font-size: 9pt;
+  color: var(--tinta-suave);
+}
+
+.crece { flex: 1; }
+
+/* La tarifa tiene doce filas con su descripción debajo. Con el espaciado
+   normal se sale de la página, así que va más apretada. */
+table.compacta { font-size: 9pt; }
+table.compacta td { padding: 1.7mm 2mm 1.7mm 0; }
+table.compacta td .que { font-size: 8pt; line-height: 1.3; }
+table.compacta tr.total td { padding-top: 2.2mm; }
+
+/* Una página con dos capturas grandes y lista larga necesita recortarlas algo
+   más. Se sigue viendo la cabecera y las primeras filas, que es lo que cuenta. */
+figure.corta img { max-height: 62mm; }
