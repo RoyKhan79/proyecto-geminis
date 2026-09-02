@@ -14,6 +14,7 @@ import {
   loadResumenAcademia,
   loadRiesgoAbandono,
   loadTemasProblematicos,
+  loadActividadSemanal,
   type NivelRiesgo,
 } from "@/server/analytics/queries";
 import {
@@ -25,6 +26,7 @@ import {
   EmptyState,
   PageHeader,
 } from "@/components/ui/primitives";
+import { BarrasComparadas, SerieTemporal } from "@/components/ui/graficos";
 import { formatDate } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Analítica" };
@@ -49,12 +51,22 @@ const RIESGO: Record<
 export default async function AnaliticaPage() {
   const ctx = await requirePagePermission("analytics.read");
 
-  const [resumen, riesgo, temas, preguntas] = await Promise.all([
+  const [resumen, riesgo, temas, preguntas, actividad] = await Promise.all([
     loadResumenAcademia(ctx.db),
     loadRiesgoAbandono(ctx.db),
     loadTemasProblematicos(ctx.db),
     loadPreguntasARevisar(ctx.db),
+    loadActividadSemanal(ctx.db),
   ]);
+
+  const semana = new Intl.DateTimeFormat("es-ES", { day: "numeric", month: "short" });
+  const serie = actividad.map((s) => ({
+    etiqueta: semana.format(s.inicio),
+    valor: s.tests,
+    detalle: `semana del ${semana.format(s.inicio)} · ${s.alumnos} alumnos${
+      s.acierto !== null ? ` · ${s.acierto}% de acierto` : ""
+    }`,
+  }));
 
   const requierenAtencion = riesgo.filter((a) => a.nivel !== "OK");
 
@@ -90,6 +102,34 @@ export default async function AnaliticaPage() {
         />
         <Metrica label="Bajas (30 días)" valor={resumen.bajas30} />
       </section>
+
+      {/*
+        La serie va antes que la lista de riesgo a propósito: primero se ve si
+        la clase entera se está enfriando, y solo después quién en concreto. Al
+        revés, un par de nombres en rojo parecen un problema individual cuando
+        en realidad puede haber caído la actividad de todos.
+      */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Actividad de las últimas diez semanas</CardTitle>
+        </CardHeader>
+        <CardContent className="pt-2">
+          {serie.every((p) => p.valor === 0) ? (
+            <EmptyState
+              title="Todavía no hay actividad"
+              description="Cuando el alumnado empiece a hacer tests, aquí se verá la evolución."
+            />
+          ) : (
+            <>
+              <p className="mb-3 text-sm text-ink-soft">
+                Tests entregados por semana. Un escalón hacia abajo que dura dos
+                semanas casi nunca se recupera solo.
+              </p>
+              <SerieTemporal datos={serie} titulo="Tests entregados por semana" />
+            </>
+          )}
+        </CardContent>
+      </Card>
 
       <Card>
         <CardHeader>
@@ -181,33 +221,26 @@ export default async function AnaliticaPage() {
                 description="Cuando el alumnado haga tests, aquí verás dónde falla."
               />
             ) : (
-              <ul className="divide-y divide-[var(--border-subtle)]">
-                {temas.map((tema) => (
-                  <li key={tema.id} className="flex items-center gap-3 px-5 py-3">
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm text-ink">{tema.label}</p>
-                      <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-surface-sunken">
-                        <div
-                          className={
-                            tema.acierto >= 70
-                              ? "h-full rounded-full bg-positive"
-                              : tema.acierto >= 50
-                                ? "h-full rounded-full bg-caution"
-                                : "h-full rounded-full bg-critical"
-                          }
-                          style={{ width: `${tema.acierto}%` }}
-                        />
-                      </div>
-                      <p className="mt-0.5 text-xs text-ink-muted">
-                        {tema.respuestas} respuestas
-                      </p>
-                    </div>
-                    <span className="shrink-0 text-sm font-semibold tabular-nums text-ink">
-                      {tema.acierto}%
-                    </span>
-                  </li>
-                ))}
-              </ul>
+              /*
+                Antes cada barra iba de verde, ámbar o rojo según el acierto.
+                Eran los colores de ESTADO usados para una magnitud, y eso los
+                gasta: cuando todo lleva semáforo, el semáforo deja de avisar.
+                Ahora es una sola serie de un color, ordenada de peor a mejor
+                —que es lo que señala dónde mirar— con el peor tema en oro y el
+                aprobado marcado con una línea.
+              */
+              <div className="px-5 pb-4 pt-1">
+                <BarrasComparadas
+                  referencia={{ valor: 50, etiqueta: "el 50 % de aciertos" }}
+                  datos={temas.map((tema, i) => ({
+                    etiqueta: tema.label,
+                    valor: tema.acierto,
+                    texto: `${tema.acierto}%`,
+                    pie: `${tema.respuestas} respuestas`,
+                    destacada: i === 0,
+                  }))}
+                />
+              </div>
             )}
           </CardContent>
         </Card>

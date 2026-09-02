@@ -309,6 +309,57 @@ export async function loadTemasProblematicos(db: TenantClient, limite = 8) {
     .slice(0, limite);
 }
 
+/**
+ * Actividad semanal: cuántos tests se entregan y con qué acierto medio.
+ *
+ * Diez semanas, incluidas las vacías. Saltarse las semanas sin actividad
+ * comprimiría el eje y dibujaría una línea continua donde hubo un parón, que es
+ * exactamente el dato que hay que ver.
+ *
+ * @param semanas cuántas se miran hacia atrás, contando la actual.
+ */
+export async function loadActividadSemanal(db: TenantClient, semanas = 10) {
+  const DIA = 24 * 60 * 60 * 1000;
+  const ahora = Date.now();
+  const desde = new Date(ahora - (semanas * 7 - 1) * DIA);
+
+  const intentos = await db.testAttempt.findMany({
+    where: { status: "SUBMITTED", submittedAt: { gte: desde } },
+    select: { submittedAt: true, scorePercent: true, studentId: true },
+  });
+
+  const cubos = Array.from({ length: semanas }, (_, i) => ({
+    // La semana 0 es la más antigua y la última es esta.
+    inicio: new Date(ahora - (semanas - 1 - i) * 7 * DIA),
+    tests: 0,
+    suma: 0,
+    conNota: 0,
+    alumnos: new Set<string>(),
+  }));
+
+  for (const intento of intentos) {
+    if (!intento.submittedAt) continue;
+    const atras = Math.floor((ahora - intento.submittedAt.getTime()) / DIA / 7);
+    const indice = semanas - 1 - atras;
+    if (indice < 0 || indice >= semanas) continue;
+
+    const cubo = cubos[indice];
+    cubo.tests += 1;
+    cubo.alumnos.add(intento.studentId);
+    if (intento.scorePercent !== null) {
+      cubo.suma += Number(intento.scorePercent);
+      cubo.conNota += 1;
+    }
+  }
+
+  return cubos.map((c) => ({
+    inicio: c.inicio,
+    tests: c.tests,
+    alumnos: c.alumnos.size,
+    acierto: c.conNota > 0 ? Math.round(c.suma / c.conNota) : null,
+  }));
+}
+
 /** Preguntas que conviene revisar: casi nadie acierta o acierta todo el mundo. */
 export async function loadPreguntasARevisar(db: TenantClient) {
   const preguntas = await db.question.findMany({

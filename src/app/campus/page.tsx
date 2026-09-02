@@ -14,6 +14,7 @@ import { QuickLinks } from "@/components/campus/quick-links";
 import { PlanDelDia } from "@/components/campus/plan-del-dia";
 import { proponerPlanDelDia } from "@/server/ai/insights";
 import { Card, CardContent, EmptyState, IconTile } from "@/components/ui/primitives";
+import { Anillo } from "@/components/ui/graficos";
 import { formatDateTime } from "@/lib/utils";
 
 export const metadata: Metadata = { title: "Inicio" };
@@ -101,31 +102,35 @@ export default async function CampusHomePage() {
           ) : null}
 
           <Card>
-            <CardContent className="space-y-3 p-4 pt-4">
-              <div className="flex items-baseline justify-between">
+            <CardContent className="flex items-center gap-4 p-4 pt-4">
+              {/*
+                Un anillo y no la barra de antes. Es UNA proporción, que es lo
+                único para lo que sirve un anillo, y como cifra suelta en medio
+                se lee de un vistazo desde el móvil sin tener que estimar una
+                longitud contra un carril gris.
+
+                La barra decía lo mismo, pero como dato «de acompañamiento». Lo
+                que hace que alguien vuelva mañana es ver cuánto lleva.
+              */}
+              <Anillo
+                valor={progreso.completados}
+                total={progreso.temasAccesibles}
+                etiqueta={`de ${progreso.temasAccesibles}`}
+                tamano={84}
+              />
+              <div className="min-w-0 flex-1">
                 <p className="text-sm font-medium text-ink">Tu progreso</p>
-                <p className="text-sm tabular-nums text-ink-muted">
-                  {progreso.completados} de {progreso.temasAccesibles} temas
+                <p className="mt-0.5 text-sm text-ink-soft">
+                  {progreso.completados === 0
+                    ? "Empieza por el primer tema de tu temario."
+                    : `Llevas ${progreso.porcentaje}% del temario que tienes abierto.`}
+                </p>
+                <p className="mt-1 text-xs text-ink-muted">
+                  {progreso.enCurso > 0
+                    ? `${progreso.enCurso} en curso`
+                    : "Ningún tema a medias."}
                 </p>
               </div>
-              <div
-                className="h-2 overflow-hidden rounded-full bg-surface-sunken"
-                role="progressbar"
-                aria-valuenow={progreso.porcentaje}
-                aria-valuemin={0}
-                aria-valuemax={100}
-                aria-label="Progreso del temario"
-              >
-                <div
-                  className="h-full rounded-full bg-accent transition-all"
-                  style={{ width: `${progreso.porcentaje}%` }}
-                />
-              </div>
-              <p className="text-xs text-ink-muted">
-                {progreso.enCurso > 0
-                  ? `${progreso.enCurso} en curso`
-                  : "Empieza por el primer tema de tu temario."}
-              </p>
             </CardContent>
           </Card>
 

@@ -171,6 +171,46 @@ Dos piezas, en [`src/components/marca.tsx`](../src/components/marca.tsx):
 
 ---
 
+## Gráficos
+
+Tres formas en [`src/components/ui/graficos.tsx`](../src/components/ui/graficos.tsx),
+y cada una responde a una pregunta distinta. El orden al usarlas es: primero qué
+trabajo hace el dato, después la forma, y **el color al final**. Casi todos los
+paneles feos se hacen al revés.
+
+| Componente | Para qué | Dónde |
+|---|---|---|
+| `SerieTemporal` | Cómo cambia algo con el tiempo | Analítica · actividad semanal |
+| `BarrasComparadas` | Comparar magnitudes entre categorías | Analítica · acierto por tema |
+| `Anillo` | Una proporción, con la cifra dentro | Campus · progreso del temario |
+
+Las reglas que comparten:
+
+- **Una serie, un color.** Ninguna compara series distintas, así que no hay
+  paleta categórica ni leyenda: el título dice qué es. Para comparar dos cosas
+  van dos gráficos, **nunca dos ejes**.
+- **El texto lleva color de texto.** Cifras y etiquetas en la tinta de siempre,
+  jamás en el color de la serie.
+- **Nada escondido detrás del ratón.** Las barras traen su valor escrito; el
+  tooltip de la serie es para el detalle. Lo que solo aparece al pasar el ratón
+  no existe en un proyector ni en un PDF.
+- **El color sale de los tokens** (`--accent`, `--gold`). Una academia con su
+  propio color de marca tiene los gráficos de su color sin tocar nada.
+- **`BarrasComparadas` escala a un máximo que se pasa a mano**, normalmente 100.
+  Escalar al mayor de los datos exagera diferencias pequeñas: con 62, 64 y 66,
+  la barra más corta se iría a cero y parecería un desastre.
+
+Dos trampas que ya costaron un arreglo y conviene no repetir:
+
+1. `SerieTemporal` lleva `preserveAspectRatio="none"` para estirarse, y eso
+   escala X e Y de forma distinta: **un `<circle>` dentro sale ovalado**. El
+   punto activo va en HTML por encima del SVG, no dentro.
+2. Un arco de proporción cero con `strokeLinecap="round"` no desaparece: deja
+   los dos remates uno sobre otro, o sea un punto suelto. `Anillo` no dibuja
+   nada a cero.
+
+---
+
 ## Accesibilidad
 
 - Foco siempre visible, 2 px con desplazamiento (§70).
