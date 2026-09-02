@@ -433,6 +433,63 @@ export function arrastraAlQuitar(
   return sinEl.filter((c) => (MODULOS[c]?.requiere ?? []).includes(codigo));
 }
 
+/**
+ * EL TAMAÑO DE LA ACADEMIA
+ * ────────────────────────
+ * El precio de los módulos es por academia. Cobrado tal cual, sale
+ * simultáneamente demasiado caro para una academia de treinta alumnos —que
+ * tiene alternativas por 80 €— y demasiado barato para una de quinientos, que
+ * usa el mismo programa muchísimo más y a la que la competencia cobraría el
+ * triple.
+ *
+ * Así que la suma de los módulos se multiplica por un coeficiente según el
+ * alumnado activo. El precio por alumno baja según crece la academia, que es
+ * lo que hace que una academia grande no se plantee irse.
+ *
+ * «Alumnado activo» es el que tiene matrícula viva ese mes, no las fichas
+ * guardadas de años anteriores. Si no, toda academia con historia acabaría
+ * pagando por sus muertos.
+ */
+export type Tramo = {
+  codigo: string;
+  /** Cómo se llama en la tarifa. */
+  nombre: string;
+  /** Tope de alumnado activo. `null` en el último, que no tiene. */
+  hasta: number | null;
+  /**
+   * Por cuánto se multiplica la suma de los módulos.
+   *
+   * `null` significa «a convenir»: por encima de cierto tamaño el precio deja
+   * de salir de una tabla y se negocia. Quien lo use tiene que contemplar ese
+   * caso, y por eso es `null` y no un número grande.
+   */
+  coeficiente: number | null;
+};
+
+/** Los tramos, de menor a mayor. El orden importa: `tramoDe` los recorre. */
+export const TRAMOS: Tramo[] = [
+  { codigo: "hasta-50", nombre: "Hasta 50", hasta: 50, coeficiente: 0.6 },
+  { codigo: "51-150", nombre: "De 51 a 150", hasta: 150, coeficiente: 1 },
+  { codigo: "151-350", nombre: "De 151 a 350", hasta: 350, coeficiente: 1.5 },
+  { codigo: "351-700", nombre: "De 351 a 700", hasta: 700, coeficiente: 2.1 },
+  { codigo: "mas-de-700", nombre: "Más de 700", hasta: null, coeficiente: null },
+];
+
+/** El tramo de referencia: el que se enseña como precio «de catálogo». */
+export const TRAMO_DE_REFERENCIA = TRAMOS[1];
+
+/**
+ * En qué tramo cae una academia.
+ *
+ * @param alumnosActivos Matrículas vivas. Un número negativo se trata como 0:
+ *   no existe una academia de −3 alumnos, y devolver el tramo más caro por un
+ *   dato corrupto sería lo peor que podría hacer esta función.
+ */
+export function tramoDe(alumnosActivos: number): Tramo {
+  const n = Number.isFinite(alumnosActivos) ? Math.max(0, alumnosActivos) : 0;
+  return TRAMOS.find((t) => t.hasta === null || n <= t.hasta) ?? TRAMOS[TRAMOS.length - 1];
+}
+
 /** El desglose de lo que pagaría una academia: módulos, descuento y total. */
 export type Presupuesto = {
   lineas: {
@@ -445,8 +502,18 @@ export type Presupuesto = {
     /** Si esta línea lleva un precio negociado distinto del de catálogo. */
     pactado: boolean;
   }[];
-  /** Suma antes del descuento. */
+  /** Suma de las líneas, antes del tramo y antes del descuento. */
   subtotalCents: number;
+  /** El tramo aplicado, o `null` si no se pasó el tamaño de la academia. */
+  tramo: Tramo | null;
+  /**
+   * La suma ya multiplicada por el coeficiente del tramo. Es la base sobre la
+   * que se calcula el descuento, y la que hay que enseñar: cobrar sobre una
+   * cifra que no aparece en pantalla es como se pierden las discusiones.
+   */
+  baseCents: number;
+  /** `true` cuando el tramo es «a convenir» y el total no sale de la tabla. */
+  aConvenir: boolean;
   descuentoCents: number;
   /** Porcentaje aplicado, para poder enseñarlo. */
   descuentoPorcentaje: number;
@@ -477,6 +544,10 @@ export function descuentoPorVolumen(cuantosModulos: number): number {
  *   de sumar, para que el precio sea el de lo que se va a activar de verdad.
  * @param preciosPactados Precios negociados con esa academia, por módulo y en
  *   céntimos. Lo que no esté aquí se cobra al precio de catálogo.
+ * @param descuentoPactado Porcentaje acordado, que sustituye al de volumen.
+ *   `null` o ausente para usar el de volumen; `0` es un acuerdo válido.
+ * @param alumnosActivos Matrículas vivas, para el coeficiente de tramo. Si no
+ *   se pasa, no se aplica tramo y se cobra la suma de los módulos.
  * @returns El desglose línea a línea, el descuento y el total. Todo en
  *   céntimos y en enteros: con decimales, la suma de doce líneas no cuadra con
  *   el total y alguien acaba discutiendo un céntimo por teléfono.
@@ -485,6 +556,7 @@ export function calcularPresupuesto(
   modulos: CodigoModulo[],
   preciosPactados: Partial<Record<CodigoModulo, number>> = {},
   descuentoPactado?: number | null,
+  alumnosActivos?: number | null,
 ): Presupuesto {
   const completos = resolverDependencias(modulos);
 
@@ -502,6 +574,22 @@ export function calcularPresupuesto(
 
   const subtotalCents = lineas.reduce((suma, l) => suma + l.precioCents, 0);
 
+  /*
+   * El tramo.
+   *
+   * Sin `alumnosActivos` no se aplica ninguno y se cobra la suma tal cual. Es
+   * deliberado: quien llame sin pasar el tamaño obtiene el precio de referencia,
+   * que es el comportamiento que había antes de existir los tramos. Equivocarse
+   * hacia el precio de siempre es preferible a que un olvido multiplique por dos
+   * la factura de alguien.
+   */
+  const tramo = alumnosActivos === null || alumnosActivos === undefined
+    ? null
+    : tramoDe(alumnosActivos);
+  const coeficiente = tramo?.coeficiente ?? 1;
+  const aConvenir = tramo !== null && tramo.coeficiente === null;
+  const baseCents = Math.round(subtotalCents * coeficiente);
+
   // Un descuento pactado sustituye al de volumen, incluido el cero: un acuerdo
   // puede ser precisamente que no haya descuento porque los precios de línea ya
   // se negociaron. Por eso se comprueba contra null/undefined y no por
@@ -511,14 +599,28 @@ export function calcularPresupuesto(
     ? Math.max(0, Math.min(100, Math.round(descuentoPactado)))
     : descuentoPorVolumen(completos.length);
 
-  const descuentoCents = Math.round((subtotalCents * descuentoPorcentaje) / 100);
+  /*
+   * El total sale en euros redondos.
+   *
+   * Multiplicar por un coeficiente y aplicar después un porcentaje produce
+   * cifras como 432,81 €, que en una tarifa quedan mal y que nadie repite bien
+   * por teléfono. Se redondea el total al euro y el descuento absorbe la
+   * diferencia, de modo que base − descuento = total sigue cuadrando al
+   * céntimo. Lo contrario —redondear el descuento— dejaría un total que no es
+   * la resta de lo que hay encima, y eso sí se nota en una factura.
+   */
+  const totalCents = Math.round((baseCents * (100 - descuentoPorcentaje)) / 100 / 100) * 100;
+  const descuentoCents = baseCents - totalCents;
 
   return {
     lineas,
     subtotalCents,
+    tramo,
+    baseCents,
+    aConvenir,
     descuentoCents,
     descuentoPorcentaje,
     descuentoOrigen: hayPactado ? "pactado" : "volumen",
-    totalCents: subtotalCents - descuentoCents,
+    totalCents,
   };
 }

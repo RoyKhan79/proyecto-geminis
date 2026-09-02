@@ -6,8 +6,8 @@ import { requireAcademy } from "@/lib/auth/context";
 import { CampusTabBar } from "@/components/campus/tab-bar";
 import { InstallPrompt } from "@/components/campus/install-prompt";
 import { BotonSalir } from "@/components/campus/salir";
-import { BRAND } from "@/lib/brand";
 import { Button } from "@/components/ui/button";
+import { SignoGeminis } from "@/components/marca";
 
 /**
  * Geminis Campus.
@@ -40,7 +40,7 @@ export default async function CampusLayout({
       <header className="sticky top-0 z-20 flex h-15 items-center gap-3 border-b border-line bg-surface/75 px-4 backdrop-blur-xl">
         <Link href="/campus" className="flex items-center gap-2">
           <span className="flex size-9 items-center justify-center rounded-xl bg-linear-to-br from-accent to-accent-hover text-sm font-bold text-accent-contrast shadow-[inset_0_1px_0_0_oklch(1_0_0/0.25),var(--shadow-soft)]">
-            {BRAND.initial}
+            <SignoGeminis className="size-full" />
           </span>
           <span className="truncate font-display text-[0.9375rem] font-semibold text-ink">
             {ctx.academy.name}

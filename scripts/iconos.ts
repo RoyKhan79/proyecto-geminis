@@ -1,5 +1,5 @@
 /**
- * Genera los iconos de la aplicación instalable.
+ * Genera el logotipo y los iconos de la aplicación instalable.
  *
  *   npm run iconos
  *
@@ -8,11 +8,30 @@
  * white-label) los iconos tienen que poder regenerarse con un comando en lugar
  * de con una tarde de diseño.
  *
- * Salen tres:
+ * ── LA MARCA ───────────────────────────────────────────────────────────────
+ *
+ * Dos columnas iguales unidas por arriba y por abajo: el signo de Géminis, que
+ * es el de los gemelos. No es una floritura sobre el nombre, es literalmente lo
+ * que hace el producto: **dos aplicaciones —la de la academia y la del
+ * alumnado— sobre un mismo sistema**. Las columnas son iguales porque ninguna
+ * de las dos es la de verdad y la otra un añadido.
+ *
+ * La base va en oro, que es el único acento de la identidad. Es lo que
+ * comparten: los mismos datos por debajo, de modo que la matrícula que firma
+ * hoy la secretaria es el acceso que tiene esta tarde el alumno en el móvil.
+ *
+ * Antes había aquí una «G» en Georgia. Se entendía, pero no decía nada: una
+ * inicial en una tipografía del sistema es lo que se pone cuando todavía no se
+ * ha decidido la marca.
+ *
+ * Los remates SOBRESALEN de las columnas a propósito. Sin ese vuelo el dibujo
+ * se cierra y se lee como un rectángulo o una puerta, no como el símbolo.
+ *
+ * Salen cinco archivos, más el SVG suelto y el logotipo horizontal:
  *   · icono-192 y icono-512 · el icono normal, con su margen.
  *   · icono-mascara · versión «maskable» de Android, que recorta el icono con
  *     la forma que use el sistema. Lleva el 20 % de zona segura a cada lado o
- *     el sistema se comería la letra.
+ *     el sistema se comería la marca.
  */
 import { writeFile } from "node:fs/promises";
 import sharp from "sharp";
@@ -24,6 +43,40 @@ const MARCA = {
   letra: "#fefdfb",
   oro: "#e1a536",
 };
+
+/**
+ * EL SIGNO, dibujado.
+ *
+ * Todo en proporción a `caja` para que valga igual a 32 px que a 512, y con
+ * rectángulos redondeados en vez de un trazado: a tamaño de favicon, un
+ * `path` con curvas se emborrona y estos no.
+ *
+ * @param cx,cy centro del signo.
+ * @param caja lado útil del icono, sin el margen.
+ */
+function marca(cx: number, cy: number, caja: number): string {
+  const alto = caja * 0.54;
+  const ancho = caja * 0.5; // los remates, más anchos que las columnas
+  const grueso = caja * 0.086;
+  const radio = grueso / 2;
+  const separacion = caja * 0.125; // del eje a cada columna
+  const y0 = cy - alto / 2;
+  const x0 = cx - ancho / 2;
+
+  const columna = (x: number) =>
+    `<rect x="${x - grueso / 2}" y="${y0}" width="${grueso}" height="${alto}" rx="${radio}" fill="${MARCA.letra}"/>`;
+  const remate = (y: number, color: string) =>
+    `<rect x="${x0}" y="${y}" width="${ancho}" height="${grueso}" rx="${radio}" fill="${color}"/>`;
+
+  // El remate de abajo va el último: tapa el final de las columnas y así el oro
+  // queda limpio en lugar de partido por dos rectángulos blancos encima.
+  return [
+    columna(cx - separacion),
+    columna(cx + separacion),
+    remate(y0, MARCA.letra),
+    remate(y0 + alto - grueso, MARCA.oro),
+  ].join("\n  ");
+}
 
 /**
  * El icono, en SVG.
@@ -55,27 +108,60 @@ function svg(tamano: number, zonaSegura: number, conFondoCompleto: boolean): str
          <rect x="${margen}" y="${margen}" width="${caja}" height="${caja}" rx="${radio}" fill="url(#filo)"/>`
   }
 
-  <!-- La G, en serif: es la tipografía de los titulares del producto. Va
-       dibujada como texto con familias genéricas para no depender de que la
-       fuente esté instalada en la máquina que genera los iconos. -->
-  <text
-    x="50%"
-    y="50%"
-    dy="0.335em"
-    text-anchor="middle"
-    font-family="Georgia, 'Times New Roman', serif"
-    font-size="${caja * 0.56}"
-    font-weight="600"
-    fill="${MARCA.letra}"
-  >G</text>
+  ${marca(tamano / 2, tamano / 2, caja)}
+</svg>`;
+}
 
-  <!-- El punto dorado: lo conseguido. Es el único acento del icono. -->
-  <circle
-    cx="${tamano * 0.5 + caja * 0.275}"
-    cy="${tamano * 0.5 + caja * 0.275}"
-    r="${caja * 0.048}"
-    fill="${MARCA.oro}"
-  />
+/**
+ * El logotipo horizontal: la pastilla con el signo, y el nombre al lado.
+ *
+ * El texto va como `<text>` con familias genéricas, no convertido a curvas.
+ * Tiene una pega —se dibuja con la serif que haya en la máquina, así que no es
+ * idéntico en todas— y una ventaja que aquí pesa más: se puede cambiar el
+ * nombre del producto editando una línea, y el nombre todavía es provisional
+ * (ver src/lib/brand.ts). El día que deje de serlo, esto se pasa a curvas.
+ *
+ * @param colorTexto tinta del nombre. Oscuro para fondo claro y al revés.
+ */
+function logotipo(colorTexto: string): string {
+  const alto = 128;
+  const pastilla = 96;
+  const y = (alto - pastilla) / 2;
+  const radio = pastilla * 0.235;
+  const hueco = 28;
+  const texto = y + pastilla / 2;
+
+  /*
+   * El ancho se deja holgado a propósito.
+   *
+   * El texto no va convertido a curvas, así que su anchura real depende de la
+   * serif que tenga instalada la máquina que abra el archivo. Ajustarlo al
+   * milímetro con la de aquí garantizaría que en otra se corte la última letra,
+   * que es exactamente lo que pasó con 520.
+   */
+  const ancho = 680;
+
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${ancho}" height="${alto}" viewBox="0 0 ${ancho} ${alto}">
+  <defs>
+    <linearGradient id="fondo" x1="0" y1="0" x2="0.35" y2="1">
+      <stop offset="0" stop-color="${MARCA.fondoA}"/>
+      <stop offset="1" stop-color="${MARCA.fondoB}"/>
+    </linearGradient>
+  </defs>
+
+  <rect x="0" y="${y}" width="${pastilla}" height="${pastilla}" rx="${radio}" fill="url(#fondo)"/>
+  ${marca(pastilla / 2, alto / 2, pastilla)}
+
+  <text
+    x="${pastilla + hueco}"
+    y="${texto}"
+    dy="0.34em"
+    font-family="Georgia, 'Times New Roman', serif"
+    font-size="46"
+    font-weight="600"
+    letter-spacing="-0.5"
+    fill="${colorTexto}"
+  >Proyecto Geminis</text>
 </svg>`;
 }
 
@@ -104,6 +190,13 @@ async function main() {
   // El SVG suelto sirve para el favicon y para cualquier material comercial.
   await writeFile("public/icono.svg", svg(512, 0.06, false));
   console.log("  ✓ public/icono.svg");
+
+  // Y el logotipo horizontal, que es lo que se pone en una portada, una firma
+  // de correo o una factura. En dos versiones porque un logotipo con el texto
+  // oscuro desaparece sobre fondo azul, y es justo lo que acaba pasando.
+  await writeFile("public/logo.svg", logotipo("#14181f"));
+  await writeFile("public/logo-claro.svg", logotipo("#fefdfb"));
+  console.log("  ✓ public/logo.svg y public/logo-claro.svg");
 }
 
 main().catch((error) => {

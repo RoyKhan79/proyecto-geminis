@@ -6,6 +6,7 @@ import { MANAGER_NAV, type NavSection } from "./nav-config";
 import { BRAND } from "@/lib/brand";
 import { IconTile } from "@/components/ui/primitives";
 import { cn } from "@/lib/utils";
+import { SignoGeminis } from "@/components/marca";
 
 /**
  * Barra lateral de Manager. Recibe ya filtrados los elementos que la persona
@@ -34,7 +35,7 @@ export function ManagerSidebar({
     >
       <div className="flex items-center gap-3 px-2">
         <span className="flex size-9 items-center justify-center rounded-xl bg-linear-to-br from-accent to-accent-hover text-sm font-bold text-accent-contrast shadow-[inset_0_1px_0_0_oklch(1_0_0/0.25),var(--shadow-soft)]">
-          {BRAND.initial}
+          <SignoGeminis className="size-full" />
         </span>
         <div className="min-w-0">
           <p className="line-clamp-2 font-display text-[0.9375rem] font-semibold leading-tight text-ink">

@@ -5,6 +5,7 @@ import { verificarCorreo } from "@/lib/auth/recovery";
 import { BRAND } from "@/lib/brand";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/primitives";
+import { SignoGeminis } from "@/components/marca";
 
 export const metadata: Metadata = { title: "Confirmar correo" };
 
@@ -27,7 +28,7 @@ export default async function VerificarPage({
     <main className="shell-wash flex min-h-dvh flex-col items-center justify-center bg-surface-sunken px-4 py-10">
       <div className="w-full max-w-sm space-y-8">
         <div className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-linear-to-br from-accent to-accent-hover text-xl font-bold text-accent-contrast shadow-[inset_0_1px_0_0_oklch(1_0_0/0.28),var(--shadow-raised)]">
-          {BRAND.initial}
+          <SignoGeminis className="size-full" />
         </div>
 
         <Card>

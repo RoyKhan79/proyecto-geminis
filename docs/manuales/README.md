@@ -4,7 +4,7 @@ Dos PDF que se generan desde el propio proyecto:
 
 | Archivo | Para quién | Páginas |
 |---|---|---|
-| `manual-academias.pdf` | La academia. Presentación comercial, con la tarifa al final. | 22 |
+| `manual-academias.pdf` | La academia. Presentación comercial, con la tarifa al final. | 23 |
 | `manual-alumnado.pdf` | El alumnado. Cómo se usa el campus. | 15 |
 
 Y un tercero que **no se envía a nadie**: [`ESTUDIO_DE_MERCADO.md`](ESTUDIO_DE_MERCADO.md),
@@ -48,16 +48,20 @@ usa las tipografías y los colores reales del producto.
    `src/lib/modules/catalogo.ts`. Si cambian ahí, hay que cambiarlos aquí: hoy
    están escritos a mano en el HTML.
 
-## Pendiente
+## Los precios salen del código
 
-El **coeficiente por tramo de alumnado** que aparece en la página 20 del manual
-está anunciado pero **no implementado**: el catálogo tiene un precio plano por
-academia. Antes de mandar la tarifa a nadie hay que poder facturarla. Está
-explicado en el estudio de mercado, apartado 5.
+La tarifa del manual **no está inventada a mano**: los módulos, el descuento por
+volumen y el coeficiente de tramo están en `src/lib/modules/catalogo.ts`, y hay
+una prueba —«los precios que anuncia el manual son los que cobra el programa»,
+en `tests/modulos.test.ts`— que comprueba las doce cifras de la tabla de tramos
+contra el motor de cálculo.
+
+Si alguien cambia el precio de un módulo, esa prueba falla y avisa de que hay un
+PDF ahí fuera diciendo otra cosa.
 
 ## Sobre el envío
 
-Los PDF pesan 4,8 MB y 3,3 MB. Como adjunto en un envío masivo es demasiado:
+Los PDF pesan 4,7 MB y 3,2 MB. Como adjunto en un envío masivo es demasiado:
 penaliza la entrega y muchos servidores lo rechazan. Mejor alojarlos y mandar el
 enlace. El apartado 6 del estudio de mercado explica además lo que exige la
 LSSI-CE para el correo comercial no solicitado.

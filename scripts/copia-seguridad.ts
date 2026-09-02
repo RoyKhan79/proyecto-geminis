@@ -3,7 +3,8 @@
  *
  *   npm run copia            · copia completa de la base
  *   npm run copia -- --academia geminis-demo   · solo una academia
- *   npm run copia:restaurar -- <archivo>       · restaura en una base de pruebas
+ *   npm run copia:restaurar -- <archivo>       · lee y comprueba, sin escribir
+ *   npm run copia:probar    -- <archivo>       · la restaura de verdad y la tira
  *
  * Dos tipos de copia, porque resuelven dos miedos distintos:
  *
@@ -15,10 +16,11 @@
  *     puede hacer: restaurarla se llevaría por delante el trabajo de todos los
  *     demás desde la copia.
  *
- * Lo que NO hace esto: programarse solo. Va en cron, y el comando está en
- * docs/SECURITY_MODEL.md. Y una advertencia que no es retórica: **una copia que
- * no se ha restaurado nunca no es una copia**. Por eso existe `copia:restaurar`
- * y por eso conviene ejecutarlo de vez en cuando.
+ * Lo que NO hace esto: programarse solo. Va en cron; hay archivos listos en
+ * `despliegue/`. Y una advertencia que no es retórica: **una copia que no se ha
+ * restaurado nunca no es una copia**. Por eso existe `npm run copia:probar`,
+ * que la mete en una base desechable y comprueba que entra entera. Ejecutarlo
+ * es lo que convierte estos archivos en copias de seguridad.
  */
 import { spawn } from "node:child_process";
 import { mkdir, writeFile } from "node:fs/promises";
@@ -192,6 +194,74 @@ async function copiaDeAcademia(slug: string) {
      WHERE EXISTS (SELECT 1 FROM memberships m WHERE m."userId" = u.id AND m."academyId" = $1)`,
     academia.id,
   );
+
+  /*
+   * LO QUE LA COPIA SEÑALA PERO NO LLEVA DENTRO
+   *
+   * Una copia de academia solo trae tablas con `academyId`, más la propia
+   * academia y sus personas. Pero esas filas apuntan a tablas globales —el plan
+   * contratado, por ejemplo— que no llevan `academyId` y que se quedaban fuera.
+   * Restaurar ese archivo en una base vacía fallaba con un error de clave
+   * foránea, y nadie lo sabía porque nunca se había intentado restaurar.
+   *
+   * Se resuelve siguiendo las claves foráneas en vez de escribiendo una lista:
+   * `academies` y `users` estaban puestos a mano, y `plans` faltaba justamente
+   * porque a nadie se le ocurrió añadirlo. Lo mismo pasaría con la siguiente.
+   *
+   * Se repite hasta que no aparece nada nuevo, porque una tabla global puede
+   * apuntar a otra.
+   */
+  const enlaces = await prismaBase.$queryRaw<
+    { origen: string; columna: string; destino: string; clave: string }[]
+  >`
+    SELECT src.relname AS origen, att_src.attname AS columna,
+           tgt.relname AS destino, att_tgt.attname AS clave
+    FROM pg_constraint c
+    JOIN pg_class src ON src.oid = c.conrelid
+    JOIN pg_class tgt ON tgt.oid = c.confrelid
+    JOIN unnest(c.conkey) WITH ORDINALITY AS k(attnum, ord) ON true
+    JOIN unnest(c.confkey) WITH ORDINALITY AS fk(attnum, ord) ON fk.ord = k.ord
+    JOIN pg_attribute att_src ON att_src.attrelid = c.conrelid AND att_src.attnum = k.attnum
+    JOIN pg_attribute att_tgt ON att_tgt.attrelid = c.confrelid AND att_tgt.attnum = fk.attnum
+    WHERE c.contype = 'f' AND c.connamespace = current_schema()::regnamespace`;
+
+  for (let vuelta = 0; vuelta < 10; vuelta += 1) {
+    let nuevas = 0;
+
+    for (const enlace of enlaces) {
+      const origen = datos[enlace.origen];
+      if (!origen || origen.length === 0) continue;
+
+      const referencias = [
+        ...new Set(
+          origen
+            .map((fila) => (fila as Record<string, unknown>)[enlace.columna])
+            .filter((v): v is string => typeof v === "string" && v.length > 0),
+        ),
+      ];
+      if (referencias.length === 0) continue;
+
+      const yaEstan = new Set(
+        (datos[enlace.destino] ?? []).map(
+          (f) => (f as Record<string, unknown>)[enlace.clave] as string,
+        ),
+      );
+      const faltan = referencias.filter((id) => !yaEstan.has(id));
+      if (faltan.length === 0) continue;
+
+      const traidas = await prismaBase.$queryRawUnsafe<Record<string, unknown>[]>(
+        `SELECT * FROM "${enlace.destino}" WHERE "${enlace.clave}" = ANY($1::text[])`,
+        faltan,
+      );
+      if (traidas.length === 0) continue;
+
+      datos[enlace.destino] = [...(datos[enlace.destino] ?? []), ...traidas];
+      filas += traidas.length;
+      nuevas += traidas.length;
+    }
+
+    if (nuevas === 0) break;
+  }
 
   const destino = path.join(CARPETA, `${academia.slug}-${marca()}.json`);
 

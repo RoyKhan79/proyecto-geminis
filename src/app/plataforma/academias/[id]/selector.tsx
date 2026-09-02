@@ -40,6 +40,7 @@ export function SelectorDeModulos({
   inicial,
   preciosPactados,
   descuentoPactado,
+  alumnosActivos,
 }: {
   academyId: string;
   inicial: CodigoModulo[];
@@ -47,6 +48,8 @@ export function SelectorDeModulos({
   preciosPactados: Partial<Record<CodigoModulo, number>>;
   /** Porcentaje acordado, o `null` para que salga del volumen. */
   descuentoPactado: number | null;
+  /** Matrículas vivas ahora mismo. Es lo que fija el tramo. */
+  alumnosActivos: number;
 }) {
   const router = useRouter();
   const [pendiente, iniciar] = useTransition();
@@ -56,8 +59,8 @@ export function SelectorDeModulos({
 
   const lista = useMemo(() => [...elegidos], [elegidos]);
   const presupuesto = useMemo(
-    () => calcularPresupuesto(lista, preciosPactados, descuentoPactado),
-    [lista, preciosPactados, descuentoPactado],
+    () => calcularPresupuesto(lista, preciosPactados, descuentoPactado, alumnosActivos),
+    [lista, preciosPactados, descuentoPactado, alumnosActivos],
   );
   const porDependencia = useMemo(() => new Set(anadidosPorDependencia(lista)), [lista]);
 
@@ -130,8 +133,12 @@ export function SelectorDeModulos({
                   {pack.nombre}
                   <span className="text-ink-muted">
                     {formatCents(
-                    calcularPresupuesto(pack.modulos, preciosPactados, descuentoPactado)
-                      .totalCents,
+                    calcularPresupuesto(
+                      pack.modulos,
+                      preciosPactados,
+                      descuentoPactado,
+                      alumnosActivos,
+                    ).totalCents,
                   )}
                   </span>
                 </Button>
@@ -244,6 +251,30 @@ export function SelectorDeModulos({
                   {formatCents(presupuesto.subtotalCents)}
                 </dd>
               </div>
+
+              {/*
+                El tramo se enseña siempre, también cuando el coeficiente es 1.
+                Escondido cuando no cambia nada, quien mira la pantalla no sabe
+                que existe y se lleva la sorpresa el día que la academia crece.
+              */}
+              {presupuesto.tramo ? (
+                <div className="flex items-baseline justify-between gap-2">
+                  <dt className="text-ink-soft">
+                    Tramo · {presupuesto.tramo.nombre}
+                    <span className="ml-1 text-[0.7rem] text-ink-muted">
+                      {alumnosActivos} con matrícula viva
+                      {presupuesto.tramo.coeficiente !== null
+                        ? ` · ×${presupuesto.tramo.coeficiente}`
+                        : ""}
+                    </span>
+                  </dt>
+                  <dd className="shrink-0 tabular-nums text-ink">
+                    {presupuesto.aConvenir
+                      ? "a convenir"
+                      : formatCents(presupuesto.baseCents)}
+                  </dd>
+                </div>
+              ) : null}
               <div className="flex items-baseline justify-between gap-2">
                 <DescuentoPactado
                   academyId={academyId}

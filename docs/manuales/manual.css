@@ -107,14 +107,19 @@ body {
   font-weight: 700;
   letter-spacing: 0.02em;
 }
+/*
+ * El signo de Géminis: dos columnas iguales sobre una base dorada. La academia
+ * y el alumnado sobre el mismo sistema.
+ *
+ * Va suelto sobre el azul de la portada, sin pastilla. La pastilla existe en la
+ * aplicación para despegar la marca de un fondo claro cualquiera; aquí el fondo
+ * ya es el azul de la marca y meter un cuadrado blanco en medio solo la ensucia.
+ */
 .logo {
-  width: 13mm; height: 13mm;
-  border-radius: 3.4mm;
-  background: #fff;
-  color: var(--marca);
-  display: flex; align-items: center; justify-content: center;
-  font-family: "Fraunces", serif;
-  font-size: 19pt; font-weight: 700;
+  width: 11mm;
+  height: 11mm;
+  display: block;
+  flex: 0 0 auto;
 }
 .portada .pie {
   font-size: 9.5pt;

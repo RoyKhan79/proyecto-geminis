@@ -50,6 +50,25 @@ export default async function ModulosDeAcademiaPage({
 
   if (!academia || academia.deletedAt) notFound();
 
+  /*
+   * El alumnado activo, que es lo que fija el tramo de precio.
+   *
+   * Se cuenta aquí y no se guarda en la academia a propósito: un número
+   * guardado se queda viejo y acaba facturándose un tramo que ya no es el que
+   * toca. Se cuenta igual que en la analítica —matrícula viva, sin borrar—
+   * para que la cifra de esta pantalla y la que ve la academia coincidan.
+   *
+   * Va sin `tenantDb` porque el superadministrador no tiene academia propia;
+   * el filtro por `academyId` es explícito y es la única fila que se lee.
+   */
+  const alumnosActivos = await prismaBase.membership.count({
+    where: {
+      academyId: academia.id,
+      deletedAt: null,
+      studentProfile: { is: { status: "ACTIVE" } },
+    },
+  });
+
   const activos = academia.modules
     .filter((m) => m.active)
     .map((m) => m.module as CodigoModulo);
@@ -88,6 +107,7 @@ export default async function ModulosDeAcademiaPage({
         inicial={activos}
         preciosPactados={preciosPactados}
         descuentoPactado={academia.moduleDiscountPercent}
+        alumnosActivos={alumnosActivos}
       />
 
       {retirados.length > 0 ? (

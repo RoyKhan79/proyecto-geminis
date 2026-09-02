@@ -181,7 +181,7 @@ async function main() {
         ? "confirmado por quien despliega"
         : `sin confirmar · carpeta: ${carpetaCopias}${existsSync(carpetaCopias) ? " (existe)" : " (no existe)"}`,
     comoSeArregla:
-      "En el cron: 30 3 * * * cd /ruta && npm run copia. Después: BACKUP_CRON_CONFIRMED=1",
+      "Copia despliegue/geminis.cron al cron del servidor (ver despliegue/README.md). Después: BACKUP_CRON_CONFIRMED=1",
   });
 
   comprobar({
@@ -193,7 +193,7 @@ async function main() {
         ? "confirmado por quien despliega"
         : "sin confirmar: una copia que no se ha restaurado nunca no es una copia",
     comoSeArregla:
-      "npm run copia:restaurar -- <archivo>. Después: RESTORE_TESTED_CONFIRMED=1",
+      "npm run copia:probar -- <archivo>  (la restaura de verdad en una base desechable). Después: RESTORE_TESTED_CONFIRMED=1",
   });
 
   // ── Tareas programadas ─────────────────────────────────────────────────────
@@ -211,7 +211,7 @@ async function main() {
     detalle: radar
       ? `última vez: ${radar.startedAt.toLocaleString("es-ES")}`
       : "no se ha ejecutado nunca",
-    comoSeArregla: "En el cron: 30 8 * * * cd /ruta && npm run radar",
+    comoSeArregla: "Está en despliegue/geminis.cron: 30 8 * * * npm run radar",
   });
 
   comprobar({
@@ -222,7 +222,7 @@ async function main() {
       process.env.MAINTENANCE_CRON_CONFIRMED === "1"
         ? "confirmado"
         : "sin confirmar: se acumulan sesiones y enlaces caducados",
-    comoSeArregla: "En el cron: 0 4 * * * cd /ruta && npm run mantenimiento",
+    comoSeArregla: "Está en despliegue/geminis.cron: 0 4 * * * npm run mantenimiento",
   });
 
   // ── Correo y direcciones ───────────────────────────────────────────────────

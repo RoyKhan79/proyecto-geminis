@@ -60,7 +60,13 @@ export async function guardarModulosAction(
 
   const academia = await prismaBase.academy.findUnique({
     where: { id: parsed.data.academyId },
-    select: { id: true, name: true, deletedAt: true },
+    select: {
+      id: true,
+      name: true,
+      deletedAt: true,
+      moduleDiscountPercent: true,
+      modules: { select: { module: true, priceCents: true } },
+    },
   });
   if (!academia || academia.deletedAt) return { error: "Esa academia no existe." };
 
@@ -117,6 +123,42 @@ export async function guardarModulosAction(
     });
   }
 
+  /*
+   * Lo que queda escrito como total.
+   *
+   * Antes se registraba `calcularPresupuesto(finales)` a secas: sin los precios
+   * pactados, sin el descuento y sin el tramo. Es decir, un número que no era
+   * lo que pagaba nadie. Un registro de auditoría con una cifra inventada es
+   * peor que uno sin cifra, porque el día que se discute una factura se cita.
+   */
+  const preciosPactados: Partial<Record<CodigoModulo, number>> = {};
+  for (const fila of academia.modules) {
+    if (fila.priceCents !== null) {
+      preciosPactados[fila.module as CodigoModulo] = fila.priceCents;
+    }
+  }
+  const alumnosActivos = await prismaBase.membership.count({
+    where: {
+      academyId: academia.id,
+      deletedAt: null,
+      studentProfile: { is: { status: "ACTIVE" } },
+    },
+  });
+  const presupuesto = calcularPresupuesto(
+    finales,
+    preciosPactados,
+    academia.moduleDiscountPercent,
+    alumnosActivos,
+  );
+  const totalesParaAuditoria = {
+    subtotal: presupuesto.subtotalCents,
+    alumnosActivos,
+    tramo: presupuesto.tramo?.codigo ?? null,
+    base: presupuesto.baseCents,
+    descuento: presupuesto.descuentoCents,
+    total: presupuesto.totalCents,
+  };
+
   await recordAudit({
     academyId: academia.id,
     actorId: ctx.user.id,
@@ -127,7 +169,7 @@ export async function guardarModulosAction(
       antes: [...activosAntes],
       despues: finales,
       quitados: aQuitar,
-      total: calcularPresupuesto(finales).totalCents,
+      ...totalesParaAuditoria,
     },
     context: { notas: parsed.data.notas ?? null },
   });

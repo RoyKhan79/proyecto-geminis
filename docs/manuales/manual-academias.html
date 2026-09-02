@@ -9,7 +9,7 @@
 
 <!-- ── PORTADA ──────────────────────────────────────────────────────────── -->
 <section class="pagina portada">
-  <div class="marca-portada"><span class="logo">G</span> Proyecto Geminis</div>
+  <div class="marca-portada"><svg class="logo" viewBox="0 0 100 100" aria-hidden="true"><rect x="33.2" y="23" width="8.6" height="54" rx="4.3" fill="#fff"/><rect x="58.2" y="23" width="8.6" height="54" rx="4.3" fill="#fff"/><rect x="25" y="23" width="50" height="8.6" rx="4.3" fill="#fff"/><rect x="25" y="68.4" width="50" height="8.6" rx="4.3" fill="#e1a536"/></svg> Proyecto Geminis</div>
   <div>
     <h1>El sistema operativo<br>de una academia<br>de oposiciones.</h1>
     <p class="bajada">
@@ -51,7 +51,7 @@
     <div><span>Vuestros datos son vuestros</span><span>17</span></div>
     <div><span>Preguntas que nos hacen siempre</span><span>18</span></div>
     <div><span>Precios</span><span>19</span></div>
-    <div><span>Cómo empezar</span><span>22</span></div>
+    <div><span>Cómo empezar</span><span>23</span></div>
   </div>
 
   <div class="crece"></div>
@@ -794,8 +794,7 @@
   <p class="rotulo">Tarifa</p>
   <h2>Se paga por lo que se usa</h2>
   <p class="entradilla">
-    Una academia no compra «Geminis»: compra las partes que necesita. Si vuestra
-    gestoría ya hace las facturas, no compréis la facturación.
+    Una academia no compra «Geminis»: compra las partes que necesita.
   </p>
 
   <table class="compacta">
@@ -862,12 +861,13 @@
   </table>
 
   <p style="font-size:9pt;color:var(--tinta-suave)">
-    Precios sin IVA, por academia y mes. Los módulos se añaden o se quitan
-    cuando queráis.
+    Precios sin IVA, por academia y mes. Sobre esta suma se aplican el descuento
+    por volumen y el tramo de tamaño de las dos páginas siguientes: 393 € es lo
+    que suman los doce, no lo que se acaba pagando por ellos.
   </p>
 </section>
 
-<!-- ── PRECIOS 2 ────────────────────────────────────────────────────────── -->
+<!-- ── PRECIOS 2 · packs y volumen ──────────────────────────────────────── -->
 <section class="pagina" data-seccion="Precios" data-pag="20">
   <p class="rotulo">Tarifa</p>
   <h2>Tres montajes para no elegir doce casillas</h2>
@@ -891,8 +891,8 @@
     </div>
     <div class="pack destacada">
       <h4>Online</h4>
-      <div class="euros">229 €</div>
-      <div class="mes">al mes, sin IVA</div>
+      <div class="euros">206 €</div>
+      <div class="mes">al mes, sin IVA · 229 € −10 %</div>
       <div class="para">Academia que vende temario y tests, con su app para el alumnado. El más contratado.</div>
       <ul>
         <li>Núcleo</li>
@@ -905,8 +905,8 @@
     </div>
     <div class="pack">
       <h4>Completo</h4>
-      <div class="euros">393 €</div>
-      <div class="mes">al mes, sin IVA</div>
+      <div class="euros">314 €</div>
+      <div class="mes">al mes, sin IVA · 393 € −20 %</div>
       <div class="para">Todo, incluida la IA, la analítica de abandono y el radar del BOE.</div>
       <ul>
         <li>Los doce módulos</li>
@@ -919,12 +919,39 @@
     </div>
   </div>
 
-  <h3>Y el tamaño de la academia</h3>
+  <h3>Cuantos más módulos, más barato sale cada uno</h3>
   <p>
-    Los precios de arriba son para una academia de <strong>51 a 150 alumnos
-    activos</strong>. No nos parece razonable cobrarle lo mismo a una academia
-    de treinta personas que a una de quinientas, así que el precio se ajusta por
-    tramo:
+    No es generosidad. Una academia que lleva ocho módulos con nosotros da menos
+    trabajo que ocho academias con uno, y sobre todo se queda. El descuento se
+    aplica solo, sin pedirlo:
+  </p>
+
+  <table>
+    <thead>
+      <tr><th>Módulos contratados</th><th class="precio">Descuento</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>De 1 a 4</td><td class="precio">—</td></tr>
+      <tr><td>5 o más</td><td class="precio">−10 %</td></tr>
+      <tr><td>7 o más</td><td class="precio">−15 %</td></tr>
+      <tr><td>10 o más</td><td class="precio">−20 %</td></tr>
+    </tbody>
+  </table>
+
+  <div class="aviso">
+    <p><strong>Los precios de esta página son para una academia de 51 a 150
+    alumnos activos.</strong> Por debajo se paga menos y por encima más; la
+    tabla completa está en la página siguiente.</p>
+  </div>
+</section>
+
+<!-- ── PRECIOS 3 · el tramo ─────────────────────────────────────────────── -->
+<section class="pagina" data-seccion="Precios" data-pag="21">
+  <p class="rotulo">Tarifa</p>
+  <h2>Y el tamaño de la academia</h2>
+  <p class="entradilla">
+    No nos parece razonable cobrarle lo mismo a una academia de treinta personas
+    que a una de quinientas. Usan el mismo programa de forma muy distinta.
   </p>
 
   <table>
@@ -937,13 +964,20 @@
       </tr>
     </thead>
     <tbody>
-      <tr><td>Hasta 50</td><td class="precio">76 €</td><td class="precio">137 €</td><td class="precio">236 €</td></tr>
-      <tr><td>De 51 a 150</td><td class="precio">126 €</td><td class="precio">229 €</td><td class="precio">393 €</td></tr>
-      <tr><td>De 151 a 350</td><td class="precio">189 €</td><td class="precio">344 €</td><td class="precio">590 €</td></tr>
-      <tr><td>De 351 a 700</td><td class="precio">265 €</td><td class="precio">481 €</td><td class="precio">825 €</td></tr>
+      <tr><td>Hasta 50</td><td class="precio">76 €</td><td class="precio">124 €</td><td class="precio">189 €</td></tr>
+      <tr><td>De 51 a 150</td><td class="precio">126 €</td><td class="precio">206 €</td><td class="precio">314 €</td></tr>
+      <tr><td>De 151 a 350</td><td class="precio">189 €</td><td class="precio">309 €</td><td class="precio">472 €</td></tr>
+      <tr><td>De 351 a 700</td><td class="precio">265 €</td><td class="precio">433 €</td><td class="precio">660 €</td></tr>
       <tr><td>Más de 700</td><td class="precio" colspan="3">a convenir</td></tr>
     </tbody>
   </table>
+
+  <p>
+    Fijaos en lo que pasa con el coste por alumno del pack Completo: en una
+    academia de 150 son <strong>2,09 € al mes por persona</strong>; en una de
+    700, <strong>0,94 €</strong>. Cuanto más crecéis, menos os cuesta cada
+    alumno.
+  </p>
 
   <div class="aviso">
     <p><strong>«Alumnado activo» es el que tiene matrícula viva ese mes.</strong>
@@ -951,10 +985,17 @@
     guardadas de años anteriores, que si no todo el mundo acabaría pagando por
     su histórico.</p>
   </div>
+
+  <div class="destacado">
+    <p class="cita">
+      Y el tramo se recalcula solo, hacia arriba y hacia abajo. Si tenéis un año
+      flojo, pagáis menos sin tener que llamar a renegociar nada.
+    </p>
+  </div>
 </section>
 
-<!-- ── PRECIOS 3 ────────────────────────────────────────────────────────── -->
-<section class="pagina" data-seccion="Precios" data-pag="21">
+<!-- ── PRECIOS 4 · lo incluido ──────────────────────────────────────────── -->
+<section class="pagina" data-seccion="Precios" data-pag="22">
   <p class="rotulo">Tarifa</p>
   <h2>Lo que va incluido siempre</h2>
 
@@ -989,8 +1030,8 @@
   <h3>Puesto en perspectiva</h3>
   <p>
     Una academia de 150 alumnos que cobre 100 € al mes factura 15.000 € al mes.
-    El pack Completo son <strong>393 €</strong>: un <strong>2,6 %</strong> de lo
-    que ingresa, o <strong>2,62 € por alumno y mes</strong>.
+    El pack Completo son <strong>314 €</strong>: un <strong>2,1 %</strong> de lo
+    que ingresa, o <strong>2,09 € por alumno y mes</strong>.
   </p>
 
   <div class="destacado">
@@ -1012,7 +1053,7 @@
 
 <!-- ── CIERRE ───────────────────────────────────────────────────────────── -->
 <section class="pagina portada">
-  <div class="marca-portada"><span class="logo">G</span> Proyecto Geminis</div>
+  <div class="marca-portada"><svg class="logo" viewBox="0 0 100 100" aria-hidden="true"><rect x="33.2" y="23" width="8.6" height="54" rx="4.3" fill="#fff"/><rect x="58.2" y="23" width="8.6" height="54" rx="4.3" fill="#fff"/><rect x="25" y="23" width="50" height="8.6" rx="4.3" fill="#fff"/><rect x="25" y="68.4" width="50" height="8.6" rx="4.3" fill="#e1a536"/></svg> Proyecto Geminis</div>
   <div>
     <h1>¿Lo vemos<br>funcionando?</h1>
     <p class="bajada">

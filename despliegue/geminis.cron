@@ -1,0 +1,37 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# GEMINIS · tareas programadas
+#
+# Instalar:   crontab despliegue/geminis.cron
+# Comprobar:  crontab -l
+#
+# Cambia /srv/geminis por la ruta real. Y comprueba que `npm` está en el PATH
+# del cron, que casi nunca es el mismo del intérprete: si usas nvm, pon la ruta
+# absoluta del binario (`which npm` te la dice).
+#
+# Las tres tareas se quejan por su cuenta si algo va mal; la salida se guarda
+# para poder mirar qué pasó la mañana que no llegó un aviso.
+# ─────────────────────────────────────────────────────────────────────────────
+
+SHELL=/bin/bash
+PATH=/usr/local/bin:/usr/bin:/bin
+MAILTO=""
+
+# El radar del BOE. A las 8:30, porque el Boletín está publicado desde primera
+# hora y así el aviso llega antes de que abra la academia.
+30 8 * * * cd /srv/geminis && npm run radar >> /var/log/geminis/radar.log 2>&1
+
+# Copia de seguridad diaria, de madrugada.
+# Después de ponerla: BACKUP_CRON_CONFIRMED=1 en el entorno.
+30 3 * * * cd /srv/geminis && npm run copia >> /var/log/geminis/copia.log 2>&1
+
+# Mantenimiento: caducar sesiones y enlaces de un solo uso que ya no valen.
+# Sin esto se acumulan y la base engorda sin motivo.
+0 4 * * * cd /srv/geminis && npm run mantenimiento >> /var/log/geminis/mantenimiento.log 2>&1
+
+# PROBAR LA COPIA. Una vez a la semana, los lunes.
+#
+# Esto no es opcional ni es adorno: una copia que no se ha restaurado nunca no
+# es una copia, es un archivo. Crea una base desechable, mete dentro la copia
+# más reciente, comprueba que las claves foráneas vuelven a crearse y la borra.
+# Si falla, te enteras un lunes cualquiera y no el día del desastre.
+0 5 * * 1 cd /srv/geminis && npm run copia:probar -- "$(ls -t .dev/copias/geminis-completa-*.json | head -1)" >> /var/log/geminis/copia-probar.log 2>&1

@@ -5,6 +5,7 @@ import { getAuthContext } from "@/lib/auth/context";
 import { BRAND } from "@/lib/brand";
 import { Captura } from "./captura";
 import { Indice } from "./indice";
+import { SignoGeminis } from "@/components/marca";
 import {
   Apartado,
   Comando,
@@ -61,7 +62,7 @@ export default async function ManualPage() {
           <div className="flex flex-wrap items-center justify-between gap-3">
             <p className="flex items-center gap-2.5 font-mono text-[0.7rem] uppercase tracking-[0.12em] text-ink-muted">
               <span className="grid size-7 place-items-center rounded-lg bg-linear-to-br from-accent to-accent-hover font-display text-sm font-bold text-accent-contrast">
-                {BRAND.initial}
+                <SignoGeminis className="size-full" />
               </span>
               {BRAND.name}
             </p>

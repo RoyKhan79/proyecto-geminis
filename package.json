@@ -48,6 +48,7 @@
     "dispositivos:probar": "node --env-file=.env --import tsx scripts/probar-dispositivos.ts",
     "copia": "node --env-file=.env --import tsx scripts/copia-seguridad.ts",
     "copia:restaurar": "node --env-file=.env --import tsx scripts/restaurar-copia.ts",
+    "copia:probar": "node --env-file=.env --import tsx scripts/restaurar-copia.ts --probar",
     "ia:fuga": "node --env-file=.env --import tsx scripts/probar-fuga-ia.ts",
     "pentest": "node scripts/pentest.mjs",
     "desplegar:comprobar": "node --env-file=.env --import tsx scripts/comprobar-despliegue.ts",

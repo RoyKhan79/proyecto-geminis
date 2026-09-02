@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { getAuthContext } from "@/lib/auth/context";
 import { BRAND } from "@/lib/brand";
 import { SignInForm } from "./sign-in-form";
+import { SignoGeminis } from "@/components/marca";
 
 export const metadata: Metadata = {
   title: "Entrar",
@@ -45,7 +46,7 @@ export default async function EntrarPage({
         <div className="mx-auto w-full max-w-[26rem]">
           <Link href="/" className="inline-flex items-center gap-2.5">
             <span className="flex size-10 items-center justify-center rounded-xl bg-linear-to-br from-accent to-accent-hover text-base font-bold text-accent-contrast shadow-[inset_0_1px_0_0_oklch(1_0_0/0.28),var(--shadow-raised)]">
-              {BRAND.initial}
+              <SignoGeminis className="size-full" />
             </span>
             <span className="font-display text-lg font-semibold tracking-tight text-ink">
               {BRAND.name}

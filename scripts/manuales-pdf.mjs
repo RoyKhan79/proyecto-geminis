@@ -58,6 +58,23 @@ for (const [nombre, titulo] of DOCUMENTOS) {
   }
 
   const destino = path.join(CARPETA, `${nombre}.pdf`);
+
+  /*
+   * En Windows, un PDF abierto en un visor queda bloqueado y la escritura falla
+   * con EBUSY. Sin este aviso lo que sale es una traza de pila que parece un
+   * fallo del generador, y se pierde un rato buscando en el sitio equivocado.
+   */
+  try {
+    fs.closeSync(fs.openSync(destino, "r+"));
+  } catch (e) {
+    if (e.code === "EBUSY" || e.code === "EPERM") {
+      console.log(`  ${nombre}.pdf está abierto en otro programa. Ciérralo y repite.`);
+      await p.close();
+      continue;
+    }
+    // ENOENT es lo normal la primera vez: todavía no existe.
+  }
+
   await p.pdf({
     path: destino,
     format: "A4",

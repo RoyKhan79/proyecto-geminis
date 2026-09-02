@@ -15,6 +15,9 @@ import {
   descuentoPorVolumen,
   moduloDelPermiso,
   resolverDependencias,
+  TRAMOS,
+  TRAMO_DE_REFERENCIA,
+  tramoDe,
   type CodigoModulo,
 } from "@/lib/modules/catalogo";
 
@@ -201,6 +204,110 @@ describe("presupuesto", () => {
       const con = calcularPresupuesto([...base, modulo.codigo]).totalCents;
       expect(con, `añadir ${modulo.codigo} abarata el total`).toBeGreaterThanOrEqual(sin);
     }
+  });
+});
+
+describe("tramo por tamaño de la academia", () => {
+  it("cada número cae en un tramo, y en los bordes cae en el de abajo", () => {
+    expect(tramoDe(0).codigo).toBe("hasta-50");
+    expect(tramoDe(50).codigo).toBe("hasta-50");
+    expect(tramoDe(51).codigo).toBe("51-150");
+    expect(tramoDe(150).codigo).toBe("51-150");
+    expect(tramoDe(151).codigo).toBe("151-350");
+    expect(tramoDe(350).codigo).toBe("151-350");
+    expect(tramoDe(351).codigo).toBe("351-700");
+    expect(tramoDe(700).codigo).toBe("351-700");
+    expect(tramoDe(701).codigo).toBe("mas-de-700");
+    expect(tramoDe(99999).codigo).toBe("mas-de-700");
+  });
+
+  it("un dato corrupto cae en el tramo más barato, nunca en el más caro", () => {
+    // Equivocarse cobrando de más por un número roto es mucho peor que
+    // equivocarse cobrando de menos: lo segundo se corrige, lo primero se
+    // descubre cuando el cliente se va.
+    expect(tramoDe(-3).codigo).toBe("hasta-50");
+    expect(tramoDe(Number.NaN).codigo).toBe("hasta-50");
+    expect(tramoDe(Number.POSITIVE_INFINITY).codigo).toBe("hasta-50");
+  });
+
+  it("los tramos están ordenados y no dejan huecos", () => {
+    let anterior = -1;
+    for (const t of TRAMOS.slice(0, -1)) {
+      expect(t.hasta).not.toBeNull();
+      expect(t.hasta!).toBeGreaterThan(anterior);
+      anterior = t.hasta!;
+    }
+    expect(TRAMOS[TRAMOS.length - 1].hasta).toBeNull();
+  });
+
+  it("sin decir cuántos alumnos hay, no se aplica tramo y se cobra lo de siempre", () => {
+    // Es la garantía de que añadir los tramos no ha cambiado el precio de nadie
+    // por sorpresa. Un olvido tiene que devolver el precio de referencia.
+    const modulos = PACKS.find((p) => p.codigo === "online")!.modulos;
+    const sinTramo = calcularPresupuesto(modulos);
+    const referencia = calcularPresupuesto(modulos, {}, null, 100);
+
+    expect(sinTramo.tramo).toBeNull();
+    expect(sinTramo.baseCents).toBe(sinTramo.subtotalCents);
+    expect(referencia.tramo?.codigo).toBe(TRAMO_DE_REFERENCIA.codigo);
+    expect(sinTramo.totalCents).toBe(referencia.totalCents);
+  });
+
+  it("cuanto más grande la academia, más paga", () => {
+    const modulos = CATALOGO.map((m) => m.codigo);
+    const totales = [10, 100, 200, 500].map(
+      (n) => calcularPresupuesto(modulos, {}, null, n).totalCents,
+    );
+    for (let i = 1; i < totales.length; i += 1) {
+      expect(totales[i]).toBeGreaterThan(totales[i - 1]);
+    }
+  });
+
+  it("por encima del último tramo el precio es a convenir, no un número inventado", () => {
+    const p = calcularPresupuesto(CATALOGO.map((m) => m.codigo), {}, null, 5000);
+    expect(p.aConvenir).toBe(true);
+    expect(p.tramo?.coeficiente).toBeNull();
+  });
+
+  it("la resta cuadra al céntimo y el total sale en euros redondos", () => {
+    // Si `base − descuento` no diera el total, la factura tendría un renglón
+    // que no sale de los de arriba, y eso se nota.
+    for (const n of [10, 100, 200, 500, 5000]) {
+      for (const pack of PACKS) {
+        const p = calcularPresupuesto(pack.modulos, {}, null, n);
+        expect(p.baseCents - p.descuentoCents, `${pack.codigo} · ${n}`).toBe(p.totalCents);
+        expect(p.totalCents % 100, `${pack.codigo} · ${n} no es euro redondo`).toBe(0);
+      }
+    }
+  });
+
+  it("los precios que anuncia el manual son los que cobra el programa", () => {
+    /*
+     * Las cifras de docs/manuales/manual-academias.html están escritas a mano.
+     * Esta prueba las ata al código: si alguien cambia el precio de un módulo,
+     * un coeficiente o el descuento por volumen, esto falla y avisa de que hay
+     * un PDF ahí fuera diciendo otra cosa.
+     */
+    const esperado: Record<string, [number, number, number, number]> = {
+      esencial: [76, 126, 189, 265],
+      online: [124, 206, 309, 433],
+      completo: [189, 314, 472, 660],
+    };
+    const alumnosPorTramo = [10, 100, 200, 500];
+
+    for (const [codigo, euros] of Object.entries(esperado)) {
+      const pack = PACKS.find((p) => p.codigo === codigo);
+      expect(pack, `falta el pack ${codigo}`).toBeDefined();
+      alumnosPorTramo.forEach((n, i) => {
+        const p = calcularPresupuesto(pack!.modulos, {}, null, n);
+        expect(p.totalCents / 100, `${codigo} con ${n} alumnos`).toBe(euros[i]);
+      });
+    }
+  });
+
+  it("la suma de los doce módulos es la que sale en la tarifa", () => {
+    const suma = CATALOGO.reduce((s, m) => s + m.precioCents, 0);
+    expect(suma).toBe(39300);
   });
 });
 

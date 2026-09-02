@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getAuthContext } from "@/lib/auth/context";
-import { BRAND } from "@/lib/brand";
 import { RecoveryForm } from "./recovery-form";
+import { SignoGeminis } from "@/components/marca";
 
 export const metadata: Metadata = { title: "Recuperar contraseña" };
 
@@ -22,7 +22,7 @@ export default async function RecuperarPage() {
       <div className="w-full max-w-sm space-y-8">
         <div className="space-y-3 text-center">
           <div className="mx-auto flex size-14 items-center justify-center rounded-2xl bg-linear-to-br from-accent to-accent-hover text-xl font-bold text-accent-contrast shadow-[inset_0_1px_0_0_oklch(1_0_0/0.28),var(--shadow-raised)]">
-            {BRAND.initial}
+            <SignoGeminis className="size-full" />
           </div>
           <div className="space-y-1.5">
             <h1 className="text-2xl font-semibold leading-tight text-ink">

@@ -13,25 +13,8 @@
   <rect x="30.72" y="30.72" width="450.56" height="450.56" rx="105.88159999999999" fill="url(#fondo)"/>
          <rect x="30.72" y="30.72" width="450.56" height="450.56" rx="105.88159999999999" fill="url(#filo)"/>
 
-  <!-- La G, en serif: es la tipografía de los titulares del producto. Va
-       dibujada como texto con familias genéricas para no depender de que la
-       fuente esté instalada en la máquina que genera los iconos. -->
-  <text
-    x="50%"
-    y="50%"
-    dy="0.335em"
-    text-anchor="middle"
-    font-family="Georgia, 'Times New Roman', serif"
-    font-size="252.31360000000004"
-    font-weight="600"
-    fill="#fefdfb"
-  >G</text>
-
-  <!-- El punto dorado: lo conseguido. Es el único acento del icono. -->
-  <circle
-    cx="379.904"
-    cy="379.904"
-    r="21.62688"
-    fill="#e1a536"
-  />
+  <rect x="180.30592000000001" y="134.34879999999998" width="38.74816" height="243.3024" rx="19.37408" fill="#fefdfb"/>
+  <rect x="292.94592" y="134.34879999999998" width="38.74816" height="243.3024" rx="19.37408" fill="#fefdfb"/>
+  <rect x="143.36" y="134.34879999999998" width="225.28" height="38.74816" rx="19.37408" fill="#fefdfb"/>
+  <rect x="143.36" y="338.90304000000003" width="225.28" height="38.74816" rx="19.37408" fill="#e1a536"/>
 </svg>

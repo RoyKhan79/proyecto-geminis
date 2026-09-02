@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="680" height="128" viewBox="0 0 680 128">
+  <defs>
+    <linearGradient id="fondo" x1="0" y1="0" x2="0.35" y2="1">
+      <stop offset="0" stop-color="#2956c4"/>
+      <stop offset="1" stop-color="#1e409f"/>
+    </linearGradient>
+  </defs>
+
+  <rect x="0" y="16" width="96" height="96" rx="22.56" fill="url(#fondo)"/>
+  <rect x="31.872" y="38.08" width="8.256" height="51.84" rx="4.128" fill="#fefdfb"/>
+  <rect x="55.872" y="38.08" width="8.256" height="51.84" rx="4.128" fill="#fefdfb"/>
+  <rect x="24" y="38.08" width="48" height="8.256" rx="4.128" fill="#fefdfb"/>
+  <rect x="24" y="81.664" width="48" height="8.256" rx="4.128" fill="#e1a536"/>
+
+  <text
+    x="124"
+    y="64"
+    dy="0.34em"
+    font-family="Georgia, 'Times New Roman', serif"
+    font-size="46"
+    font-weight="600"
+    letter-spacing="-0.5"
+    fill="#fefdfb"
+  >Proyecto Geminis</text>
+</svg>
