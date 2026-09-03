@@ -5,7 +5,9 @@ import { ChevronLeft, KeyRound, Receipt, SlidersHorizontal } from "lucide-react"
 import { requireAcademy } from "@/lib/auth/context";
 import {
   archiveStudentAction,
+  quitarFotoAlumnoAction,
   restoreStudentAction,
+  subirFotoAlumnoAction,
   updateStudentAction,
 } from "@/server/students/actions";
 import {
@@ -32,7 +34,7 @@ import {
   CardDescription,
 } from "@/components/ui/primitives";
 import { formatCents, formatDate, formatDateTime } from "@/lib/utils";
-import { FotoDelAlumno } from "./foto";
+import { FotoDePersona } from "@/components/gestion/foto-persona";
 import { AccesoForm, type AccesoConcedido } from "./acceso-form";
 import { capacidadesDisponibles, CAPABILITY_LABEL } from "@/lib/access/capacidades";
 import type { Capability } from "@/generated/prisma/enums";
@@ -158,11 +160,13 @@ export default async function FichaAlumnoPage({
           */}
           <Card>
             <CardContent className="flex items-center gap-4 p-5">
-              <FotoDelAlumno
+              <FotoDePersona
                 membershipId={alumno.id}
                 nombre={`${alumno.user.firstName} ${alumno.user.lastName ?? ""}`}
                 url={alumno.user.avatarUrl}
                 puedeEditar={puedeEditar}
+                subir={subirFotoAlumnoAction}
+                quitar={quitarFotoAlumnoAction}
               />
               <div className="min-w-0">
                 <p className="font-display text-[1.0625rem] font-semibold leading-snug tracking-[-0.015em] text-ink">

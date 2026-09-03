@@ -7,8 +7,13 @@ import { recordAudit, diff } from "@/lib/audit";
 import { requirePermission } from "@/lib/auth/context";
 import { prismaBase } from "@/lib/db/client";
 import { addMemberToAcademy } from "@/server/academies/provision";
-import { buildStorageKey, storage } from "@/lib/storage";
 import { CAPACIDADES, capacidadesDisponibles } from "@/lib/access/capacidades";
+import {
+  anotarCambioDeFoto,
+  guardarFotoDePersona,
+  motivoParaRechazarFoto,
+  quitarFotoDePersona,
+} from "@/server/shared/foto";
 
 /**
  * Acciones sobre alumnos.
@@ -556,21 +561,14 @@ export async function enrollStudentAction(
   return { ok: true };
 }
 
-const MAX_FOTO_BYTES = 5 * 1024 * 1024;
-const FOTOS_ADMITIDAS = ["image/jpeg", "image/png", "image/webp"];
-
 /**
  * Sube o cambia la foto de un alumno.
  *
  * @param formData `membershipId` y `foto`.
  * @returns Confirmación, o el motivo.
- * @remarks La foto se guarda como cualquier otro archivo de la academia —en su
- *   carpeta, con su clave— y se sirve por la ruta protegida. No hay URL pública
- *   de la cara de nadie: es un dato personal, no un icono.
- *
- *   Se admiten JPEG, PNG y WebP hasta 5 MB. El límite es bajo a propósito: una
- *   foto de carné no necesita más, y sin tope la primera academia que suba
- *   doscientas fotos de móvil de 12 MB se come el almacenamiento del plan.
+ * @remarks El trabajo está en `@/server/shared/foto`: es idéntico para el
+ *   profesorado y no tiene sentido tenerlo dos veces. Lo que cambia y se decide
+ *   AQUÍ es el permiso —`students.write`— y qué queda escrito en la auditoría.
  */
 export async function subirFotoAlumnoAction(
   _prev: FormState,
@@ -581,52 +579,21 @@ export async function subirFotoAlumnoAction(
   const membershipId = String(formData.get("membershipId") ?? "");
   const foto = formData.get("foto");
 
-  if (!(foto instanceof File) || foto.size === 0) {
-    return { error: "Elige una foto." };
-  }
-  if (foto.size > MAX_FOTO_BYTES) {
-    return { error: "La foto no puede pasar de 5 MB. Con una de carné sobra." };
-  }
-  if (!FOTOS_ADMITIDAS.includes(foto.type)) {
-    return { error: "La foto tiene que ser JPEG, PNG o WebP." };
-  }
+  const motivo = motivoParaRechazarFoto(foto);
+  if (motivo) return { error: motivo };
 
-  const alumno = await ctx.db.membership.findUnique({
-    where: { id: membershipId },
-    select: { id: true, userId: true },
-  });
-  if (!alumno) return { error: "Ese alumno no existe." };
+  const alumnoId = await guardarFotoDePersona(
+    ctx.db,
+    ctx.academy.id,
+    membershipId,
+    ctx.membershipId,
+    foto as File,
+  );
+  if (!alumnoId) return { error: "Ese alumno no existe." };
 
-  const buffer = Buffer.from(await foto.arrayBuffer());
-  const key = buildStorageKey(ctx.academy.id, foto.name || "foto.jpg");
-  const guardado = await storage().put(key, buffer, foto.type);
+  await anotarCambioDeFoto(ctx.academy.id, ctx.user.id, alumnoId, "student.photo");
 
-  const archivo = await ctx.db.storedFile.create({
-    data: {
-      storageKey: guardado.key,
-      storageDriver: storage().name,
-      originalName: foto.name || "foto",
-      mimeType: foto.type,
-      sizeBytes: guardado.sizeBytes,
-      checksumSha256: guardado.checksumSha256,
-      uploadedById: ctx.membershipId,
-    },
-  });
-
-  await prismaBase.user.update({
-    where: { id: alumno.userId },
-    data: { avatarUrl: `/api/archivos/${archivo.id}` },
-  });
-
-  await recordAudit({
-    academyId: ctx.academy.id,
-    actorId: ctx.user.id,
-    action: "student.photo",
-    entityType: "Membership",
-    entityId: alumno.id,
-  });
-
-  revalidatePath(`/gestion/alumnos/${alumno.id}`);
+  revalidatePath(`/gestion/alumnos/${alumnoId}`);
   revalidatePath("/gestion/alumnos");
   return { ok: true };
 }
@@ -642,25 +609,16 @@ export async function quitarFotoAlumnoAction(formData: FormData) {
   const ctx = await requirePermission("students.write");
   const membershipId = String(formData.get("membershipId") ?? "");
 
-  const alumno = await ctx.db.membership.findUnique({
-    where: { id: membershipId },
-    select: { id: true, userId: true },
-  });
-  if (!alumno) return;
+  const alumnoId = await quitarFotoDePersona(ctx.db, membershipId);
+  if (!alumnoId) return;
 
-  await prismaBase.user.update({
-    where: { id: alumno.userId },
-    data: { avatarUrl: null },
-  });
+  await anotarCambioDeFoto(
+    ctx.academy.id,
+    ctx.user.id,
+    alumnoId,
+    "student.photo.remove",
+  );
 
-  await recordAudit({
-    academyId: ctx.academy.id,
-    actorId: ctx.user.id,
-    action: "student.photo.remove",
-    entityType: "Membership",
-    entityId: alumno.id,
-  });
-
-  revalidatePath(`/gestion/alumnos/${alumno.id}`);
+  revalidatePath(`/gestion/alumnos/${alumnoId}`);
   revalidatePath("/gestion/alumnos");
 }

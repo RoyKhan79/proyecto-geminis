@@ -2,7 +2,13 @@
 
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { recordAudit } from "@/lib/audit";
+import { diff, recordAudit } from "@/lib/audit";
+import {
+  anotarCambioDeFoto,
+  guardarFotoDePersona,
+  motivoParaRechazarFoto,
+  quitarFotoDePersona,
+} from "@/server/shared/foto";
 import { requirePermission } from "@/lib/auth/context";
 import { transaccionDeAcademia } from "@/lib/db/tenant";
 import { slugify } from "@/lib/utils";
@@ -363,6 +369,172 @@ export async function createTeacherAction(
 
   revalidatePath("/gestion/profesores");
   return { ok: true };
+}
+
+const editarProfesorSchema = teacherSchema.extend({
+  membershipId: z.string().min(1),
+});
+
+/**
+ * Cambia los datos de un profesor.
+ *
+ * El correo se puede cambiar porque la gente cambia de correo, pero **no se
+ * toca la cuenta de otra persona**: si el nuevo ya lo tiene alguien distinto,
+ * se rechaza. Sin esa comprobación, escribir el correo de un compañero
+ * secuestraría su acceso.
+ *
+ * @param formData `membershipId` y los mismos campos que el alta.
+ * @returns Confirmación, o el motivo.
+ */
+export async function updateTeacherAction(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const ctx = await requirePermission("teachers.write");
+  const parsed = editarProfesorSchema.safeParse(
+    Object.fromEntries(formData.entries()),
+  );
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message ?? "Revisa los datos." };
+  }
+  const data = parsed.data;
+
+  const { prismaBase } = await import("@/lib/db/client");
+
+  const profesor = await ctx.db.membership.findUnique({
+    where: { id: data.membershipId },
+    select: {
+      id: true,
+      userId: true,
+      user: { select: { email: true, firstName: true, lastName: true, phone: true } },
+      teacherProfile: { select: { headline: true, specialties: true } },
+    },
+  });
+  if (!profesor?.teacherProfile) return { error: "Ese profesor no existe." };
+
+  if (data.email !== profesor.user.email) {
+    const ocupado = await prismaBase.user.findFirst({
+      where: { email: data.email, id: { not: profesor.userId } },
+      select: { id: true },
+    });
+    if (ocupado) {
+      return { error: "Ese correo ya es de otra persona." };
+    }
+  }
+
+  await prismaBase.user.update({
+    where: { id: profesor.userId },
+    data: {
+      firstName: data.firstName,
+      lastName: data.lastName || null,
+      email: data.email,
+      phone: data.phone || null,
+    },
+  });
+
+  /*
+   * El perfil se actualiza A TRAVÉS de la matrícula, no directamente.
+   *
+   * `TeacherProfile` no tiene `academyId` —cuelga de `Membership`, que sí lo
+   * tiene—, así que el guardián de academia no deja tocarlo por su cuenta: no
+   * podría comprobar que ese perfil es de esta academia. Escrito así, el filtro
+   * va sobre la matrícula y Row Level Security se aplica igual que en todo lo
+   * demás.
+   */
+  await ctx.db.membership.update({
+    where: { id: profesor.id },
+    data: {
+      teacherProfile: {
+        update: {
+          headline: data.headline || null,
+          specialties: splitSpecialties(data.specialties),
+        },
+      },
+    },
+  });
+
+  await recordAudit({
+    academyId: ctx.academy.id,
+    actorId: ctx.user.id,
+    action: "teacher.update",
+    entityType: "Membership",
+    entityId: profesor.id,
+    changes: diff(
+      {
+        nombre: `${profesor.user.firstName} ${profesor.user.lastName ?? ""}`.trim(),
+        correo: profesor.user.email,
+        telefono: profesor.user.phone,
+        titulo: profesor.teacherProfile.headline,
+        especialidades: profesor.teacherProfile.specialties.join(", "),
+      },
+      {
+        nombre: `${data.firstName} ${data.lastName ?? ""}`.trim(),
+        correo: data.email,
+        telefono: data.phone || null,
+        titulo: data.headline || null,
+        especialidades: splitSpecialties(data.specialties).join(", "),
+      },
+    ),
+  });
+
+  revalidatePath(`/gestion/profesores/${profesor.id}`);
+  revalidatePath("/gestion/profesores");
+  return { ok: true };
+}
+
+/**
+ * Sube o cambia la foto de un profesor.
+ *
+ * Mismo trabajo que la del alumnado y el mismo código
+ * (`@/server/shared/foto`). Lo que cambia, y por eso son dos acciones y no una,
+ * es el permiso: quien lleva las matrículas no tiene por qué poder cambiarle la
+ * cara a un compañero.
+ */
+export async function subirFotoProfesorAction(
+  _prev: FormState,
+  formData: FormData,
+): Promise<FormState> {
+  const ctx = await requirePermission("teachers.write");
+
+  const membershipId = String(formData.get("membershipId") ?? "");
+  const foto = formData.get("foto");
+
+  const motivo = motivoParaRechazarFoto(foto);
+  if (motivo) return { error: motivo };
+
+  const profesorId = await guardarFotoDePersona(
+    ctx.db,
+    ctx.academy.id,
+    membershipId,
+    ctx.membershipId,
+    foto as File,
+  );
+  if (!profesorId) return { error: "Ese profesor no existe." };
+
+  await anotarCambioDeFoto(ctx.academy.id, ctx.user.id, profesorId, "teacher.photo");
+
+  revalidatePath(`/gestion/profesores/${profesorId}`);
+  revalidatePath("/gestion/profesores");
+  return { ok: true };
+}
+
+/** Quita la foto de un profesor. */
+export async function quitarFotoProfesorAction(formData: FormData) {
+  const ctx = await requirePermission("teachers.write");
+  const membershipId = String(formData.get("membershipId") ?? "");
+
+  const profesorId = await quitarFotoDePersona(ctx.db, membershipId);
+  if (!profesorId) return;
+
+  await anotarCambioDeFoto(
+    ctx.academy.id,
+    ctx.user.id,
+    profesorId,
+    "teacher.photo.remove",
+  );
+
+  revalidatePath(`/gestion/profesores/${profesorId}`);
+  revalidatePath("/gestion/profesores");
 }
 
 // ── Editar y archivar oposiciones ────────────────────────────────────────────

@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { UserRound } from "lucide-react";
 import { requireAcademy } from "@/lib/auth/context";
 import { createTeacherAction } from "@/server/academic/actions";
 import { InlineCreate } from "@/components/manager/inline-create";
+import { Avatar } from "@/components/ui/avatar";
 import {
   Badge,
   Card,
@@ -30,7 +32,15 @@ export default async function ProfesoresPage() {
     select: {
       id: true,
       status: true,
-      user: { select: { firstName: true, lastName: true, email: true, phone: true } },
+      user: {
+        select: {
+          firstName: true,
+          lastName: true,
+          email: true,
+          phone: true,
+          avatarUrl: true,
+        },
+      },
       teacherProfile: { select: { headline: true, specialties: true } },
       assignments: {
         select: {
@@ -55,7 +65,8 @@ export default async function ProfesoresPage() {
               action={createTeacherAction}
               label="Nuevo profesor"
               title="Nuevo profesor"
-              successMessage="Profesor dado de alta."
+              successMessage="Profesor dado de alta. Entra en su ficha para ponerle la foto."
+              aviso="La foto se pone después, desde su ficha: hay que crear a la persona antes de tener dónde guardarla."
             >
               <div className="grid gap-4 sm:grid-cols-2">
                 <Field label="Nombre" htmlFor="firstName" required>
@@ -107,12 +118,28 @@ export default async function ProfesoresPage() {
               {profesores.map((profesor) => (
                 <tr key={profesor.id} className="hover:bg-surface-muted">
                   <Td>
-                    <span className="block font-medium text-ink">
-                      {profesor.user.firstName} {profesor.user.lastName ?? ""}
-                    </span>
-                    <span className="text-xs text-ink-muted">
-                      {profesor.teacherProfile?.headline ?? profesor.user.email}
-                    </span>
+                    {/*
+                      El enlace envuelve solo el nombre y no la fila entera: una
+                      fila-enlace no se puede copiar ni abrir en otra pestaña con
+                      el botón central, y aquí la gente hace las dos cosas.
+                    */}
+                    <Link
+                      href={`/gestion/profesores/${profesor.id}`}
+                      className="flex items-center gap-3"
+                    >
+                      <Avatar
+                        nombre={`${profesor.user.firstName} ${profesor.user.lastName ?? ""}`}
+                        url={profesor.user.avatarUrl}
+                      />
+                      <span className="min-w-0">
+                        <span className="block font-medium text-ink hover:underline">
+                          {profesor.user.firstName} {profesor.user.lastName ?? ""}
+                        </span>
+                        <span className="text-xs text-ink-muted">
+                          {profesor.teacherProfile?.headline ?? profesor.user.email}
+                        </span>
+                      </span>
+                    </Link>
                   </Td>
                   <Td className="hidden sm:table-cell">
                     <div className="flex flex-wrap gap-1">

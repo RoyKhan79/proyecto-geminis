@@ -2,19 +2,22 @@
 
 import { useActionState, useRef, useState } from "react";
 import { AlertCircle, Camera, Trash2 } from "lucide-react";
-import {
-  quitarFotoAlumnoAction,
-  subirFotoAlumnoAction,
-  type FormState,
-} from "@/server/students/actions";
+import type { FormState } from "@/server/students/actions";
 import { Avatar } from "@/components/ui/avatar";
 
 /**
- * LA FOTO DEL ALUMNO
+ * LA FOTO DE UNA PERSONA · alumnado y profesorado
  *
  * Una academia con doscientos alumnos necesita ponerle cara a un nombre: el que
  * llama por teléfono, el que viene a recoger un certificado. Sin foto, la ficha
  * es una lista de campos.
+ *
+ * Las dos acciones —subir y quitar— llegan como propiedades en vez de estar
+ * escritas aquí. Es lo que permite que el mismo componente valga para el
+ * alumnado y para el profesorado sin duplicarlo, y sobre todo que cada uno
+ * conserve SU permiso: quien lleva las matrículas no tiene por qué poder
+ * cambiarle la cara a un compañero. Si las acciones estuvieran dentro, ese
+ * matiz se perdería en la primera copia y pega del archivo.
  *
  * Se sube pulsando sobre la propia foto, que es donde todo el mundo pincha, y
  * el formulario se envía solo al elegir el archivo: pedir «elige» y luego
@@ -86,19 +89,25 @@ async function reducir(archivo: File): Promise<File> {
   }
 }
 
-export function FotoDelAlumno({
+export function FotoDePersona({
   membershipId,
   nombre,
   url,
   puedeEditar,
+  subir,
+  quitar,
 }: {
   membershipId: string;
   nombre: string;
   url: string | null;
   puedeEditar: boolean;
+  /** La acción que sube la foto, con el permiso que corresponda. */
+  subir: (prev: FormState, datos: FormData) => Promise<FormState>;
+  /** La que la quita. */
+  quitar: (datos: FormData) => void | Promise<void>;
 }) {
   const [state, formAction] = useActionState<FormState, FormData>(
-    subirFotoAlumnoAction,
+    subir,
     undefined,
   );
   const formulario = useRef<HTMLFormElement>(null);
@@ -170,7 +179,7 @@ export function FotoDelAlumno({
       </form>
 
       {url ? (
-        <form action={quitarFotoAlumnoAction} className="text-center">
+        <form action={quitar} className="text-center">
           <input type="hidden" name="membershipId" value={membershipId} />
           <button
             type="submit"
