@@ -107,7 +107,7 @@ export async function aplicarAsistenteAction(
 
   for (const fila of filas) {
     if (fila.archivo.size > MAX_UPLOAD_BYTES) {
-      return { error: `«${fila.archivo.name}» supera los 200 MB.` };
+      return { error: `«${fila.archivo.name}» supera los 32 MB.` };
     }
     if (!isAllowedMime(fila.archivo.type)) {
       return {

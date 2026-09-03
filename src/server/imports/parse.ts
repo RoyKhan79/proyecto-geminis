@@ -16,6 +16,15 @@ export type ParsedSheet = {
   rows: Record<string, string>[];
   /// Filas descartadas por estar completamente vacías.
   emptyRows: number;
+  /**
+   * Cuántas filas con datos traía el archivo, ANTES del tope de `MAX_ROWS`.
+   *
+   * Existe para que se pueda avisar. Antes se recortaba a veinte mil y no se
+   * decía en ningún sitio: quien subiera treinta mil alumnos importaba veinte
+   * mil y se quedaba sin diez mil sin enterarse. Perder datos en silencio es
+   * peor que fallar.
+   */
+  totalRows: number;
 };
 
 /**
@@ -31,7 +40,8 @@ export class ImportParseError extends Error {
   }
 }
 
-const MAX_ROWS = 20000;
+/** Tope de filas por archivo. Se exporta para poder decir el número. */
+export const MAX_ROWS = 20000;
 
 /**
  * Lee un archivo de importación y devuelve sus filas.
@@ -85,6 +95,7 @@ function parseCsv(buffer: ArrayBuffer): ParsedSheet {
     headers,
     rows: rows.slice(0, MAX_ROWS),
     emptyRows: resultado.data.length - rows.length,
+    totalRows: rows.length,
   };
 }
 
@@ -129,9 +140,12 @@ async function parseExcel(buffer: ArrayBuffer): Promise<ParsedSheet> {
   const rows: Record<string, string>[] = [];
   let vacias = 0;
 
+  // Se cuentan todas las que traen datos, se guarden o no: es lo que permite
+  // avisar de que el archivo tenía más de las que caben.
+  let conDatos = 0;
+
   sheet.eachRow({ includeEmpty: false }, (row, numero) => {
     if (numero === 1) return;
-    if (rows.length >= MAX_ROWS) return;
 
     const registro: Record<string, string> = {};
     limpias.forEach((header, index) => {
@@ -142,10 +156,12 @@ async function parseExcel(buffer: ArrayBuffer): Promise<ParsedSheet> {
       vacias += 1;
       return;
     }
+    conDatos += 1;
+    if (rows.length >= MAX_ROWS) return;
     rows.push(registro);
   });
 
-  return { headers: limpias, rows, emptyRows: vacias };
+  return { headers: limpias, rows, emptyRows: vacias, totalRows: conDatos };
 }
 
 /** Convierte cualquier valor de celda de Excel en texto legible. */

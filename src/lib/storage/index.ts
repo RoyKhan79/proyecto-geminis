@@ -274,12 +274,25 @@ export function toWebStream(stream: NodeJS.ReadableStream): ReadableStream {
 // ── Reglas de subida ─────────────────────────────────────────────────────────
 
 /**
- * Tamaño máximo por archivo: 200 MB.
+ * Tamaño máximo por archivo: 32 MB.
  *
- * Da de sobra para un temario escaneado y para una grabación corta, y corta el
- * caso de alguien subiendo una película por error.
+ * Decía 200 MB y era mentira. Todas las subidas de este proyecto van por Server
+ * Actions, y Next corta el cuerpo de una Server Action mucho antes: por defecto
+ * en 1 MB. O sea que esta constante autorizaba doscientos megas de un archivo
+ * que jamás llegaba a la función, y lo que veía el usuario no era este mensaje
+ * sino una pantalla de error del framework.
+ *
+ * Ahora coincide con `serverActions.bodySizeLimit` de `next.config.ts`, que es
+ * quien manda de verdad. **Si se cambia uno hay que cambiar el otro**: no se
+ * puede leer desde aquí porque la configuración de Next no se importa en el
+ * código de servidor.
+ *
+ * 32 y no 200 porque el cuerpo se carga entero en memoria antes de llegar aquí:
+ * el número son megas de RAM por subida simultánea, no una promesa gratis. Da
+ * de sobra para un tema escaneado. Para vídeo hace falta una ruta que reciba en
+ * flujo, que no existe todavía.
  */
-export const MAX_UPLOAD_BYTES = 200 * 1024 * 1024;
+export const MAX_UPLOAD_BYTES = 32 * 1024 * 1024;
 
 /**
  * Tipos admitidos. Lista blanca a propósito: aceptar cualquier cosa es la vía

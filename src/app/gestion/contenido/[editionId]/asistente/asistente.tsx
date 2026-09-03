@@ -168,7 +168,7 @@ export function AsistenteDeTemario({
                 : "Elegir archivos"}
             </span>
             <span className="text-xs text-ink-muted">
-              PDF, Word, PowerPoint… hasta 200 MB cada uno
+              PDF, Word, PowerPoint… hasta 32 MB cada uno
             </span>
             <input
               type="file"

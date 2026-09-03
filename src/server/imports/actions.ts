@@ -6,6 +6,7 @@ import { z } from "zod";
 import { recordAudit } from "@/lib/audit";
 import { requirePermission } from "@/lib/auth/context";
 import { ImportParseError, parseImportFile, suggestMapping } from "./parse";
+import { MAX_ROWS } from "./parse";
 import { MAX_BYTES_ARCHIVO } from "./zip-seguro";
 import { limitarAccion } from "@/lib/rate-limit";
 import {
@@ -61,6 +62,24 @@ export async function uploadImportAction(
     return { error: "El archivo no contiene filas con datos." };
   }
 
+  /*
+   * Se niega en vez de recortar.
+   *
+   * El lector corta a MAX_ROWS, y antes eso no se decía en ningún sitio: quien
+   * subiera treinta mil alumnos importaba veinte mil y perdía diez mil sin
+   * enterarse. Entre fallar y quedarse dos tercios de los datos, hay que
+   * fallar: el que ve un error parte el archivo, el que no ve nada descubre lo
+   * que falta meses después.
+   */
+  if (hoja.totalRows > MAX_ROWS) {
+    return {
+      error:
+        `El archivo trae ${hoja.totalRows.toLocaleString("es-ES")} filas y el máximo ` +
+        `son ${MAX_ROWS.toLocaleString("es-ES")}. Pártelo en varios y súbelos uno a uno; ` +
+        `así no se queda nadie fuera sin que te des cuenta.`,
+    };
+  }
+
   const job = await ctx.db.importJob.create({
     data: {
       type: "STUDENTS",
@@ -73,16 +92,32 @@ export async function uploadImportAction(
     },
   });
 
-  // Guardamos las filas tal cual venían: si el mapeo cambia, se reevalúa sin
-  // volver a pedir el archivo.
-  await ctx.db.importRow.createMany({
-    data: hoja.rows.map((rawData, index) => ({
-      jobId: job.id,
-      rowNumber: index + 2, // +2: la 1 es la cabecera y las hojas empiezan en 1
-      rawData,
-      status: "PENDING" as const,
-    })),
-  });
+  /*
+   * Guardamos las filas tal cual venían: si el mapeo cambia, se reevalúa sin
+   * volver a pedir el archivo.
+   *
+   * EN LOTES, no de una vez. Cada operación de academia va dentro de una
+   * transacción para fijar el contexto de RLS, y una transacción tiene plazo.
+   * Un archivo de treinta mil filas se lo comía entero y la importación moría
+   * con «a commit cannot be executed on an expired transaction», que además no
+   * le dice nada a quien lo lee.
+   *
+   * Mil por lote mantiene cada transacción corta. También es mejor para la base
+   * de datos que una transacción larguísima bloqueando la tabla, que es lo que
+   * pasa cuando alguien importa el histórico entero de la academia.
+   */
+  const LOTE = 1000;
+  for (let desde = 0; desde < hoja.rows.length; desde += LOTE) {
+    await ctx.db.importRow.createMany({
+      data: hoja.rows.slice(desde, desde + LOTE).map((rawData, i) => ({
+        jobId: job.id,
+        // +2: la 1 es la cabecera y las hojas empiezan en 1.
+        rowNumber: desde + i + 2,
+        rawData,
+        status: "PENDING" as const,
+      })),
+    });
+  }
 
   await recordAudit({
     academyId: ctx.academy.id,

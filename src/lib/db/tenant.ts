@@ -256,7 +256,20 @@ async function conRls<T>(
     }
 
     return correrEnTx.call(enTx, args);
-  });
+    /*
+     * El mismo plazo que `transaccionDeTenant`.
+     *
+     * Aquí no se pasaba ninguno, así que regía el de Prisma: 5 segundos. Y esta
+     * envoltura la cruzan TODAS las operaciones de academia, incluidas las que
+     * legítimamente tardan más de eso —un `createMany` de treinta mil filas de
+     * una importación—. El resultado era un 500 con «a commit cannot be executed
+     * on an expired transaction», que no dice nada a quien lo lee.
+     *
+     * Dos caminos del mismo archivo con plazos distintos son una trampa: el que
+     * se escribe a mano aguantaba quince segundos y el que se usa siempre,
+     * cinco.
+     */
+  }, { timeout: 15_000 });
 }
 
 /**

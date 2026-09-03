@@ -1,7 +1,7 @@
 import { deflateRawSync } from "node:zlib";
 import ExcelJS from "exceljs";
 import { describe, expect, it } from "vitest";
-import { ImportParseError, parseImportFile } from "@/server/imports/parse";
+import { ImportParseError, MAX_ROWS, parseImportFile } from "@/server/imports/parse";
 import {
   ArchivoPeligrosoError,
   MAX_ENTRADAS,
@@ -142,6 +142,47 @@ describe("importación · un Excel normal se lee", () => {
     expect(resumen.entradas).toBeGreaterThan(0);
     expect(resumen.entradas).toBeLessThanOrEqual(MAX_ENTRADAS);
     expect(resumen.bytesDescomprimidos).toBeGreaterThan(0);
+  });
+});
+
+describe("importación · un archivo con más filas de las que caben", () => {
+  /*
+   * El lector corta a MAX_ROWS y ANTES NO LO DECÍA. Quien subiera treinta mil
+   * alumnos importaba veinte mil y perdía diez mil sin enterarse.
+   *
+   * Era imposible de provocar mientras Next cortaba el cuerpo de las Server
+   * Actions en 1 MB —ningún archivo así llegaba—, y apareció en cuanto se
+   * subió ese límite. Estas pruebas fijan que el recuento delate el recorte.
+   */
+  function csvCon(filas: number): ArrayBuffer {
+    const lineas = ["nombre,apellidos,email"];
+    for (let i = 0; i < filas; i += 1) {
+      lineas.push(`Nombre${i},Apellido${i},alumno${i}@ejemplo.test`);
+    }
+    return aArrayBuffer(Buffer.from(lineas.join("\n"), "utf8"));
+  }
+
+  it("dice cuántas filas traía de verdad, no cuántas se ha quedado", async () => {
+    const hoja = await parseImportFile("alumnos.csv", csvCon(MAX_ROWS + 500));
+
+    expect(hoja.rows.length).toBe(MAX_ROWS);
+    expect(hoja.totalRows).toBe(MAX_ROWS + 500);
+    // Esta es la comparación de la que depende el aviso: si los dos números
+    // fueran iguales, el recorte volvería a ser invisible.
+    expect(hoja.totalRows).toBeGreaterThan(hoja.rows.length);
+  });
+
+  it("con un archivo normal, los dos números coinciden", async () => {
+    const hoja = await parseImportFile("alumnos.csv", csvCon(120));
+    expect(hoja.rows.length).toBe(120);
+    expect(hoja.totalRows).toBe(120);
+  });
+
+  it("las filas vacías no cuentan como filas del archivo", async () => {
+    const csv = "nombre,apellidos\nAna,Pérez\n,\n \nLuis,Gómez\n";
+    const hoja = await parseImportFile("alumnos.csv", aArrayBuffer(Buffer.from(csv, "utf8")));
+    expect(hoja.rows.length).toBe(2);
+    expect(hoja.totalRows).toBe(2);
   });
 });
 

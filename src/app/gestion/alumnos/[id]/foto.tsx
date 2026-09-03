@@ -25,6 +25,67 @@ import { Avatar } from "@/components/ui/avatar";
  * cookie de sesión, y se llevaría un 401. Una foto de carné no necesita
  * optimización.
  */
+/** Lo que mide el lado mayor de la foto guardada. */
+const LADO_MAXIMO = 512;
+
+/**
+ * REDUCE LA FOTO ANTES DE MANDARLA
+ *
+ * La foto de una ficha se enseña a 80 píxeles. Mandar los cuatro megas que
+ * saca un móvil para eso es tirar el ancho de banda de la academia, llenar el
+ * disco y hacer lenta la pantalla de alumnos, donde se cargan doscientas.
+ *
+ * Hay además dos razones que no son de rendimiento:
+ *
+ *   · **Se quita el EXIF.** Una foto de móvil lleva dentro el modelo, la fecha
+ *     y muchas veces **las coordenadas GPS de dónde se hizo**. Eso viaja al
+ *     servidor y se queda ahí para siempre pegado a la ficha de una persona,
+ *     normalmente menor de edad. Volver a dibujarla en un lienzo deja solo los
+ *     píxeles.
+ *
+ *   · **Se acaba el problema del tamaño.** Aunque el servidor ya admita 32 MB,
+ *     una foto que se manda a 60 KB no depende de ningún límite.
+ *
+ * Si algo falla —un formato que el navegador no sabe decodificar, un lienzo
+ * bloqueado— se devuelve el archivo original y que decida el servidor. Un
+ * ayudante que rompe la subida cuando no puede ayudar es peor que no tenerlo.
+ *
+ * @param archivo El que ha elegido la persona.
+ * @returns La versión reducida, o el original si no se ha podido.
+ */
+async function reducir(archivo: File): Promise<File> {
+  try {
+    // `from-image` respeta la orientación del EXIF ANTES de descartarlo. Sin
+    // esto, las fotos hechas en vertical se guardan tumbadas.
+    const bitmap = await createImageBitmap(archivo, { imageOrientation: "from-image" });
+
+    const escala = Math.min(1, LADO_MAXIMO / Math.max(bitmap.width, bitmap.height));
+    const ancho = Math.round(bitmap.width * escala);
+    const alto = Math.round(bitmap.height * escala);
+
+    const lienzo = document.createElement("canvas");
+    lienzo.width = ancho;
+    lienzo.height = alto;
+    const pincel = lienzo.getContext("2d");
+    if (!pincel) return archivo;
+    pincel.drawImage(bitmap, 0, 0, ancho, alto);
+    bitmap.close();
+
+    const trozo = await new Promise<Blob | null>((listo) =>
+      lienzo.toBlob(listo, "image/jpeg", 0.85),
+    );
+    if (!trozo) return archivo;
+
+    // Si por lo que sea la reducida pesa más que la original, se manda la
+    // original: pasa con imágenes ya optimizadas y muy pequeñas.
+    if (trozo.size >= archivo.size) return archivo;
+
+    return new File([trozo], "foto.jpg", { type: "image/jpeg" });
+  } catch {
+    return archivo;
+  }
+}
+
 export function FotoDelAlumno({
   membershipId,
   nombre,
@@ -85,11 +146,23 @@ export function FotoDelAlumno({
             name="foto"
             accept="image/jpeg,image/png,image/webp"
             className="sr-only"
-            onChange={(e) => {
-              if (!e.target.files?.length) return;
+            onChange={async (e) => {
+              const elegido = e.target.files?.[0];
+              if (!elegido) return;
+              setSubiendo(true);
+
+              // Se reduce antes de enviar y se cambia el archivo del propio
+              // campo, para que el formulario mande la versión ligera sin que
+              // haya que montar el envío a mano.
+              const ligera = await reducir(elegido);
+              if (ligera !== elegido) {
+                const caja = new DataTransfer();
+                caja.items.add(ligera);
+                e.target.files = caja.files;
+              }
+
               // Se envía al elegir. Pedir «elige» y luego «guarda» es un paso de
               // más para algo que solo puede significar una cosa.
-              setSubiendo(true);
               formulario.current?.requestSubmit();
             }}
           />

@@ -303,7 +303,7 @@ export async function uploadResourceAction(
 
   if (!(file instanceof File) || file.size === 0) return { error: "Elige un archivo." };
   if (file.size > MAX_UPLOAD_BYTES) {
-    return { error: "El archivo supera los 200 MB." };
+    return { error: "El archivo supera los 32 MB." };
   }
   if (!isAllowedMime(file.type)) {
     return {

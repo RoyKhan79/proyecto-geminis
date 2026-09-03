@@ -59,6 +59,35 @@ const nextConfig: NextConfig = {
   // vulnerabilidades conocidas de una versión concreta.
   poweredByHeader: false,
 
+  experimental: {
+    /*
+     * EL TAMAÑO DE LO QUE SE PUEDE SUBIR
+     *
+     * Next corta el cuerpo de una Server Action en 1 MB por defecto, y en este
+     * proyecto TODAS las subidas van por Server Actions: temario, exámenes,
+     * tareas, importaciones y la foto del alumno. Sin esta línea, el producto
+     * no admitía ningún archivo de más de 1 MB.
+     *
+     * Lo peor no era el límite, era que nadie lo sabía: cada sitio comprobaba
+     * su propio tope —200 MB el temario, 10 MB el Excel, 5 MB la foto— y esas
+     * comprobaciones no se alcanzaban nunca. El usuario no veía «la foto no
+     * puede pasar de 5 MB», veía una pantalla de error de Next.
+     *
+     * 32 MB y no 200: el cuerpo de una Server Action se carga ENTERO en
+     * memoria antes de llegar al código, así que el número no es una promesa
+     * gratis, son megas de RAM por subida simultánea. 32 da de sobra para un
+     * tema escaneado y para cualquier Excel de alumnos, y no tumba el servidor
+     * si tres profesores suben a la vez.
+     *
+     * Para vídeo hace falta otra cosa: una ruta que reciba en flujo y escriba
+     * directamente en el almacén, sin pasar por memoria. No existe todavía y
+     * está anotado en docs/DECISIONS.md.
+     */
+    serverActions: {
+      bodySizeLimit: "32mb",
+    },
+  },
+
   async headers() {
     const cabeceras = [...cabecerasSeguridad];
 

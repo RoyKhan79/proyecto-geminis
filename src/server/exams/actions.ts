@@ -263,7 +263,7 @@ export async function entregarExamenAction(
   for (const archivo of archivos) {
     if (archivo.size === 0) continue;
     if (archivo.size > MAX_UPLOAD_BYTES) {
-      return { error: `«${archivo.name}» supera los 200 MB.` };
+      return { error: `«${archivo.name}» supera los 32 MB.` };
     }
     if (!isAllowedMime(archivo.type)) {
       return {
