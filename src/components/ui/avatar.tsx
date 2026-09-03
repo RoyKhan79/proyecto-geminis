@@ -1,4 +1,3 @@
-import Image from "next/image";
 import { cn, initials } from "@/lib/utils";
 
 /**
@@ -33,12 +32,31 @@ export function Avatar({
   const iniciales = initials(nombrePila ?? "", resto.join(" ") || null);
 
   if (url) {
+    /*
+     * `<img>` y NO el componente de Next.
+     *
+     * Las fotos se sirven por `/api/archivos/…`, que exige sesión. El
+     * optimizador de Next pide la imagen desde el servidor, en otra petición y
+     * SIN la cookie de quien está mirando, así que se llevaba un error y
+     * devolvía 400. En la lista de alumnos no se veía una foto antigua: no se
+     * veía ninguna, solo el hueco.
+     *
+     * La ficha del alumno ya lo hacía así y lo explicaba; el fallo era que este
+     * componente, que es el que usa la lista, no. Una foto de carné de 512 px
+     * no necesita optimización.
+     *
+     * `lazy` sí importa aquí: una lista de doscientos alumnos son doscientas
+     * peticiones, y las de abajo no hacen falta hasta que se baje.
+     */
     return (
-      <Image
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
         src={url}
         alt=""
         width={medidas.px}
         height={medidas.px}
+        loading="lazy"
+        decoding="async"
         className={cn(
           "shrink-0 rounded-full border border-line object-cover",
           medidas.clase,
