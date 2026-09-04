@@ -169,6 +169,15 @@ model LegislationChangeAlert {
   changeType LegislationChangeType @default(AMENDED)
   status     AlertStatus           @default(OPEN)
 
+  /// Identificador del anuncio oficial que la originó (BOE-A-2021-4757), si la
+  /// abrió el radar. Nulo cuando la registró una persona a mano.
+  ///
+  /// Es lo que evita que el radar abra la misma alerta cada mañana: el sumario
+  /// de un día no cambia, así que sin esto una modificación publicada el lunes
+  /// generaría una alerta nueva cada vez que se reprocesara ese día.
+  officialId  String?
+  officialUrl String?
+
   title       String
   description String?
   previousText String?
@@ -188,6 +197,9 @@ model LegislationChangeAlert {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  /// Una alerta por norma y anuncio. Con `officialId` nulo no restringe nada,
+  /// que es lo que hace falta: las que se registran a mano no se limitan.
+  @@unique([legislationId, officialId])
   @@index([academyId, status, createdAt])
   @@map("legislation_change_alerts")
 }

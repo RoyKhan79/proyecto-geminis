@@ -754,3 +754,41 @@ dependen de cómo se busque.
 
 **Probado.** `tests/recuperacion-busqueda.test.ts` cubre los tres fallos, y las
 cuatro pruebas correspondientes fallan contra el código anterior.
+
+### ADR-0062 · El radar de normativa lee el título del BOE, no el texto de la ley
+**Decisión.** El radar lee también «I. Disposiciones generales» y decide, a
+partir del **título** del anuncio, si una norma que la academia sigue se
+modifica, se deroga o se corrige. Abre una alerta con el impacto calculado y
+marca las preguntas afectadas. No descarga ni compara textos consolidados.
+
+**Por qué se puede hacer así.** Los títulos del BOE son muy regulares: «Real
+Decreto 236/2021 … por el que se modifica el Real Decreto 1412/2000», «Ley
+Orgánica 4/2021 … por la que se modifica la Ley Orgánica 6/1985». La norma que
+cambia va nombrada en el título en la mayoría de las modificaciones.
+
+**Qué se pierde, medido.** Contra el sumario real del 30 y 31 de marzo de 2021
+detecta cinco de los seis cambios de esos dos días. El que falla es el Real
+Decreto 203/2021, que modifica la Ley 39/2015 en su articulado y cuyo título
+solo habla de aprobar un reglamento: la ley modificada no aparece. **Esto no
+sustituye a leer el BOE**, y la alerta que se abre lo dice con esas palabras.
+
+**Por qué se exige un verbo de cambio, y delante de la norma.** Una norma
+importante se cita cada semana sin que la toquen: «de acuerdo con lo previsto en
+la Ley 39/2015». Si cada mención abriera alerta, la academia tendría una alerta
+falsa por semana y dejaría de mirarlas, que es la forma de que un aviso bueno
+pase desapercibido. Y el verbo tiene que ir *antes* de la referencia, porque así
+se construyen estos títulos en español; es lo que separa «por el que se modifica
+la Ley 39/2015» de «el reglamento previsto en la Ley 39/2015 y se modifica el
+Real Decreto 1065/2007», donde lo que cambia es otra cosa.
+
+**Se marca, no se cambia** (ADR-0013). Las preguntas enlazadas pasan a
+«posiblemente desactualizada» y salen de los tests hasta que alguien las mire.
+
+**Solo para quien paga el módulo**, igual que el radar de convocatorias: esta
+tarea corre en el servidor sin pasar por `requireAcademy`, y sin ese filtro una
+academia que dejara de pagar «Normativa y radar del BOE» vería desaparecer el
+módulo de su menú y seguiría recibiendo alertas por detrás.
+
+**Una alerta por norma y anuncio.** El sumario de un día no cambia y
+reprocesarlo es normal; sin esa restricción, una modificación publicada el lunes
+abriría una alerta nueva cada mañana.

@@ -333,6 +333,7 @@ describe("radar del BOE", () => {
   const base = {
     source: "BOE" as const,
     externalId: "BOE-A-2026-1",
+    section: "2B",
     department: "MINISTERIO DE HACIENDA",
     epigraph: null,
     url: null,

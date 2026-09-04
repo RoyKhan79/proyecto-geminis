@@ -17,6 +17,11 @@ import type { OfficialSource } from "@/generated/prisma/enums";
 export type ItemBoletin = {
   source: OfficialSource;
   externalId: string;
+  /// Código de la sección del boletín: "2B" oposiciones, "1" disposiciones
+  /// generales. Se guarda porque el sumario se descarga una sola vez y después
+  /// hay que separar lo que va al radar de convocatorias de lo que va al de
+  /// normativa.
+  section: string;
   title: string;
   department: string | null;
   epigraph: string | null;
@@ -67,11 +72,32 @@ export class BoeNoPublicadoError extends Error {
   }
 }
 
+/** La sección donde salen las convocatorias de oposiciones. */
+export const SECCION_OPOSICIONES = "2B";
+
 /**
- * Descarga el sumario del BOE de un día y devuelve los anuncios de la sección
- * «II.B Oposiciones y concursos», que es donde salen las convocatorias.
+ * La sección donde salen las leyes y sus modificaciones.
+ *
+ * «I. Disposiciones generales». Es donde aparece «Real Decreto ... por el que
+ * se modifica la Ley 39/2015», que es justo lo que una academia necesita saber
+ * y lo que hasta ahora nadie miraba: el radar solo leía la 2B.
  */
-export async function fetchBoeOposiciones(fecha: Date): Promise<ItemBoletin[]> {
+export const SECCION_DISPOSICIONES = "1";
+
+/**
+ * Descarga el sumario del BOE de un día y devuelve los anuncios de las
+ * secciones pedidas.
+ *
+ * Se descarga **una sola vez** aunque interesen varias secciones: el sumario es
+ * el mismo documento y el BOE no merece que le pidamos lo mismo dos veces.
+ *
+ * @param secciones Códigos de sección. Sin ninguno, no devuelve nada: es más
+ *   seguro que devolver el boletín entero por descuido.
+ */
+export async function fetchBoeSumario(
+  fecha: Date,
+  secciones: string[],
+): Promise<ItemBoletin[]> {
   const dia = formatoFechaBoe(fecha);
   const url = `https://boe.es/datosabiertos/api/boe/sumario/${dia}`;
 
@@ -102,9 +128,10 @@ export async function fetchBoeOposiciones(fecha: Date): Promise<ItemBoletin[]> {
       nombre?: string;
       departamento?: unknown;
     }[]) {
-      // 2B = «II. Autoridades y personal - B. Oposiciones y concursos».
-      // Es la sección donde aparecen las convocatorias; la 2A son nombramientos.
-      if (seccion.codigo !== "2B") continue;
+      // 2B = «II. Autoridades y personal - B. Oposiciones y concursos» (la 2A
+      // son nombramientos). 1 = «I. Disposiciones generales».
+      const codigo = String(seccion.codigo ?? "");
+      if (!secciones.includes(codigo)) continue;
 
       for (const departamento of lista(seccion.departamento) as {
         nombre?: string;
@@ -136,6 +163,7 @@ export async function fetchBoeOposiciones(fecha: Date): Promise<ItemBoletin[]> {
           items.push({
             source: "BOE",
             externalId: identificador,
+            section: codigo,
             title: titulo,
             department: departamento.nombre ?? null,
             epigraph: epigrafe,
@@ -155,6 +183,16 @@ export async function fetchBoeOposiciones(fecha: Date): Promise<ItemBoletin[]> {
   }
 
   return items;
+}
+
+/**
+ * Los anuncios de oposiciones del BOE de un día.
+ *
+ * Se mantiene con su nombre de siempre porque es lo que llama el radar de
+ * convocatorias y no tiene por qué saber de secciones.
+ */
+export function fetchBoeOposiciones(fecha: Date): Promise<ItemBoletin[]> {
+  return fetchBoeSumario(fecha, [SECCION_OPOSICIONES]);
 }
 
 /**

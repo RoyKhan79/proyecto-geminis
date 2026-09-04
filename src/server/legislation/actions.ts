@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { recordAudit } from "@/lib/audit";
 import { requirePermission } from "@/lib/auth/context";
+import { abrirAlertaDeCambio } from "./alerta";
 
 /**
  * NORMATIVA Y ALERTAS DE CAMBIO LEGISLATIVO
@@ -187,64 +188,37 @@ export async function registerChangeAction(
   });
   if (!norma) return { error: "Esa norma no existe." };
 
-  // Impacto: qué contenido depende del artículo que ha cambiado.
-  const enlaces = await ctx.db.contentLegislationLink.findMany({
-    where: data.articleId ? { articleId: data.articleId } : { article: { legislationId: norma.id } },
-    select: {
-      nodeId: true,
-      questionId: true,
-      node: { select: { id: true, label: true } },
-      question: { select: { id: true, statement: true } },
-    },
+  // El impacto, la alerta y el marcado de preguntas viven en `alerta.ts`,
+  // compartidos con el radar de normativa: los dos caminos tienen que hacer
+  // exactamente lo mismo y calcularlo dos veces sería garantizar que un día
+  // dejen de coincidir.
+  const abierta = await abrirAlertaDeCambio(ctx.db, {
+    legislationId: norma.id,
+    referencia: norma.reference,
+    articleId: data.articleId || null,
+    changeType: data.changeType,
+    title: data.title,
+    description: data.description || null,
+    previousText: data.previousText || null,
+    newText: data.newText || null,
   });
 
-  const temas = enlaces.filter((e) => e.node).map((e) => e.node!);
-  const preguntas = enlaces.filter((e) => e.question).map((e) => e.question!);
+  // Sin `officialId` no hay nada que pueda estar repetido, así que aquí nunca
+  // devuelve nulo. El comprobador de tipos no lo sabe.
+  if (!abierta) return { error: "Ese cambio ya estaba registrado." };
 
-  const alerta = await ctx.db.legislationChangeAlert.create({
-    data: {
-      legislationId: norma.id,
-      articleId: data.articleId || null,
-      changeType: data.changeType,
-      status: "OPEN",
-      title: data.title,
-      description: data.description || null,
-      previousText: data.previousText || null,
-      newText: data.newText || null,
-      impact: {
-        temas: temas.map((t) => ({ id: t.id, label: t.label })),
-        preguntas: preguntas.map((p) => ({
-          id: p.id,
-          enunciado: p.statement.slice(0, 120),
-        })),
-        totalTemas: temas.length,
-        totalPreguntas: preguntas.length,
-      },
-    },
-  });
-
-  // Las preguntas se marcan, NO se cambian. Quien decide es el preparador.
-  if (preguntas.length > 0) {
-    await ctx.db.question.updateMany({
-      where: { id: { in: preguntas.map((p) => p.id) }, status: "PUBLISHED" },
-      data: {
-        status: "POSSIBLY_OUTDATED",
-        outdatedReason: `Cambio en ${norma.reference}: ${data.title}`,
-        outdatedAt: new Date(),
-      },
-    });
-  }
+  const { temas, preguntas } = abierta.impacto;
 
   await recordAudit({
     academyId: ctx.academy.id,
     actorId: ctx.user.id,
     action: "legislation.change",
     entityType: "LegislationChangeAlert",
-    entityId: alerta.id,
+    entityId: abierta.alertaId,
     changes: {
       norma: norma.reference,
       temasAfectados: temas.length,
-      preguntasMarcadas: preguntas.length,
+      preguntasMarcadas: abierta.preguntasMarcadas,
     },
   });
 
@@ -255,7 +229,7 @@ export async function registerChangeAction(
     ok:
       preguntas.length + temas.length === 0
         ? "Cambio registrado. No hay contenido enlazado a ese artículo todavía."
-        : `Cambio registrado: ${temas.length} temas afectados y ${preguntas.length} preguntas marcadas para revisar.`,
+        : `Cambio registrado: ${temas.length} temas afectados y ${abierta.preguntasMarcadas} preguntas marcadas para revisar.`,
   };
 }
 

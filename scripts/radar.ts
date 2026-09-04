@@ -44,7 +44,20 @@ async function main() {
       ? resultado.saltado
       : resultado.error
         ? `ERROR: ${resultado.error}`
-        : `${resultado.itemsAnalizados} anuncios · ${resultado.coincidencias} coincidencias · ${resultado.avisos} avisos · ${resultado.academias} academias`;
+        : [
+            `${resultado.itemsAnalizados} anuncios`,
+            `${resultado.coincidencias} coincidencias`,
+            `${resultado.avisos} avisos`,
+            `${resultado.academias} academias`,
+            // La normativa solo se enseña cuando ha encontrado algo: en un día
+            // normal son cero y repetirlo cada línea esconde lo que sí importa.
+            ...(resultado.normativa && resultado.normativa.alertas > 0
+              ? [
+                  `${resultado.normativa.alertas} cambios de norma`,
+                  `${resultado.normativa.preguntasMarcadas} preguntas marcadas`,
+                ]
+              : []),
+          ].join(" · ");
     console.log(`  ${resultado.fecha}  ${detalle}`);
   }
 }

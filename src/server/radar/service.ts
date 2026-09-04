@@ -2,7 +2,14 @@ import { prismaBase } from "@/lib/db/client";
 import { tenantDb } from "@/lib/db/tenant";
 import { sendEmail } from "@/lib/email";
 import { env } from "@/lib/env";
-import { BoeNoPublicadoError, coincide, fetchBoeOposiciones } from "./boe";
+import { revisarDisposiciones } from "@/server/legislation/radar-normativa";
+import {
+  BoeNoPublicadoError,
+  coincide,
+  fetchBoeSumario,
+  SECCION_DISPOSICIONES,
+  SECCION_OPOSICIONES,
+} from "./boe";
 
 /**
  * MOTOR DEL RADAR
@@ -28,6 +35,8 @@ export type ResultadoRadar = {
   coincidencias: number;
   avisos: number;
   academias: number;
+  /// Lo que ha encontrado el radar de normativa en la sección I.
+  normativa?: { alertas: number; preguntasMarcadas: number };
   saltado?: string;
   error?: string;
 };
@@ -68,7 +77,12 @@ export async function ejecutarRadarBoe(fecha: Date): Promise<ResultadoRadar> {
 
   let items;
   try {
-    items = await fetchBoeOposiciones(dia);
+    // Las dos secciones de una vez: el sumario es el mismo documento y no
+    // tiene sentido pedirle al BOE lo mismo dos veces.
+    items = await fetchBoeSumario(dia, [
+      SECCION_OPOSICIONES,
+      SECCION_DISPOSICIONES,
+    ]);
   } catch (error) {
     const esFestivo = error instanceof BoeNoPublicadoError;
     await prismaBase.radarRun.update({
@@ -139,6 +153,17 @@ export async function ejecutarRadarBoe(fecha: Date): Promise<ResultadoRadar> {
     }
   >();
 
+  /*
+   * Solo la sección de oposiciones.
+   *
+   * El sumario se descarga entero —dos secciones— porque el radar de normativa
+   * usa la otra. Sin este filtro, las vigilancias de convocatorias se
+   * compararían también contra las leyes de la sección I y una vigilancia con
+   * la palabra «administrativo» empezaría a detectar reales decretos como si
+   * fueran convocatorias.
+   */
+  const oposiciones = items.filter((i) => i.section === SECCION_OPOSICIONES);
+
   for (const vigilancia of vigilancias) {
     if (vigilancia.sources.length > 0 && !vigilancia.sources.includes("BOE")) {
       continue;
@@ -146,7 +171,7 @@ export async function ejecutarRadarBoe(fecha: Date): Promise<ResultadoRadar> {
 
     const db = tenantDb(vigilancia.academyId);
 
-    for (const item of items) {
+    for (const item of oposiciones) {
       if (!coincide(item, vigilancia)) continue;
 
       // Puede coincidir con dos vigilancias de la misma academia: se guarda una
@@ -219,6 +244,16 @@ export async function ejecutarRadarBoe(fecha: Date): Promise<ResultadoRadar> {
     }
   }
 
+  /*
+   * Y la otra mitad: las leyes.
+   *
+   * Va aparte del bucle de arriba porque no comparte nada con él: allí se
+   * comparan vigilancias de una academia contra anuncios; aquí se comparan las
+   * normas que cada academia tiene en seguimiento. Lo único común es el
+   * sumario.
+   */
+  const normativa = await revisarDisposiciones(items);
+
   await prismaBase.radarRun.update({
     where: { id: run.id },
     data: {
@@ -236,5 +271,9 @@ export async function ejecutarRadarBoe(fecha: Date): Promise<ResultadoRadar> {
     coincidencias,
     avisos,
     academias: academiasTocadas.size,
+    normativa: {
+      alertas: normativa.alertas,
+      preguntasMarcadas: normativa.preguntasMarcadas,
+    },
   };
 }

@@ -109,7 +109,10 @@ Modelo ya listo: `ImportJob`, `ImportRow`.
 - Marcado de preguntas posiblemente desactualizadas ✅
 - Detección automática de referencias en las preguntas ✅
 - Conexión con el BOE para convocatorias ✅ (radar)
-- Rastreo de modificaciones legislativas en boletines — pendiente
+- Rastreo de modificaciones legislativas en la sección I del BOE ✅
+  (ADR-0062). Detecta por el título del anuncio, no por el texto de la ley:
+  cinco de seis cambios en la prueba contra el sumario real. No sustituye a
+  leer el BOE, y la alerta lo dice
 
 ## ✅ Fase 7 — Analítica y retención *(C · D)* · **terminada**
 
