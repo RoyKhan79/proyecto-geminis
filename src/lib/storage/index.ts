@@ -391,7 +391,7 @@ const FIRMAS: Record<string, { desplazamiento: number; bytes: number[] }[]> = {
  * Se mira aparte de las firmas porque estos hay que rechazarlos aunque el tipo
  * declarado sea uno que no tenga firma conocida: un HTML declarado como
  * `text/plain` pasaría todas las comprobaciones de arriba y se serviría desde
- * el dominio de Geminis.
+ * el dominio de Catedria.
  */
 const PROHIBIDOS: { nombre: string; prueba: (inicio: Buffer) => boolean }[] = [
   {

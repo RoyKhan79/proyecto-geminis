@@ -1,9 +1,9 @@
-# Geminis
+# Catedria
 
 Plataforma SaaS para academias de oposiciones: gestión, campus del alumno e
 inteligencia artificial sobre el material propio de cada academia.
 
-Geminis no aspira a ser un LMS con un chatbot encima. Aspira a ser el sistema
+Catedria no aspira a ser un LMS con un chatbot encima. Aspira a ser el sistema
 operativo de una academia de oposiciones: que la academia gestione su negocio,
 que el alumno estudie de verdad desde el móvil, y que el preparador tenga más
 capacidad sin perder el control de su contenido.
@@ -21,7 +21,7 @@ Las siete fases del plan están construidas y verificadas.
 | 2 | Import: Excel y CSV con simulación, validación y reversión | ✅ |
 | 3 | Contenido, visor de documentos, clases, comunicaciones y pagos | ✅ |
 | 4 | Tests, corrección e histórico de errores | ✅ |
-| 5 | Geminis IA con recuperación por permisos y citas | ✅ |
+| 5 | Catedria IA con recuperación por permisos y citas | ✅ |
 | 6 | Normativa y alertas de cambio legislativo | ✅ |
 | 7 | Analítica y riesgo de abandono | ✅ |
 
@@ -69,7 +69,7 @@ npm install          # dependencias + binarios de PostgreSQL
 npm run db:start     # levanta PostgreSQL en 127.0.0.1:55432
 cp .env.example .env
 npm run db:deploy    # aplica las migraciones
-npm run db:seed      # crea la Academia Geminis Demo
+npm run db:seed      # crea la Academia Catedria Demo
 npm run dev          # http://localhost:3000
 ```
 
@@ -88,7 +88,7 @@ npm run demo:todo
 
 ### Cuentas de la academia demo
 
-Todas usan la contraseña `Geminis2026!`.
+Todas usan la contraseña `Catedria2026!`.
 
 > **Estas cuentas son solo para desarrollo.** Su contraseña está publicada aquí,
 > así que en un servidor real son una puerta abierta. Hay dos cosas que lo
@@ -98,7 +98,7 @@ Todas usan la contraseña `Geminis2026!`.
 
 | Perfil | Correo | Dónde entra |
 |--------|--------|-------------|
-| Administración | `admin@academiademo.test` | Geminis Manager |
+| Administración | `admin@academiademo.test` | Catedria Manager |
 | Profesora | `laura@academiademo.test` | Manager (solo lo asignado) |
 | Personal administrativo | `secretaria@academiademo.test` | Manager (sin datos académicos sensibles) |
 | Alumna · curso completo | `alumno1@academiademo.test` | Campus, con todo |
@@ -138,7 +138,7 @@ vistazo cómo el contenido depende de lo contratado.
 | `npm run copia:restaurar -- <archivo>` | Comprueba que esa copia sirve |
 | `npm run superadmin -- <correo>` | Crea el superadministrador · pide la contraseña por teclado, sin que se vea |
 | `npm run cifrar:rotar` | Cambia la clave de cifrado sin dejar ningún dato ilegible |
-| `npm run ia:probar` | Comprueba desde la terminal que Geminis IA responde |
+| `npm run ia:probar` | Comprueba desde la terminal que Catedria IA responde |
 | `npm run iconos` | Regenera los iconos de la app con los colores de marca |
 
 ---
@@ -187,7 +187,7 @@ Nunca crea una oposición por su cuenta: avisa y decide una persona.
 
 ---
 
-## Geminis IA funciona sin contratar nada
+## Catedria IA funciona sin contratar nada
 
 El asistente tiene un **motor propio** dentro del servidor: lee el material de la
 academia, entiende qué se le pregunta, localiza lo que responde y lo cita. No
@@ -225,19 +225,19 @@ academia crea, nombra y ordena a su gusto (ADR-0006).
 Un alumno ve una rama del contenido si tiene un *derecho de acceso* que la
 cubra. Eso permite vender el curso completo, solo el temario, solo las clases,
 temario + tests o lo que la academia invente, y que el profesor ajuste el acceso
-de un alumno concreto. La misma comprobación la usará Geminis IA: preguntarle a
+de un alumno concreto. La misma comprobación la usará Catedria IA: preguntarle a
 la IA nunca podrá ser una puerta trasera para leer material no contratado.
 
 ---
 
 ## Documentación
 
-- [docs/PRODUCT_REQUIREMENTS.md](docs/PRODUCT_REQUIREMENTS.md) — qué es Geminis y para quién
+- [docs/PRODUCT_REQUIREMENTS.md](docs/PRODUCT_REQUIREMENTS.md) — qué es Catedria y para quién
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) — stack, capas y cómo encaja todo
 - [docs/DATABASE_SCHEMA.md](docs/DATABASE_SCHEMA.md) — modelo de datos
 - [docs/SECURITY_MODEL.md](docs/SECURITY_MODEL.md) — aislamiento, permisos, RGPD
 - [docs/PERMISSIONS.md](docs/PERMISSIONS.md) — RBAC y alcances
-- [docs/AI_ARCHITECTURE.md](docs/AI_ARCHITECTURE.md) — Geminis IA y su gateway
+- [docs/AI_ARCHITECTURE.md](docs/AI_ARCHITECTURE.md) — Catedria IA y su gateway
 - [docs/MVP_ROADMAP.md](docs/MVP_ROADMAP.md) — plan por fases
 - [docs/DECISIONS.md](docs/DECISIONS.md) — decisiones tomadas y por qué
 - [docs/DESIGN_SYSTEM.md](docs/DESIGN_SYSTEM.md) — color, tipografía, componentes e iconos

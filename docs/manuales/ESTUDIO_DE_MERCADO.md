@@ -31,7 +31,7 @@ con simulación y vuelta atrás no sea una función más: es el argumento de ven
 
 Son baratos y son gestión. Ninguno trae temario con ritmo por grupo, banco de
 preguntas con repetición espaciada, IA sobre el material propio ni radar del
-BOE. Compiten en el módulo Núcleo de Geminis y poco más.
+BOE. Compiten en el módulo Núcleo de Catedria y poco más.
 
 ### c) Los campus virtuales / LMS
 
@@ -45,8 +45,8 @@ Aquí está la competencia de verdad para el Campus. Son buenos en dar clase
 online y flojos en llevar la academia: la matrícula, el recibo devuelto, la
 factura rectificativa y quién debe dinero se acaban llevando fuera.
 
-**El hueco que ocupa Geminis es exactamente ese: nadie cubre bien los dos lados
-a la vez.** Una academia que hoy quiera lo que hace Geminis tiene que contratar
+**El hueco que ocupa Catedria es exactamente ese: nadie cubre bien los dos lados
+a la vez.** Una academia que hoy quiera lo que hace Catedria tiene que contratar
 un ERP más un LMS, y unirlos a mano.
 
 ---
@@ -82,7 +82,7 @@ así en la visita, porque es verdad y es comprobable.
 El catálogo actual (`src/lib/modules/catalogo.ts`) cobra **por academia, no por
 alumno**. Eso es cómodo de entender y desastroso en los extremos:
 
-| Academia | Geminis Completo hoy | Coste por alumno | Contra el mercado |
+| Academia | Catedria Completo hoy | Coste por alumno | Contra el mercado |
 |---|---|---|---|
 | 30 alumnos | 393 €/mes | **13,10 €** | evolCampus 80 €. **Se pierde la venta** |
 | 150 alumnos | 393 €/mes | 2,62 € | Competitivo y justo |
@@ -133,7 +133,7 @@ pequeña, que es lo que hace que llegue a plantearse entrar.
 - **Alta e implantación: 0 €.** Argos cobra 330 € solo por la web. Regalar el
   alta ataca justo la objeción que frena la venta.
 - **Migración de los datos incluida.** Es el mayor coste de cambiar y es donde
-  Geminis es mejor que nadie.
+  Catedria es mejor que nadie.
 - **Sin permanencia.** evolCampus no la tiene; exigirla sería regalarle el
   argumento.
 - **Exportación completa de los datos en un clic.** Se dice en voz alta: un

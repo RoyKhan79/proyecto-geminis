@@ -1,6 +1,6 @@
 # Modelo de seguridad
 
-Geminis guarda el trabajo de años de una academia y los datos personales de sus
+Catedria guarda el trabajo de años de una academia y los datos personales de sus
 alumnos. Este documento describe lo que impide que eso se filtre, y también lo
 que todavía no cubre.
 
@@ -184,7 +184,7 @@ con estados propios (`PENDING`, `ACTIVE`, `PAST_DUE`, `SUSPENDED`, `EXPIRED`,
 
 Consecuencia importante: **la IA respeta lo mismo**. La recuperación filtrará por
 academia, permisos, matrículas y derechos activos ANTES de la búsqueda
-semántica. Preguntarle a Geminis IA no puede ser una forma de leer un temario
+semántica. Preguntarle a Catedria IA no puede ser una forma de leer un temario
 que no se ha comprado.
 
 Ver y descargar son cosas distintas. Un nodo puede ser visible y no descargable;

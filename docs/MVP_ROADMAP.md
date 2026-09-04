@@ -20,9 +20,9 @@ programa?
 - RBAC centralizado con catálogo de permisos
 - Auditoría
 - Design system con modo claro y oscuro
-- Academia Geminis Demo con datos realistas
+- Academia Catedria Demo con datos realistas
 
-## ✅ Fase 1 — Geminis Manager · **terminada**
+## ✅ Fase 1 — Catedria Manager · **terminada**
 
 - Panel con métricas reales
 - Alumnos: listado con búsqueda y filtros, alta, ficha, edición, baja
@@ -33,7 +33,7 @@ programa?
 - Ficha del alumno con **qué contenido tiene contratado**
 - Configuración: academia, plan, roles y permisos
 
-## ✅ Fase 1b — Geminis Campus · **terminada**
+## ✅ Fase 1b — Catedria Campus · **terminada**
 
 - Inicio: continuar donde lo dejó, progreso, próxima clase
 - Estudiar: solo las secciones que tenga contratadas
@@ -44,7 +44,7 @@ programa?
 
 ---
 
-## ✅ Fase 2 — Geminis Import *(A · D · F)* · **terminada**
+## ✅ Fase 2 — Catedria Import *(A · D · F)* · **terminada**
 
 La barrera número uno para que una academia cambie de programa es tener a sus
 alumnos en otro sitio. Esta fase es comercial, no técnica.
@@ -81,7 +81,7 @@ Modelo ya listo: `ImportJob`, `ImportRow`.
 - Simulacros con plantilla de examen, temporizador y percentil ✅
 - Repetición espaciada SM-2 con repaso diario en el Campus ✅
 
-## ✅ Fase 5 — Geminis IA *(A · B · E)* · **terminada**
+## ✅ Fase 5 — Catedria IA *(A · B · E)* · **terminada**
 
 - Gateway con varios proveedores y registro de consumo ✅
 - Indexación del contenido autorizado ✅

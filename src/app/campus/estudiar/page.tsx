@@ -16,7 +16,7 @@ export const metadata: Metadata = { title: "Estudiar" };
  * Índice de estudio.
  *
  * Las secciones que ve el alumno son las que la ACADEMIA ha creado y nombrado,
- * y solo aquellas que su producto le da. Geminis no impone ni "Temario" ni
+ * y solo aquellas que su producto le da. Catedria no impone ni "Temario" ni
  * "Tests": lee el árbol y pinta lo que hay.
  */
 export default async function EstudiarPage() {

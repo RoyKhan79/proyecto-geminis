@@ -97,7 +97,7 @@ export async function askAi(request: AiRequest): Promise<AiResponse> {
 
   if (!clave) {
     return degradada(
-      `Falta la clave del proveedor ${proveedor}. Configúrala para activar Geminis IA.`,
+      `Falta la clave del proveedor ${proveedor}. Configúrala para activar Catedria IA.`,
     );
   }
 
@@ -133,7 +133,7 @@ export async function askAi(request: AiRequest): Promise<AiResponse> {
     });
 
     return degradada(
-      "Geminis IA no está disponible en este momento. Inténtalo más tarde.",
+      "Catedria IA no está disponible en este momento. Inténtalo más tarde.",
     );
   }
 }

@@ -10,7 +10,7 @@ import {
 export const metadata: Metadata = {
   title: "Política de privacidad",
   description:
-    "Qué datos trata Proyecto Geminis, para qué, durante cuánto tiempo y qué derechos tienes.",
+    "Qué datos trata Catedria, para qué, durante cuánto tiempo y qué derechos tienes.",
 };
 
 /**

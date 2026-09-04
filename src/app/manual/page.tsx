@@ -5,7 +5,7 @@ import { getAuthContext } from "@/lib/auth/context";
 import { BRAND } from "@/lib/brand";
 import { Captura } from "./captura";
 import { Indice } from "./indice";
-import { MarcaGeminis } from "@/components/marca";
+import { MarcaCatedria } from "@/components/marca";
 import {
   Apartado,
   Comando,
@@ -26,7 +26,7 @@ import {
 
 export const metadata: Metadata = {
   title: "Manual",
-  description: "Cómo se usa Geminis, por los dos lados.",
+  description: "Cómo se usa Catedria, por los dos lados.",
 };
 
 /**
@@ -61,7 +61,7 @@ export default async function ManualPage() {
         <header className="col-span-full border-b border-line pb-9 pt-14">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <p className="flex items-center gap-2.5 font-mono text-[0.7rem] uppercase tracking-[0.12em] text-ink-muted">
-              <MarcaGeminis className="size-7" />
+              <MarcaCatedria className="size-7" />
               {BRAND.name}
             </p>
             <Link
@@ -287,7 +287,7 @@ export default async function ManualPage() {
                 Pinta encima quién está leyendo. No impide una foto a la pantalla;
                 deja claro de quién es la copia.
               </Ficha>
-              <Ficha titulo="Geminis IA">
+              <Ficha titulo="Catedria IA">
                 Si lo apagas, la IA no indexa ni cita ese material.
               </Ficha>
               <Ficha titulo="Sirve para preguntas">
@@ -536,7 +536,7 @@ export default async function ManualPage() {
 
           <Apartado
             id="copiloto"
-            titulo="Geminis IA, del lado del preparador"
+            titulo="Catedria IA, del lado del preparador"
             roles={["Administrador", "Profesor"]}
           >
             <P>
@@ -759,7 +759,7 @@ export default async function ManualPage() {
               El <strong>repaso programado</strong> es el que más rinde: te
               devuelve cada pregunta justo cuando estabas a punto de olvidarla, y
               lo que fallas vuelve antes que lo que aciertas. Al terminar puedes
-              pedirle a Geminis que te explique por qué fallaste, con la cita del
+              pedirle a Catedria que te explique por qué fallaste, con la cita del
               material.
             </P>
           </Apartado>
@@ -813,7 +813,7 @@ export default async function ManualPage() {
 
           <Apartado
             id="ia-alumno"
-            titulo="Preguntarle a Geminis"
+            titulo="Preguntarle a Catedria"
             roles={["Alumno"]}
           >
             <P>
@@ -824,7 +824,7 @@ export default async function ManualPage() {
             <Captura
               nombre="campus-ia"
               movil
-              pie="Geminis IA en el Campus. Cada respuesta llega con la cita de dónde ha salido."
+              pie="Catedria IA en el Campus. Cada respuesta llega con la cita de dónde ha salido."
             />
 
             <P>

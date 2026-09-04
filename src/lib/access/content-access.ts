@@ -10,7 +10,7 @@ import { prismaBase } from "@/lib/db/client";
  *
  * Lo usan el Campus (abrir un tema), el visor de documentos (firmar una URL),
  * el módulo de tests (lanzar un test) y —esto es lo importante— la recuperación
- * de Geminis IA (§111): la IA no puede citar un fragmento que el alumno no haya
+ * de Catedria IA (§111): la IA no puede citar un fragmento que el alumno no haya
  * contratado, porque preguntarle a la IA no puede ser una puerta trasera para
  * leer material de pago.
  *

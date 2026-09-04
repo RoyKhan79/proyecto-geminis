@@ -116,7 +116,7 @@ export type NewMember = {
 /**
  * Da de alta a una persona en una academia.
  *
- * Si el correo ya existe en Geminis se reutiliza la identidad: la misma persona
+ * Si el correo ya existe en Catedria se reutiliza la identidad: la misma persona
  * puede ser alumna de una academia y profesora de otra sin duplicar cuentas
  * (ADR-0003). Nunca se sobrescribe la contraseña de una cuenta existente.
  */

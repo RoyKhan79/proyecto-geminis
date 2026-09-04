@@ -2,7 +2,7 @@
  * COPIAS DE SEGURIDAD
  *
  *   npm run copia            · copia completa de la base
- *   npm run copia -- --academia geminis-demo   · solo una academia
+ *   npm run copia -- --academia catedria-demo   · solo una academia
  *   npm run copia:restaurar -- <archivo>       · lee y comprueba, sin escribir
  *   npm run copia:probar    -- <archivo>       · la restaura de verdad y la tira
  *

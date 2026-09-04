@@ -41,7 +41,7 @@ Recorrido de los 136 puntos del encargo. Tres estados:
 | 17 | Respuestas con citas | Hecho | `[1]`, `[2]` con documento y localizador |
 | 18 | IA del alumno | Hecho | `/campus/ia` |
 | 19 | Perfil de aprendizaje | Hecho | fortalezas y debilidades calculadas y usadas por el asistente al responder |
-| 20 | Recomendaciones | Hecho: «Geminis te propone» calcula qué toca hoy con el motivo delante (ADR-0030) |
+| 20 | Recomendaciones | Hecho: «Catedria te propone» calcula qué toca hoy con el motivo delante (ADR-0030) |
 | 21 | Copiloto del profesor | Hecho | generación de preguntas desde el material |
 | 22 | Validación humana obligatoria | Hecho | todo nace en borrador; no existe ruta que publique solo |
 
@@ -106,7 +106,7 @@ Recorrido de los 136 puntos del encargo. Tres estados:
 | 72 | Lo que NO había que construir todavía | Respetado: streaming propio, apps nativas, aprendizaje automático avanzado, contabilidad, WhatsApp, SMS, videoconferencia propia, rastreador masivo, marketplace y gamificación siguen fuera, y está escrito por qué |
 | 73 | Criterio para priorizar (A–F) | Hecho: encabeza `MVP_ROADMAP.md` y cada fase indica a qué preguntas responde |
 | 74 | Los seis diferenciadores | Hecho los seis: migración (importación con simulación y reversión), IA integrada, legislación, aprendizaje personalizado, retención y experiencia móvil |
-| 75 | Visión futura | En buena parte alcanzada: Geminis ya sabe qué prepara el alumno, cuándo examina, qué domina, qué falla y qué le conviene hoy; el profesor ve quién se está desenganchando y qué preguntas fallan; la dirección ve altas, bajas, pagos y riesgo |
+| 75 | Visión futura | En buena parte alcanzada: Catedria ya sabe qué prepara el alumno, cuándo examina, qué domina, qué falla y qué le conviene hoy; el profesor ve quién se está desenganchando y qué preguntas fallan; la dirección ve altas, bajas, pagos y riesgo |
 | 76 | No sustituir al preparador, hacerlo más potente | Hecho por diseño: la IA nunca publica sola, el profesor marca el ritmo y el material es de la academia |
 | 77 | Documentos antes de construir | Hecho: los seis pedidos, más siete escritos después |
 | 78 | Orden de desarrollo por fases | Hecho: fases 0 a 7 en el orden pedido, ninguna empezada dejando la anterior rota |
@@ -204,7 +204,7 @@ Peticiones posteriores, todas construidas:
 
 - **Simulacros** con plantilla de examen, temporizador, penalización por fallo
   como en la convocatoria y percentil frente al resto de la academia.
-- **Geminis IA con motor propio**: responde con el material de la academia sin
+- **Catedria IA con motor propio**: responde con el material de la academia sin
   contratar ninguna API. Ya no existe la pantalla de «no disponible».
 - **«¿Por qué he fallado?»** en cada pregunta errada, con la explicación del
   preparador reforzada por el temario y citada.

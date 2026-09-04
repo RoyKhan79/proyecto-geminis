@@ -27,8 +27,8 @@ Gestión, Inteligencia Artificial y Plataforma.
 
 Dos permisos merecen atención porque deciden en qué aplicación entra alguien:
 
-- `manager.access` — Geminis Manager
-- `campus.access` — Geminis Campus
+- `manager.access` — Catedria Manager
+- `campus.access` — Catedria Campus
 
 `/inicio` los lee y redirige. Quien tenga los dos entra en Manager y puede
 cambiar desde la barra superior.
@@ -60,7 +60,7 @@ No tiene: `students.notes` (observaciones internas del profesor),
 negocio sin ver ni tocar lo académico sensible.
 
 ### Alumno (`STUDENT`)
-`campus.access`, ver contenido, hacer tests, ver clases y normativa, usar Geminis
+`campus.access`, ver contenido, hacer tests, ver clases y normativa, usar Catedria
 IA. Nada más. Lo que ve de verdad lo deciden sus derechos de acceso.
 
 ---
@@ -85,7 +85,7 @@ En la interfaz:
 ```
 
 **Ocultar el botón no es autorizar.** La comprobación de servidor tiene que estar
-igualmente: una petición se puede fabricar a mano. Toda Server Action de Geminis
+igualmente: una petición se puede fabricar a mano. Toda Server Action de Catedria
 empieza por `requirePermission()`.
 
 El contexto (`getAuthContext`) se resuelve una sola vez por petición: sesión,

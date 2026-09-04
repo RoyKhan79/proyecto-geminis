@@ -1,4 +1,4 @@
-# Guión para enseñar Proyecto Geminis a una academia
+# Guión para enseñar Catedria a una academia
 
 Pensado para una demostración en directo de **20 minutos**, con dos pantallas
 abiertas (o dos navegadores): una haciendo de academia y otra de alumno.
@@ -14,8 +14,8 @@ Ten preparadas dos ventanas:
 
 | Ventana | Sesión |
 |---------|--------|
-| Izquierda · **la academia** | `admin@academiademo.test` / `Geminis2026!` |
-| Derecha · **el alumno** | `alumno1@academiademo.test` / `Geminis2026!` |
+| Izquierda · **la academia** | `admin@academiademo.test` / `Catedria2026!` |
+| Derecha · **el alumno** | `alumno1@academiademo.test` / `Catedria2026!` |
 
 ---
 
@@ -172,7 +172,7 @@ Pulsa **«Aceptar y crear»**.
 
 ## 8 · La IA que no os contradice (2 minutos)
 
-En la ventana del alumno: **Geminis IA**.
+En la ventana del alumno: **Catedria IA**.
 
 Pregunta algo del temario. Enseña las **fuentes citadas**: documento y fragmento.
 
@@ -192,7 +192,7 @@ Y el remate importante:
 
 Una frase más, que es la que sorprende:
 
-> «Y esto no os cuesta nada. Geminis lleva su propio motor dentro: no hay que
+> «Y esto no os cuesta nada. Catedria lleva su propio motor dentro: no hay que
 > contratar ninguna API, y con esa configuración vuestro temario **no sale del
 > servidor**. Si algún día queréis respuestas más redactadas, se conecta un
 > modelo y la barrera de permisos es exactamente la misma.»
@@ -201,9 +201,9 @@ Una frase más, que es la que sorprende:
 
 ## 8b · La IA que os conoce (2 minutos) ⭐
 
-Esto es lo que separa a Geminis de un buscador.
+Esto es lo que separa a Catedria de un buscador.
 
-En la ventana del alumno, entra en el inicio del Campus. Arriba, **«Geminis te
+En la ventana del alumno, entra en el inicio del Campus. Arriba, **«Catedria te
 propone»**:
 
 > «Fíjate en que no dice "estudia el tema 4". Dice *por qué*: llevas doce fallos
@@ -212,7 +212,7 @@ propone»**:
 
 Ahora ve a **Tests**. Si hay repaso pendiente, sale arriba:
 
-> «Geminis lleva la cuenta de cuándo está a punto de olvidar cada pregunta y se
+> «Catedria lleva la cuenta de cuándo está a punto de olvidar cada pregunta y se
 > la devuelve justo a tiempo. Es lo que hace que lo del tema 1 siga en pie el día
 > del examen. El alumno no organiza nada: le llega hecho.»
 

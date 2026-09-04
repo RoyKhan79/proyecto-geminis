@@ -52,7 +52,7 @@ model User {
   emailVerifiedAt DateTime?
   lastLoginAt     DateTime?
 
-  /// Superadmin de Geminis. No implica acceso al contenido de ninguna academia:
+  /// Superadmin de Catedria. No implica acceso al contenido de ninguna academia:
   /// el acceso de soporte se realiza mediante impersonación auditada (§3).
   isPlatformAdmin Boolean @default(false)
 

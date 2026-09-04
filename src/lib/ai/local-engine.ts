@@ -417,7 +417,7 @@ export type PreguntaGenerada = {
 /**
  * Genera preguntas tipo test a partir del material, **sin ningún proveedor de IA**.
  *
- * Es lo que hace que Geminis IA funcione sin contratar nada: saca los enunciados
+ * Es lo que hace que Catedria IA funcione sin contratar nada: saca los enunciados
  * del propio texto indexado. No escribe como un modelo grande, y por eso todo lo
  * que produce entra como borrador para que una persona lo revise.
  *

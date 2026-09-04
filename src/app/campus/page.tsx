@@ -37,7 +37,7 @@ export default async function CampusHomePage() {
 
   const progreso = await loadProgressSummary(ctx.db, grants, studentId);
 
-  // Lo que Geminis propone hoy a este alumno concreto. Si no tiene nada que
+  // Lo que Catedria propone hoy a este alumno concreto. Si no tiene nada que
   // decir con fundamento, devuelve una lista vacía y no se pinta nada.
   const propuestas = ctx.permissions.has("ai.student")
     ? await proponerPlanDelDia({

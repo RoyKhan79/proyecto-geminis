@@ -14,7 +14,7 @@ const SUGERENCIAS = [
 ];
 
 /**
- * La caja para preguntarle a Geminis, con las citas de la respuesta.
+ * La caja para preguntarle a Catedria, con las citas de la respuesta.
  */
 export function AskBox({
   temas,

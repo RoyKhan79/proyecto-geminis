@@ -253,7 +253,7 @@ describe("ritmo de publicación", () => {
   });
 });
 
-describe("Geminis IA no es una puerta trasera", () => {
+describe("Catedria IA no es una puerta trasera", () => {
   it("no recupera fragmentos de contenido no contratado", async () => {
     const dbA = tenantDb(academiaA.id);
 

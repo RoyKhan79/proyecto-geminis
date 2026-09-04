@@ -1,7 +1,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // RADAR DE CONVOCATORIAS
 //
-// Cada mañana, sin que nadie abra el programa, Proyecto Geminis consulta los
+// Cada mañana, sin que nadie abra el programa, Catedria consulta los
 // boletines oficiales y avisa por correo a la academia cuando sale una
 // convocatoria de las oposiciones que prepara. Si la acepta, se le crea la
 // oposición lista para subir temario.

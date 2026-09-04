@@ -48,7 +48,7 @@ nombre visible.
 **Por qué.** La terminología cambia por especialidad y por ley. En Magisterio hoy
 se dice «Programación de aula» y «Situaciones de aprendizaje» donde antes se
 decía «programación didáctica» y «unidades didácticas». Con esos nombres en el
-código, Geminis quedaría obsoleto en cada reforma y sería inútil para cualquier
+código, Catedria quedaría obsoleto en cada reforma y sería inútil para cualquier
 oposición que no encaje en BLOQUE → TEMA → TEST.
 **Descartado.** Tablas `Block`, `Topic`, `TopicSection` fijas.
 **Coste asumido.** Un árbol genérico es algo más difícil de consultar que tres
@@ -69,7 +69,7 @@ serían varias consultas o un CTE en cada petición.
 **Por qué.** El negocio real vende packs distintos —solo temario, solo clases,
 temario + tests, curso completo— y el profesor necesita poder ajustar el acceso
 de un alumno concreto. Con un booleano eso no se puede expresar.
-**Consecuencia importante.** La misma comprobación la usa Geminis IA: preguntar
+**Consecuencia importante.** La misma comprobación la usa Catedria IA: preguntar
 a la IA no puede ser una puerta trasera al material no contratado.
 
 ### ADR-0009 · La IA nunca publica sola
@@ -95,7 +95,7 @@ oficiales se conectan después.
 **Por qué.** El valor está en «este cambio afecta a 2 temas y 126 preguntas, ¿qué
 hacemos?». Un rastreador de boletines sin ese flujo no sirve de nada.
 
-### ADR-0013 · Geminis no modifica el contenido de una academia
+### ADR-0013 · Catedria no modifica el contenido de una academia
 **Decisión.** Ante un cambio legal, se genera una alerta con propuesta. Nunca se
 edita el material del profesor.
 
@@ -205,7 +205,7 @@ cuesta la plaza.
 **Detalle.** La penalización se escribe como en las bases («1/3») y se convierte
 a decimal al guardarla.
 
-### ADR-0028 · Geminis IA funciona sin proveedor externo ⭐
+### ADR-0028 · Catedria IA funciona sin proveedor externo ⭐
 **Decisión.** Existe un motor propio (`src/lib/ai/local-engine.ts`) que responde
 con el material de la academia sin ninguna API contratada. Si hay proveedor
 configurado, responde el modelo; si no, o si el proveedor falla, responde el
@@ -239,7 +239,7 @@ acertar tras dos minutos no significan lo mismo, y eso ya lo sabemos.
 **Detalle.** El tiempo por pregunta se limita a cinco minutos al guardarlo:
 dejar la pestaña abierta no significa que la pregunta costara una hora.
 
-### ADR-0030 · Geminis IA propone sin que le pregunten
+### ADR-0030 · Catedria IA propone sin que le pregunten
 **Decisión.** Al entrar en el Campus, el alumno ve hasta tres propuestas
 calculadas con sus propios datos, cada una con el motivo concreto que la
 justifica. Si no hay nada que decir con fundamento, no se muestra nada.
@@ -370,7 +370,7 @@ guardia, así que hay que acotar por `academyId` a mano. RLS sigue comprobándol
 por debajo, que es exactamente para lo que está.
 
 ### ADR-0042 · Los cobros recurrentes generan el fichero, no mueven dinero
-**Decisión.** Geminis guarda la forma de pago de cada alumno, sus datos
+**Decisión.** Catedria guarda la forma de pago de cada alumno, sus datos
 bancarios y su mandato; emite los recibos del mes; y produce el fichero SEPA
 (pain.008.001.02) que la academia sube a su banco.
 **Por qué no cobramos nosotros.** Mover dinero exige ser entidad de pago
@@ -640,7 +640,7 @@ que ADR-0056 con las pruebas que pasan sin probar nada.
 antes que en la firma de la función.
 
 ### ADR-0059 · Se vende por módulos, y el módulo sin contratar no funciona ⭐
-**Decisión.** Una academia no compra «Geminis»: compra las partes que necesita.
+**Decisión.** Una academia no compra «Catedria»: compra las partes que necesita.
 Doce módulos con su precio, tres packs preparados y descuento por volumen. El
 superadministrador compone el pack de cada academia y ve el total al instante.
 

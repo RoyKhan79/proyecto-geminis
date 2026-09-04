@@ -23,11 +23,11 @@ import { chromium, type Browser } from "playwright";
 const BASE = process.argv[2] ?? "http://localhost:3000";
 const DESTINO = path.resolve(
   process.cwd(),
-  process.argv[3] ?? "Manual de Geminis.html",
+  process.argv[3] ?? "Manual de Catedria.html",
 );
 
 const CORREO = "admin@academiademo.test";
-const CLAVE = "Geminis2026!";
+const CLAVE = "Catedria2026!";
 
 /** Tipos que se incrustan y con qué cabecera. */
 const TIPOS: Record<string, string> = {

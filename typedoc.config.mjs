@@ -40,7 +40,7 @@ const configuracion = {
   ],
 
   out: "docs/api",
-  name: "Proyecto Geminis · referencia del código",
+  name: "Catedria · referencia del código",
   readme: "docs/API_README.md",
 
   includeVersion: false,

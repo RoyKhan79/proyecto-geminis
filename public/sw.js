@@ -1,5 +1,5 @@
 /**
- * Service worker de Proyecto Geminis Campus.
+ * Service worker de Catedria Campus.
  *
  * Hace poco a propósito, y lo poco que hace es lo que de verdad importa cuando
  * alguien estudia en el metro:
@@ -189,11 +189,11 @@ self.addEventListener("push", (event) => {
   try {
     datos = event.data.json();
   } catch {
-    datos = { title: "Proyecto Geminis", body: event.data.text() };
+    datos = { title: "Catedria", body: event.data.text() };
   }
 
   event.waitUntil(
-    self.registration.showNotification(datos.title ?? "Proyecto Geminis", {
+    self.registration.showNotification(datos.title ?? "Catedria", {
       body: datos.body ?? "",
       icon: "/icono-192.png",
       badge: "/icono-192.png",

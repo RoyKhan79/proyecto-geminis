@@ -1,7 +1,7 @@
 // ─────────────────────────────────────────────────────────────────────────────
 // PLATAFORMA · La academia es el tenant
 //
-// Decisión ADR-0002: en Geminis `Academy` ES el tenant. No existe una tabla
+// Decisión ADR-0002: en Catedria `Academy` ES el tenant. No existe una tabla
 // `Tenant` separada porque hoy sería una indirección sin uso. Si en el futuro
 // aparecen grupos con varias academias, se añade `Organization` POR ENCIMA de
 // Academy, que es una migración aditiva y sencilla.
@@ -207,7 +207,7 @@ model Academy {
 // ─────────────────────────────────────────────────────────────────────────────
 // MÓDULOS CONTRATADOS
 //
-// Una academia no compra «Geminis»: compra las partes que necesita. La que solo
+// Una academia no compra «Catedria»: compra las partes que necesita. La que solo
 // da clases presenciales no quiere pagar por la app del alumnado; la que ya
 // tiene gestoría no necesita la facturación.
 //

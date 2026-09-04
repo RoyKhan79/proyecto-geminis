@@ -425,7 +425,7 @@ const richTextSchema = z.object({
 });
 
 /**
- * Apuntes escritos directamente en Proyecto Geminis.
+ * Apuntes escritos directamente en Catedria.
  *
  * El HTML se SANEA aquí, antes de guardarlo. Volverá a sanearse al pintarlo:
  * son dos barreras a propósito, porque un script guardado se ejecutaría con la

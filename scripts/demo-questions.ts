@@ -1,5 +1,5 @@
 /**
- * Banco de preguntas de demostración para la Academia Geminis Demo.
+ * Banco de preguntas de demostración para la Academia Catedria Demo.
  *
  *   npm run demo:preguntas
  *
@@ -198,7 +198,7 @@ const BANCO: Pregunta[] = [
 
 async function main() {
   const academia = await prismaBase.academy.findUnique({
-    where: { slug: "geminis-demo" },
+    where: { slug: "catedria-demo" },
     select: { id: true },
   });
   if (!academia) {

@@ -12,7 +12,7 @@ import { createSession, etiquetaDeDispositivo } from "@/lib/auth/session";
 
 async function main() {
   const academia = await prismaBase.academy.findFirst({
-    where: { slug: "geminis-demo" },
+    where: { slug: "catedria-demo" },
     select: { id: true, maxSessionsPerStudent: true },
   });
   if (!academia) throw new Error("Falta la academia demo.");

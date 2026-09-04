@@ -14,10 +14,10 @@ import {
 import { formatDateTime } from "@/lib/utils";
 import { AiPanel } from "./panel";
 
-export const metadata: Metadata = { title: "Geminis IA" };
+export const metadata: Metadata = { title: "Catedria IA" };
 
 /**
- * El copiloto de Geminis IA para el profesorado.
+ * El copiloto de Catedria IA para el profesorado.
  *
  * Lo primero que hay que hacer una vez es indexar el material: sin eso la IA no
  * tiene de dónde citar y lo dice, con razón.
@@ -66,7 +66,7 @@ export default async function IaPage() {
   return (
     <>
       <PageHeader
-        title="Geminis IA"
+        title="Catedria IA"
         description="Responde con VUESTRO material y cita de dónde sale cada dato. Nunca publica nada sin que lo apruebe una persona."
       />
 
@@ -78,7 +78,7 @@ export default async function IaPage() {
           <p className="min-w-0 flex-1 text-ink-muted">
             {aiDisponible()
               ? "Hay un proveedor configurado: las respuestas se redactan con el modelo, siempre sobre vuestro material y con sus citas."
-              : "Geminis IA funciona con su motor propio: lee vuestro material, localiza lo que responde a cada pregunta y lo cita. No hace falta contratar ninguna API. Si configuráis AI_PROVIDER, las respuestas pasan a redactarse además con un modelo."}
+              : "Catedria IA funciona con su motor propio: lee vuestro material, localiza lo que responde a cada pregunta y lo cita. No hace falta contratar ninguna API. Si configuráis AI_PROVIDER, las respuestas pasan a redactarse además con un modelo."}
           </p>
         </CardContent>
       </Card>

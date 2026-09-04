@@ -76,7 +76,7 @@ export async function fetchBoeOposiciones(fecha: Date): Promise<ItemBoletin[]> {
   const url = `https://boe.es/datosabiertos/api/boe/sumario/${dia}`;
 
   const respuesta = await fetch(url, {
-    headers: { Accept: "application/json", "User-Agent": "ProyectoGeminis/1.0" },
+    headers: { Accept: "application/json", "User-Agent": "ProyectoCatedria/1.0" },
     // El BOE puede tardar; si no responde en 30 s, se reintenta mañana.
     signal: AbortSignal.timeout(30_000),
   });

@@ -14,7 +14,7 @@ import { limpiarContadores } from "@/lib/rate-limit";
 import { cerrarExamenesVencidos } from "@/server/exams/cierre";
 
 async function main() {
-  console.log("Mantenimiento de Proyecto Geminis");
+  console.log("Mantenimiento de Catedria");
 
   const tokens = await limpiarTokensCaducados();
   console.log(`  · ${tokens} enlaces de recuperación caducados eliminados`);

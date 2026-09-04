@@ -6,7 +6,7 @@ import { MANAGER_NAV, type NavSection } from "./nav-config";
 import { BRAND } from "@/lib/brand";
 import { iconToneText } from "@/components/ui/primitives";
 import { cn } from "@/lib/utils";
-import { MarcaGeminis } from "@/components/marca";
+import { MarcaCatedria } from "@/components/marca";
 
 /**
  * Barra lateral de Manager. Recibe ya filtrados los elementos que la persona
@@ -34,7 +34,7 @@ export function ManagerSidebar({
       className="flex h-full w-[16.5rem] shrink-0 flex-col gap-7 overflow-y-auto border-r border-line/70 bg-surface/70 px-3.5 py-6 backdrop-blur-2xl"
     >
       <div className="flex items-center gap-3 px-2">
-        <MarcaGeminis className="size-9" />
+        <MarcaCatedria className="size-9" />
         <div className="min-w-0">
           <p className="line-clamp-2 font-display text-[0.9375rem] font-semibold leading-tight text-ink">
             {academyName}

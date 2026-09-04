@@ -18,7 +18,7 @@ import {
 /**
  * SERVICIO DE ARCHIVOS
  *
- * Único camino por el que sale un documento de Proyecto Geminis. Antes de
+ * Único camino por el que sale un documento de Catedria. Antes de
  * devolver un solo byte comprueba, en este orden:
  *
  *   1. que hay sesión,

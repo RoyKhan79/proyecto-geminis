@@ -143,7 +143,7 @@ export function BrandingForm({
         </CardHeader>
         <CardContent className="space-y-3 p-5 pt-0">
           <p className="text-sm text-ink-muted">
-            Descarga todo lo que tienes en Proyecto Geminis: personas, oposiciones,
+            Descarga todo lo que tienes en Catedria: personas, oposiciones,
             cursos, matrículas, contenido, preguntas, resultados y pagos. Los
             archivos subidos se entregan aparte desde el almacén.
           </p>

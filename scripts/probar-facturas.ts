@@ -13,7 +13,7 @@ import { calcularFactura, referenciaFactura } from "@/lib/billing/invoice";
 
 async function main() {
   const academia = await prismaBase.academy.findFirst({
-    where: { slug: "geminis-demo" },
+    where: { slug: "catedria-demo" },
     select: { id: true, name: true, taxId: true },
   });
   if (!academia) throw new Error("Falta la academia demo.");
@@ -31,7 +31,7 @@ async function main() {
   if (!academia.taxId) {
     await db.academy.update({
       where: { id: academia.id },
-      data: { taxId: "B12345678", legalName: "Academia Geminis Demo SL" },
+      data: { taxId: "B12345678", legalName: "Academia Catedria Demo SL" },
     });
     console.log("  · Se ha puesto un NIF de prueba a la academia");
   }
@@ -82,7 +82,7 @@ async function main() {
         reference: referenciaFactura(serie.code, serie.year, numero),
         status: "ISSUED",
         issuedOn: new Date(),
-        issuerName: "Academia Geminis Demo SL",
+        issuerName: "Academia Catedria Demo SL",
         issuerTaxId: "B12345678",
         customerName: `${alumno.user.firstName} ${alumno.user.lastName ?? ""}`.trim(),
         customerEmail: alumno.user.email,
@@ -184,7 +184,7 @@ async function main() {
       status: "ISSUED",
       issuedOn: new Date(),
       rectifiesId: originalCompleta!.id,
-      issuerName: "Academia Geminis Demo SL",
+      issuerName: "Academia Catedria Demo SL",
       issuerTaxId: "B12345678",
       customerName: "Rectificación",
       subtotalCents: totalesRect.subtotalCents,

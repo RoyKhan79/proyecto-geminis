@@ -69,7 +69,7 @@ export const CAPACIDADES: Capacidad[] = [
   },
   {
     codigo: "USE_AI_TUTOR",
-    nombre: "Geminis IA",
+    nombre: "Catedria IA",
     detalle: "Pregunta al tutor sobre el material de la academia.",
     modulo: "IA",
   },

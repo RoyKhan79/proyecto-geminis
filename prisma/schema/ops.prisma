@@ -124,7 +124,7 @@ model ImportJob {
   fileId    String?
   rowCount  Int     @default(0)
 
-  /// Mapeo columna del archivo → campo de Geminis, decidido por el usuario.
+  /// Mapeo columna del archivo → campo de Catedria, decidido por el usuario.
   columnMapping Json @default("{}")
   /// Opciones: qué hacer con duplicados, curso destino, etc.
   options       Json @default("{}")

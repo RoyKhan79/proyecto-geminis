@@ -25,7 +25,7 @@ import { prismaBase } from "@/lib/db/client";
 import { DESCARTES_HABITUALES } from "@/server/radar/boe";
 import { ejecutarRadarBoe } from "@/server/radar/service";
 
-const SLUG = process.env.DEMO_SLUG ?? "geminis-demo";
+const SLUG = process.env.DEMO_SLUG ?? "catedria-demo";
 
 /**
  * Las vigilancias de la demo.

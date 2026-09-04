@@ -181,7 +181,7 @@ async function main() {
         ? "confirmado por quien despliega"
         : `sin confirmar · carpeta: ${carpetaCopias}${existsSync(carpetaCopias) ? " (existe)" : " (no existe)"}`,
     comoSeArregla:
-      "Copia despliegue/geminis.cron al cron del servidor (ver despliegue/README.md). Después: BACKUP_CRON_CONFIRMED=1",
+      "Copia despliegue/catedria.cron al cron del servidor (ver despliegue/README.md). Después: BACKUP_CRON_CONFIRMED=1",
   });
 
   comprobar({
@@ -211,7 +211,7 @@ async function main() {
     detalle: radar
       ? `última vez: ${radar.startedAt.toLocaleString("es-ES")}`
       : "no se ha ejecutado nunca",
-    comoSeArregla: "Está en despliegue/geminis.cron: 30 8 * * * npm run radar",
+    comoSeArregla: "Está en despliegue/catedria.cron: 30 8 * * * npm run radar",
   });
 
   comprobar({
@@ -222,7 +222,7 @@ async function main() {
       process.env.MAINTENANCE_CRON_CONFIRMED === "1"
         ? "confirmado"
         : "sin confirmar: se acumulan sesiones y enlaces caducados",
-    comoSeArregla: "Está en despliegue/geminis.cron: 0 4 * * * npm run mantenimiento",
+    comoSeArregla: "Está en despliegue/catedria.cron: 0 4 * * * npm run mantenimiento",
   });
 
   // ── Correo y direcciones ───────────────────────────────────────────────────
@@ -245,7 +245,7 @@ async function main() {
   });
 
   // ── Datos de demostración ──────────────────────────────────────────────────
-  const demo = await prismaBase.academy.count({ where: { slug: "geminis-demo" } });
+  const demo = await prismaBase.academy.count({ where: { slug: "catedria-demo" } });
   const cuentasDemo = await prismaBase.user.count({
     where: { email: { endsWith: "@academiademo.test" } },
   });

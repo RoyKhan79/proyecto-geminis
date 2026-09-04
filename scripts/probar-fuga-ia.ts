@@ -15,7 +15,7 @@ import { recuperarFragmentos } from "@/lib/ai/retrieval";
 
 async function main() {
   const academia = await prismaBase.academy.findFirst({
-    where: { slug: "geminis-demo" },
+    where: { slug: "catedria-demo" },
     select: { id: true },
   });
   if (!academia) throw new Error("Falta la academia demo.");

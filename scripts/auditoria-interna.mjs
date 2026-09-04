@@ -106,7 +106,7 @@ const ACCIONES_SIN_SESION = new Set([
 ]);
 
 async function main() {
-  console.log(`\nAUDITORÍA INTERNA · Proyecto Geminis\n${"=".repeat(60)}`);
+  console.log(`\nAUDITORÍA INTERNA · Catedria\n${"=".repeat(60)}`);
 
   const paginas = await recorrer("src/app", ".tsx");
   const servidor = await recorrer("src/server", ".ts");

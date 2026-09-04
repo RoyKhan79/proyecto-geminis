@@ -8,9 +8,9 @@ import { limpiarParaSepa, normalizarIban } from "./iban";
  * bancos españoles para las domiciliaciones (Cuaderno 19-14 de la AEB en su
  * versión XML).
  *
- * Conviene ser exacto con lo que hace Geminis aquí:
+ * Conviene ser exacto con lo que hace Catedria aquí:
  *
- *   · **Geminis no cobra.** Genera el fichero. El cargo lo hace el banco.
+ *   · **Catedria no cobra.** Genera el fichero. El cargo lo hace el banco.
  *     Mover dinero exigiría ser entidad de pago y estar autorizado por el Banco
  *     de España, y no lo somos.
  *   · La academia necesita tener firmado un **contrato de adeudos** con su

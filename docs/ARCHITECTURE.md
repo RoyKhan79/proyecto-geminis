@@ -21,11 +21,11 @@ carpeta y las rutas pasan a ser un cliente más.
 
 ## 2. Las dos aplicaciones
 
-Geminis son dos productos con la misma base de datos y el mismo servidor:
+Catedria son dos productos con la misma base de datos y el mismo servidor:
 
-- **Geminis Manager** (`/gestion`) — la academia. Barra lateral, tablas, filtros,
+- **Catedria Manager** (`/gestion`) — la academia. Barra lateral, tablas, filtros,
   pensado para escritorio y tablet.
-- **Geminis Campus** (`/campus`) — el alumno. Barra inferior, una columna, todo
+- **Catedria Campus** (`/campus`) — el alumno. Barra inferior, una columna, todo
   alcanzable con el pulgar. Es *mobile first* de verdad, no un ERP encogido.
 
 Quién entra en cuál lo decide `/inicio` leyendo los permisos, no una URL que el
@@ -104,7 +104,7 @@ Convocatoria 2026
 `label` es un dato que escribe la academia. `sectionKind` solo dice qué pantalla
 usa el Campus (lector de documentos, tests, clases…), nunca cómo se llama el
 apartado. Cuando la ley cambie otra vez la terminología, la academia edita un
-texto y Geminis sigue funcionando.
+texto y Catedria sigue funcionando.
 
 Cada nodo guarda una **ruta materializada** (`path`), de modo que una rama
 completa se consulta con un `LIKE` indexado. Es la operación que más se ejecuta:
@@ -128,14 +128,14 @@ Alumno con ese producto:
 
 Un motor único (`src/lib/access/content-access.ts`) responde siempre a la misma
 pregunta, y lo usan el Campus, el visor de documentos, el módulo de tests y —
-cuando llegue — la recuperación de Geminis IA.
+cuando llegue — la recuperación de Catedria IA.
 
 ---
 
 ## 7. Inteligencia artificial
 
 Ningún módulo llamará a un proveedor de IA directamente. Todo pasará por el
-**Geminis AI Gateway**, que decide proveedor y modelo, aplica límites, filtra el
+**Catedria AI Gateway**, que decide proveedor y modelo, aplica límites, filtra el
 contexto por academia y permisos, y registra el consumo. Ver
 [AI_ARCHITECTURE.md](AI_ARCHITECTURE.md).
 

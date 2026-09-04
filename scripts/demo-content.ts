@@ -1,5 +1,5 @@
 /**
- * Añade material real a la Academia Geminis Demo: PDFs de temario colgados del
+ * Añade material real a la Academia Catedria Demo: PDFs de temario colgados del
  * árbol de contenido, para poder probar el visor y los permisos de descarga.
  *
  *   npm run demo:contenido
@@ -96,7 +96,7 @@ function makePdf(titulo: string, lineas: string[]): { buffer: Buffer; paginas: n
  * Temario de la demo.
  *
  * No es un indice: es texto explicativo de verdad, con sus plazos y sus
- * articulos. La razon es practica: con un indice de epigrafes, Geminis IA no
+ * articulos. La razon es practica: con un indice de epigrafes, Catedria IA no
  * tiene nada que responder ni con que generar preguntas, y una demostracion
  * comercial se vendria abajo en la primera pregunta. El contenido esta escrito
  * sin acentos porque el PDF se genera a mano y asi se extrae limpio.
@@ -178,7 +178,7 @@ const DOCUMENTOS = [
       "pasivo de los ciudadanos de la Union Europea en las elecciones municipales; y en 2011, el",
       "articulo 135, para incorporar el principio de estabilidad presupuestaria.",
       "",
-      "Academia Geminis Demo - material para alumnado matriculado.",
+      "Academia Catedria Demo - material para alumnado matriculado.",
     ],
   },
   {
@@ -265,7 +265,7 @@ const DOCUMENTOS = [
       "El articulo 109 permite rectificar en cualquier momento los errores materiales, de hecho o",
       "aritmeticos existentes en los actos.",
       "",
-      "Academia Geminis Demo - material para alumnado matriculado.",
+      "Academia Catedria Demo - material para alumnado matriculado.",
     ],
   },
   {
@@ -370,7 +370,7 @@ const DOCUMENTOS = [
       "notificacion de la resolucion impugnada; en los demas casos, el plazo es de tres meses. El plazo",
       "maximo para resolver y notificar es de tres meses, y el silencio es desestimatorio.",
       "",
-      "Academia Geminis Demo - material para alumnado matriculado.",
+      "Academia Catedria Demo - material para alumnado matriculado.",
     ],
   },
 ];
@@ -379,7 +379,7 @@ const rehacer = process.argv.includes("--rehacer");
 
 async function main() {
   const academia = await prismaBase.academy.findUnique({
-    where: { slug: "geminis-demo" },
+    where: { slug: "catedria-demo" },
     select: { id: true, name: true },
   });
   if (!academia) {

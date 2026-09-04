@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { getAuthContext } from "@/lib/auth/context";
 import { BRAND } from "@/lib/brand";
 import { SignInForm } from "./sign-in-form";
-import { LogotipoGeminis } from "@/components/marca";
+import { LogotipoCatedria } from "@/components/marca";
 
 export const metadata: Metadata = {
   title: "Entrar",
@@ -49,7 +49,7 @@ export default async function EntrarPage({
             alguien y es donde hay sitio para que el nombre se lea entero.
           */}
           <Link href="/" className="inline-flex" aria-label={BRAND.name}>
-            <LogotipoGeminis descriptor />
+            <LogotipoCatedria descriptor />
           </Link>
 
           <div className="mt-9 space-y-1.5">

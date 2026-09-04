@@ -11,7 +11,7 @@
 Esta guía tiene dos partes:
 
 1. **Instalar la aplicación** en un móvil real, desde el ordenador donde está
-   corriendo Proyecto Geminis.
+   corriendo Catedria.
 2. **La prueba completa**: tú de academia en el ordenador, tú de alumno en el
    móvil, viendo cómo lo que haces en un lado aparece en el otro.
 
@@ -64,11 +64,11 @@ del sistema → Red → Firewall, permitir conexiones entrantes para Node.
 
 | Quién | Correo | Contraseña |
 | --- | --- | --- |
-| Dirección de la academia | `admin@academiademo.test` | `Geminis2026!` |
-| Profesora | `laura@academiademo.test` | `Geminis2026!` |
-| Secretaría | `secretaria@academiademo.test` | `Geminis2026!` |
-| Alumna (curso completo) | `alumno1@academiademo.test` | `Geminis2026!` |
-| Alumno (solo tests) | `alumno2@academiademo.test` | `Geminis2026!` |
+| Dirección de la academia | `admin@academiademo.test` | `Catedria2026!` |
+| Profesora | `laura@academiademo.test` | `Catedria2026!` |
+| Secretaría | `secretaria@academiademo.test` | `Catedria2026!` |
+| Alumna (curso completo) | `alumno1@academiademo.test` | `Catedria2026!` |
+| Alumno (solo tests) | `alumno2@academiademo.test` | `Catedria2026!` |
 
 Los dos alumnos son distintos a propósito: **tienen contratado material
 diferente**, y esa es la parte del producto que más conviene enseñar.
@@ -77,7 +77,7 @@ diferente**, y esa es la parte del producto que más conviene enseñar.
 
 ## 1 · Instalar la app en el móvil
 
-Proyecto Geminis Campus es una **PWA**: se instala desde el navegador, sin
+Catedria Campus es una **PWA**: se instala desde el navegador, sin
 tienda de aplicaciones. Una vez instalada tiene su icono, se abre a pantalla
 completa sin barra de navegador y funciona igual que una aplicación nativa
 (ADR-0021).
@@ -179,7 +179,7 @@ contratado, y se comprueba en cada descarga.
 2. Responde algunas bien y otras mal, y deja una en blanco a propósito.
 3. Entrega.
 4. **Móvil** · En la corrección, en una pregunta fallada, toca **«¿Por qué he
-   fallado?»**. Geminis te da la explicación del preparador y la refuerza con lo
+   fallado?»**. Catedria te da la explicación del preparador y la refuerza con lo
    que dice tu temario, citando de dónde lo saca.
 5. **Ordenador** · Manager → *Analítica*. Tu intento ya está ahí, y la pregunta
    fallada cuenta para las estadísticas del tema.
@@ -191,15 +191,15 @@ contratado, y se comprueba en cada descarga.
 2. Lo que has fallado vuelve mañana; lo que has acertado con soltura, mucho más
    tarde. Eso lo decide la repetición espaciada (ADR-0029).
 
-### Prueba E · Geminis IA
+### Prueba E · Catedria IA
 
-1. **Móvil** · Campus → pregunta a Geminis: *«¿Qué plazo hay para resolver?»*
+1. **Móvil** · Campus → pregunta a Catedria: *«¿Qué plazo hay para resolver?»*
 2. Responde con el material de la academia y **cita el documento y la página**.
 3. Pregúntale ahora algo que no esté en el temario: *«¿Cuál es la capital de
    Mongolia?»*. Dice que no lo encuentra, en lugar de inventárselo.
 4. **Móvil** · Entra con `alumno2` (solo tests) y hazle la misma primera
    pregunta: **no encuentra nada**, porque no tiene el temario contratado.
-5. **Ordenador** · Manager → *Geminis IA* → elige un tema → **Generar
+5. **Ordenador** · Manager → *Catedria IA* → elige un tema → **Generar
    preguntas**. Salen en **borrador**, con su procedencia. Nada se publica solo.
 
 Lo que se demuestra: la IA no es una puerta trasera al material no contratado, y
@@ -294,7 +294,7 @@ móvil y vuelve a añadirla.
 Es lo esperado sobre HTTP. Mira el aviso de más arriba.
 
 **«No encuentro esa información» al preguntar a la IA.**
-El material puede no estar indexado. En el ordenador: Manager → *Geminis IA* →
+El material puede no estar indexado. En el ordenador: Manager → *Catedria IA* →
 **Indexar material**. Y comprueba que ese tema esté abierto y contratado para
 ese alumno.
 

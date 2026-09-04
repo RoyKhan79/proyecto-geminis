@@ -196,7 +196,7 @@ function isEmptyRow(row: Record<string, string>) {
 
 /**
  * Propone un mapeo automático entre las columnas del archivo y los campos de
- * Geminis. Es solo una propuesta: el usuario la revisa siempre. Acierta en la
+ * Catedria. Es solo una propuesta: el usuario la revisa siempre. Acierta en la
  * mayoría de exportaciones porque las academias usan cabeceras parecidas.
  */
 export function suggestMapping(

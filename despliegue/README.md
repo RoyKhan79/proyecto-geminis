@@ -1,4 +1,4 @@
-# Poner Geminis en marcha en un servidor
+# Poner Catedria en marcha en un servidor
 
 Lo que falta cuando el código ya está bien: las cosas que no se pueden resolver
 desde el repositorio. `npm run desplegar:comprobar` las va tachando.
@@ -8,9 +8,9 @@ desde el repositorio. `npm run desplegar:comprobar` las va tachando.
 ## 1 · Las tareas programadas
 
 ```bash
-crontab despliegue/geminis.cron   # cambia antes /srv/geminis por tu ruta
+crontab despliegue/catedria.cron   # cambia antes /srv/catedria por tu ruta
 crontab -l                        # comprueba que ha entrado
-mkdir -p /var/log/geminis
+mkdir -p /var/log/catedria
 ```
 
 Son cuatro: el radar del BOE cada mañana, la copia de seguridad de madrugada, el
@@ -34,7 +34,7 @@ SMTP_HOST="smtp.tuproveedor.com"
 SMTP_PORT=587
 SMTP_USER="..."
 SMTP_PASSWORD="..."
-SMTP_FROM="Geminis <avisos@tudominio.com>"
+SMTP_FROM="Catedria <avisos@tudominio.com>"
 ```
 
 Y en el DNS del dominio, **SPF, DKIM y DMARC**. Sin eso el correo llega a la

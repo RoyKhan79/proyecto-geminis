@@ -1,4 +1,4 @@
-// Geminis · configuración base del esquema
+// Catedria · configuración base del esquema
 //
 // El esquema está dividido por dominios en esta misma carpeta:
 //   platform.prisma    → academias (tenants), planes SaaS

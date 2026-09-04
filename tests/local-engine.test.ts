@@ -8,7 +8,7 @@ import {
 import type { Fragmento } from "@/lib/ai/retrieval";
 
 /**
- * El motor local es lo que hace que Geminis IA funcione sin contratar ninguna
+ * El motor local es lo que hace que Catedria IA funcione sin contratar ninguna
  * API. Se comprueba lo que de verdad importa: que responde con el material y
  * que NO responde cuando el material no lo dice.
  */

@@ -3,7 +3,7 @@ import type { Permission } from "@/lib/auth/permissions";
 /**
  * EL CATÁLOGO DE MÓDULOS
  * ──────────────────────
- * Una academia no compra «Geminis»: compra las partes que necesita. Una
+ * Una academia no compra «Catedria»: compra las partes que necesita. Una
  * academia pequeña que solo da clases presenciales no quiere pagar por la app
  * del alumnado; una que vende temario online no necesita la facturación si ya
  * la lleva su gestoría.
@@ -203,7 +203,7 @@ export const CATALOGO: Modulo[] = [
   },
   {
     codigo: "IA",
-    nombre: "Geminis IA",
+    nombre: "Catedria IA",
     resumen:
       "El asistente que responde con el material de la academia, y el copiloto del preparador.",
     incluye: [
@@ -348,7 +348,7 @@ export const MODULO_DE_PERMISO: Partial<Record<Permission, CodigoModulo>> = {
   // App del alumnado
   "campus.access": "CAMPUS",
 
-  // Geminis IA
+  // Catedria IA
   "ai.student": "IA",
   "ai.copilot": "IA",
   "ai.settings": "IA",
@@ -379,7 +379,7 @@ export function moduloDelPermiso(permiso: Permission): CodigoModulo {
 /**
  * Completa una selección con lo que hace falta para que funcione.
  *
- * El núcleo entra siempre, y las dependencias también: contratar Geminis IA sin
+ * El núcleo entra siempre, y las dependencias también: contratar Catedria IA sin
  * temario deja un asistente sin nada que citar, y facturación sin cobros deja
  * facturas que no se cruzan con ningún pago. Se añaden en lugar de dar un
  * error, y en pantalla se dice cuáles se han añadido.

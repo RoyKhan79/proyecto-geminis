@@ -16,7 +16,7 @@ import {
  * para que llegara etiquetado como `application/pdf`. Una lista blanca de tipos
  * filtra una etiqueta, no un contenido.
  *
- * Servir un HTML desde el dominio de Geminis es lo que hay que impedir: sería
+ * Servir un HTML desde el dominio de Catedria es lo que hay que impedir: sería
  * un script ejecutándose con la sesión de quien lo abra. Hoy hay dos cosas más
  * que lo tapan —la respuesta va con `nosniff` y con `script-src 'none'`— pero
  * ninguna es razón para aceptar el archivo, porque las dos son de la capa de

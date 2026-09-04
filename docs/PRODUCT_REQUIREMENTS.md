@@ -1,4 +1,4 @@
-# Geminis · definición de producto
+# Catedria · definición de producto
 
 ## 1. Qué es
 
@@ -34,7 +34,7 @@ grupo de WhatsApp y varias hojas de cálculo. Consecuencias:
 
 ## 4. Los seis diferenciadores
 
-1. **Migración fácil.** Cambiarse a Geminis no puede ser un proyecto. Importar
+1. **Migración fácil.** Cambiarse a Catedria no puede ser un proyecto. Importar
    alumnos desde Excel con previsualización y con posibilidad de deshacerlo.
 2. **IA integrada en el trabajo real**, con el material de la academia y citando
    sus fuentes. No un chatbot genérico pegado en una esquina.
@@ -49,37 +49,37 @@ grupo de WhatsApp y varias hojas de cálculo. Consecuencias:
 
 ## 5. Principios
 
-**El conocimiento es de la academia.** Geminis lo procesa según lo contratado.
+**El conocimiento es de la academia.** Catedria lo procesa según lo contratado.
 El contenido de una academia no se usa para otra ni para entrenar nada.
 
 **Aislamiento absoluto.** Dos academias que preparan la misma oposición son dos
 mundos separados. En la base de datos, en los archivos, en los índices y en la
 IA.
 
-**Geminis no sustituye al preparador, lo hace más potente.** La academia aporta
-experiencia, metodología, contenido y criterio. Geminis aporta automatización,
+**Catedria no sustituye al preparador, lo hace más potente.** La academia aporta
+experiencia, metodología, contenido y criterio. Catedria aporta automatización,
 análisis, organización y seguimiento. La decisión académica es siempre humana.
 
 **Nada se publica sin una persona.** La IA propone; el profesor decide.
 
 **El producto no impone la forma de trabajar.** La academia organiza y nombra su
-contenido como quiera. Geminis no sabe cómo debe llamarse un apartado.
+contenido como quiera. Catedria no sabe cómo debe llamarse un apartado.
 
 **Sencillo para quien no es informático.** En cada pantalla: ¿podría usar esto
 alguien sin conocimientos técnicos?
 
 ## 6. Los dos productos
 
-**Geminis Manager** — la academia. Escritorio y tablet. Potente pero fácil.
+**Catedria Manager** — la academia. Escritorio y tablet. Potente pero fácil.
 
-**Geminis Campus** — el alumno. Móvil primero. Debe sentirse como una aplicación,
+**Catedria Campus** — el alumno. Móvil primero. Debe sentirse como una aplicación,
 no como un ERP encogido.
 
 ## 7. Quién usa qué
 
 | Perfil | Qué hace |
 |--------|----------|
-| Superadmin de Geminis | Gestiona la plataforma: academias, planes, uso, incidencias. Nunca ve el contenido de una academia salvo por soporte explícito y auditado. |
+| Superadmin de Catedria | Gestiona la plataforma: academias, planes, uso, incidencias. Nunca ve el contenido de una academia salvo por soporte explícito y auditado. |
 | Administrador de academia | Gestiona toda su academia. |
 | Profesor / preparador | Solo sus oposiciones, grupos y alumnos. Sube contenido, crea tests, imparte clases, decide qué ve cada alumno. |
 | Personal administrativo | Matrículas, altas, bajas, recibos, comunicaciones. Sin acceso a lo académico sensible. |
@@ -92,18 +92,18 @@ límites por alumnos, profesores, almacenamiento y consumo de IA.
 
 Cada academia puede a su vez vender a sus alumnos productos distintos: curso
 completo, solo temario, solo clases, temario + tests, packs de simulacros,
-intensivos. Geminis gestiona qué desbloquea cada producto.
+intensivos. Catedria gestiona qué desbloquea cada producto.
 
 ## 9. Qué debe conseguir
 
-**Para el alumno.** Entra y Geminis sabe qué oposición prepara, cuándo tiene el
+**Para el alumno.** Entra y Catedria sabe qué oposición prepara, cuándo tiene el
 examen, qué ha estudiado, qué domina, qué falla y qué debería estudiar hoy.
 
-**Para el preparador.** Entra y Geminis sabe qué alumnos van bien, cuáles se
+**Para el preparador.** Entra y Catedria sabe qué alumnos van bien, cuáles se
 están desenganchando, qué conceptos generan problemas, qué preguntas pueden estar
 obsoletas y qué normativa ha cambiado.
 
-**Para el administrador.** Entra y Geminis sabe cuántos alumnos tiene, las altas,
+**Para el administrador.** Entra y Catedria sabe cuántos alumnos tiene, las altas,
 las bajas, los pagos, la actividad y los riesgos.
 
 ## 10. Qué no hacemos

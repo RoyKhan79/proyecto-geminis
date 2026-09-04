@@ -204,7 +204,7 @@ export async function ejecutarRadarBoe(fecha: Date): Promise<ResultadoRadar> {
         (h) => `· [${h.vigilancia}] ${h.titulo}\n  ${h.url ?? ""}`,
       ),
       "",
-      `Revísalas en Proyecto Geminis: ${env.APP_URL}/gestion/convocatorias`,
+      `Revísalas en Catedria: ${env.APP_URL}/gestion/convocatorias`,
       "",
       "No se ha creado ninguna oposición: lo decides tú.",
     ].join("\n");

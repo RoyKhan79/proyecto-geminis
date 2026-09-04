@@ -1,4 +1,4 @@
-# Por dónde va Proyecto Geminis
+# Por dónde va Catedria
 
 Actualizado el **30 de agosto de 2026**. Para leer en dos minutos antes de
 seguir trabajando.
@@ -13,7 +13,7 @@ Un SaaS para academias de oposiciones españolas, con dos caras:
   temario, cobros y facturas, agenda, evaluación, comunicación y analítica.
 - **Campus** (`/campus`) · la aplicación del alumnado, pensada para el móvil:
   estudiar, descargar temas para ir sin cobertura, tests, simulacros, exámenes
-  de desarrollo y Geminis IA.
+  de desarrollo y Catedria IA.
 
 Por encima, un **superadministrador** (`/plataforma`) que da de alta academias
 y da soporte, y que **no ve el contenido ni el alumnado de ninguna**.

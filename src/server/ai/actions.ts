@@ -53,7 +53,7 @@ const preguntaSchema = z.object({
 });
 
 /**
- * La pregunta de un alumno a Geminis IA.
+ * La pregunta de un alumno a Catedria IA.
  *
  * @returns La respuesta con sus citas, o el motivo si no se puede responder.
  * @remarks El orden no se negocia: sesión, academia, permisos, matrículas,

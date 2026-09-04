@@ -7,7 +7,7 @@ import {
 /**
  * RECUPERACIÓN CON PERMISOS (RAG)
  *
- * La pieza que hace que Geminis IA no sea una puerta trasera al material de
+ * La pieza que hace que Catedria IA no sea una puerta trasera al material de
  * pago. El orden es innegociable (§112):
  *
  *   sesión → academia → permisos → matrículas → derechos → ritmo del temario
@@ -81,7 +81,7 @@ export async function recuperarFragmentos(params: {
         /*
          * El tutor solo puede citar lo que este alumno podría leer por su
          * cuenta. Son dos permisos distintos y conviene no confundirlos: si
-         * PUEDE usar el tutor lo decide «Geminis IA», y se comprueba a la
+         * PUEDE usar el tutor lo decide «Catedria IA», y se comprueba a la
          * entrada; QUÉ puede citarle se decide aquí, y es exactamente su
          * derecho de lectura. Citar algo que ya puede abrir no es una fuga;
          * citar lo que no ha pagado sí, y por eso esto no puede ser el filtro

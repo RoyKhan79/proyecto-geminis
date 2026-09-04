@@ -2,7 +2,7 @@ import { chromium } from "playwright";
 import fs from "node:fs";
 
 const BASE = "http://localhost:3000";
-const CLAVE = "Geminis2026!";
+const CLAVE = "Catedria2026!";
 const SALIDA = "docs/manuales/capturas";
 
 const ESCRITORIO = { width: 1440, height: 900 };

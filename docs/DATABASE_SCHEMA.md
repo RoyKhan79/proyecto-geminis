@@ -123,7 +123,7 @@ dan al migrar desde otro programa.
 ### Normativa como grafo ligero
 
 `ContentLegislationLink` une un artículo con un tema o con una pregunta, y
-distingue si lo marcó una persona (`MANUAL`) o lo propuso Geminis (`DETECTED`),
+distingue si lo marcó una persona (`MANUAL`) o lo propuso Catedria (`DETECTED`),
 porque la confianza no es la misma. Con eso se responde «el artículo 16 afecta a
 2 temas y 128 preguntas» sin montar una base de datos de grafos.
 

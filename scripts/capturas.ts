@@ -22,7 +22,7 @@ import path from "node:path";
 import { chromium, type Browser, type Page } from "playwright";
 
 const BASE = process.argv[2] ?? "http://localhost:3000";
-const CLAVE_DEMO = "Geminis2026!";
+const CLAVE_DEMO = "Catedria2026!";
 const DESTINO = path.resolve(process.cwd(), "public/manual");
 
 /** Escritorio para Manager, teléfono para el Campus: el Campus se hace en el

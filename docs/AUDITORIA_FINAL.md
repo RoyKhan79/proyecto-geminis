@@ -45,7 +45,7 @@ La HTTP encuentra lo que el código *parece* hacer pero no hace.
 | Recuperación de contraseña | **Sólido** | Testigos resumidos, de un solo uso, con caducidad y separados por propósito |
 | Autorización | **Sólido** | Catálogo único de permisos, comprobado en servidor en las 46 pantallas privadas |
 | Acceso a contenido de pago | **Sólido** | La misma barrera para la interfaz, para la descarga de archivos y para la IA |
-| Geminis IA | **Sólido** | Filtra permisos antes de buscar; nada se publica sin aprobación humana |
+| Catedria IA | **Sólido** | Filtra permisos antes de buscar; nada se publica sin aprobación humana |
 | XSS | **Sólido** | Saneado por lista blanca al guardar y al pintar |
 | Cabeceras HTTP | **Sólido** | CSP, HSTS, X-Frame-Options, Referrer-Policy, Permissions-Policy |
 | Trazabilidad | **Sólido** | Auditoría por academia con enmascarado de datos sensibles |
@@ -222,7 +222,7 @@ Es lo que más se ha mirado, porque es lo único que no admite un fallo.
 - El enlace se valida al abrir pero se consume al guardar (ADR-0039): muchos
   antivirus de correo abren los enlaces antes que la persona.
 
-### 4.4 Geminis IA
+### 4.4 Catedria IA
 
 - La recuperación **filtra por permisos antes de buscar**, no después. Se
   comprueba estáticamente que `loadStudentGrants` aparece antes de la consulta

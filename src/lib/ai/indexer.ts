@@ -6,7 +6,7 @@ import { storage } from "@/lib/storage";
  * INDEXADOR DE LA BASE DE CONOCIMIENTO
  *
  * Convierte el material autorizado de una academia en fragmentos consultables
- * por Geminis IA. Solo entra aquí lo que la academia ha marcado como usable por
+ * por Catedria IA. Solo entra aquí lo que la academia ha marcado como usable por
  * la IA (§105), y cada fragmento guarda de dónde sale para poder citarlo.
  *
  * Los PDFs se procesan extrayendo el texto plano que llevan dentro. No se hace

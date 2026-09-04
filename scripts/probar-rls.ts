@@ -107,7 +107,7 @@ async function main() {
   console.log(`Políticas activas: ${politicas[0].n} · tablas con FORCE: ${forzadas[0].n}`);
 
   const a = await prismaBase.academy.findFirst({
-    where: { slug: "geminis-demo" },
+    where: { slug: "catedria-demo" },
     select: { id: true, name: true },
   });
   if (!a) throw new Error("No existe la academia demo. Ejecuta `npm run db:seed`.");

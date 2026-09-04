@@ -18,7 +18,7 @@ import { slugify } from "@/lib/utils";
 /**
  * PLATAFORMA
  *
- * Lo que usa el equipo de Proyecto Geminis para dar de alta academias, mirar
+ * Lo que usa el equipo de Catedria para dar de alta academias, mirar
  * consumo y hacer soporte. Nada de esto da acceso al contenido de una academia:
  * para eso está la impersonación, que es explícita y queda registrada (§3).
  */
@@ -297,7 +297,7 @@ export async function exportAcademyDataAction(): Promise<PlatformState> {
     intentos,
     pagos,
     nota:
-      "Exportación completa de los datos de la academia en Proyecto Geminis. Los archivos subidos se entregan aparte desde el almacén.",
+      "Exportación completa de los datos de la academia en Catedria. Los archivos subidos se entregan aparte desde el almacén.",
   };
 
   return { ok: JSON.stringify(paquete) };

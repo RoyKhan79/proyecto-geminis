@@ -3,7 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getAuthContext } from "@/lib/auth/context";
 import { RecoveryForm } from "./recovery-form";
-import { LogotipoGeminis } from "@/components/marca";
+import { LogotipoCatedria } from "@/components/marca";
 
 export const metadata: Metadata = { title: "Recuperar contraseña" };
 
@@ -21,7 +21,7 @@ export default async function RecuperarPage() {
     <main className="shell-wash flex min-h-dvh flex-col items-center justify-center bg-surface-sunken px-4 py-10">
       <div className="w-full max-w-sm space-y-8">
         <div className="space-y-3 text-center">
-          <LogotipoGeminis className="mx-auto" />
+          <LogotipoCatedria className="mx-auto" />
           <div className="space-y-1.5">
             <h1 className="text-2xl font-semibold leading-tight text-ink">
               ¿Has olvidado tu contraseña?

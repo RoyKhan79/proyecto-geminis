@@ -25,7 +25,7 @@ try {
 }
 
 const BASE = process.argv[2] ?? "http://localhost:3000";
-const PASSWORD = "Geminis2026!";
+const PASSWORD = "Catedria2026!";
 
 let pasadas = 0;
 let fallidas = 0;
@@ -447,7 +447,7 @@ async function main() {
     );
   }
 
-  // ── 8b. Geminis IA ────────────────────────────────────────────────────────
+  // ── 8b. Catedria IA ────────────────────────────────────────────────────────
   // La IA es material de la academia servido a través de otra puerta. Se
   // comprueba que esa puerta tiene la misma cerradura que las demás.
   console.log("\n8b. GEMINIS IA");

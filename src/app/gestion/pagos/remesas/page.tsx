@@ -157,7 +157,7 @@ export default async function RemesasPage({
       <Card className="border-dashed">
         <CardContent className="p-4 pt-4 text-sm text-ink-soft">
           <p>
-            <strong className="text-ink">Geminis no cobra el dinero.</strong> Prepara
+            <strong className="text-ink">Catedria no cobra el dinero.</strong> Prepara
             los recibos y genera el fichero de adeudos SEPA; el cargo lo hace tu
             banco cuando subes ese fichero. Necesitas tener firmado con él un
             contrato de adeudos y que cada alumno domiciliado haya firmado su

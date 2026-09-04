@@ -93,7 +93,7 @@ function sello(cx: number, cy: number, caja: number): string {
     ...anillos,
     `<text x="${cx}" y="${cy}" dy="0.345em" text-anchor="middle"`,
     `  font-family="Georgia, 'Times New Roman', serif"`,
-    `  font-size="${cuerpo}" font-weight="600" fill="${MARCA.letra}">G</text>`,
+    `  font-size="${cuerpo}" font-weight="600" fill="${MARCA.letra}">C</text>`,
   ].join("\n  ");
 }
 
@@ -171,7 +171,7 @@ function logotipo(colorTexto: string): string {
     font-size="${cuerpo}"
     letter-spacing="${espaciado}"
     fill="${colorTexto}"
-  >GEMINIS</text>
+  >CATEDRIA</text>
 
   <rect x="${cx - filete / 2}" y="122" width="${filete}" height="1.6" fill="${MARCA.oro}"/>
 

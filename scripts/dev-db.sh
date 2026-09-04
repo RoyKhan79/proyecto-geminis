@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Geminis · PostgreSQL local para desarrollo
+# Catedria · PostgreSQL local para desarrollo
 # ------------------------------------------
 # Arranca un PostgreSQL real (binarios de @embedded-postgres) sin Docker,
 # sin sudo y sin instalar nada en el sistema. Los datos viven en .dev/pgdata,

@@ -41,7 +41,7 @@ const oppositionSchema = z.object({
  *
  * Las secciones se crean con nombres corrientes ("Temario", "Clases"…) solo
  * como punto de partida: la academia las renombra, borra o añade a su gusto.
- * Geminis no depende de esos nombres para nada (ADR-0006).
+ * Catedria no depende de esos nombres para nada (ADR-0006).
  */
 export async function createOppositionAction(
   _prev: FormState,

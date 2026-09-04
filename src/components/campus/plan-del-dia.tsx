@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/primitives";
 import { cn } from "@/lib/utils";
 
 /**
- * Lo que Geminis propone hoy.
+ * Lo que Catedria propone hoy.
  *
  * Se pinta arriba del todo porque es lo primero que debería leer el alumno al
  * entrar. Cada propuesta lleva su motivo visible: si no puede justificar por
@@ -26,7 +26,7 @@ export function PlanDelDia({ propuestas }: { propuestas: Propuesta[] }) {
     <section className="space-y-2">
       <h2 className="flex items-center gap-2 text-sm font-semibold text-ink">
         <Sparkles className="size-4 text-accent" aria-hidden />
-        Geminis te propone
+        Catedria te propone
       </h2>
 
       <div className="space-y-2">

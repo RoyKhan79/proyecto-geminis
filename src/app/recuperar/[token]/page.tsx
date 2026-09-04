@@ -7,7 +7,7 @@ import { comprobarToken } from "@/lib/auth/recovery";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/primitives";
 import { ResetForm } from "./reset-form";
-import { LogotipoGeminis } from "@/components/marca";
+import { LogotipoCatedria } from "@/components/marca";
 
 export const metadata: Metadata = { title: "Nueva contraseña" };
 
@@ -34,7 +34,7 @@ export default async function NuevaContrasenaPage({
     <main className="shell-wash flex min-h-dvh flex-col items-center justify-center bg-surface-sunken px-4 py-10">
       <div className="w-full max-w-sm space-y-8">
         <div className="space-y-3 text-center">
-          <LogotipoGeminis className="mx-auto" />
+          <LogotipoCatedria className="mx-auto" />
           <h1 className="text-2xl font-semibold leading-tight text-ink">
             Elige tu nueva contraseña
           </h1>

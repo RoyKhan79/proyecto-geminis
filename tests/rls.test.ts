@@ -6,7 +6,7 @@ import { prismaBase } from "@/lib/db/client";
 /**
  * COBERTURA DE ROW LEVEL SECURITY
  *
- * Geminis promete dos barreras de aislamiento: la guardia de aplicación
+ * Catedria promete dos barreras de aislamiento: la guardia de aplicación
  * (`tenantDb`) y las políticas de PostgreSQL. La segunda se activó de una vez
  * sobre las 50 tablas que existían aquel día, con una lista escrita a mano
  * dentro de una migración.

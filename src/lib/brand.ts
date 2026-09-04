@@ -14,13 +14,13 @@
  */
 export const BRAND = {
   /** Nombre visible del producto. */
-  name: "Proyecto Geminis",
+  name: "Catedria",
   /** Versión corta para espacios estrechos (barra lateral, móvil). */
-  short: "Proyecto Geminis",
+  short: "Catedria",
   /** Aplicación de gestión para la academia. */
   manager: "Manager",
   /** Aplicación del alumnado. */
   campus: "Campus",
   /** Asistente de inteligencia artificial. */
-  ai: "IA de Proyecto Geminis",
+  ai: "IA de Catedria",
 } as const;

@@ -25,7 +25,7 @@ import { createServer } from "node:http";
 import { homedir, networkInterfaces } from "node:os";
 import path from "node:path";
 
-const ARCHIVO = path.resolve(process.cwd(), "Manual de Geminis.html");
+const ARCHIVO = path.resolve(process.cwd(), "Manual de Catedria.html");
 const PUERTO = Number(process.env.PUERTO_MANUAL ?? 4173);
 const CLOUDFLARED = path.join(homedir(), ".local", "bin", "cloudflared");
 
@@ -115,7 +115,7 @@ async function main() {
   const megas = statSync(ARCHIVO).size / 1024 / 1024;
 
   await servir();
-  console.log(`\nManual de Geminis · ${megas.toFixed(1)} MB`);
+  console.log(`\nManual de Catedria · ${megas.toFixed(1)} MB`);
   console.log("=".repeat(62));
   console.log(`  En esta wifi   http://${direccionLocal()}:${PUERTO}`);
 

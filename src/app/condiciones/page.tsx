@@ -10,7 +10,7 @@ import {
 export const metadata: Metadata = {
   title: "Condiciones de uso",
   description:
-    "Qué se puede y qué no se puede hacer en Proyecto Geminis, y de quién es cada cosa.",
+    "Qué se puede y qué no se puede hacer en Catedria, y de quién es cada cosa.",
 };
 
 /**

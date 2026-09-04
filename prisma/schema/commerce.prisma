@@ -259,7 +259,7 @@ model Payment {
 // suelto, pero había que crearlos a mano uno a uno cada mes, que es
 // exactamente el trabajo administrativo que este producto existe para quitar.
 //
-// Lo que Geminis hace y lo que NO hace, dicho claro:
+// Lo que Catedria hace y lo que NO hace, dicho claro:
 //   · SÍ: guarda la forma de pago de cada alumno, sus datos bancarios y su
 //     mandato; genera las cuotas del mes; y produce el fichero SEPA que la
 //     academia sube a su banco.

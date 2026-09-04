@@ -1,5 +1,5 @@
 /**
- * Indexa el material de una academia para que Geminis IA pueda citarlo.
+ * Indexa el material de una academia para que Catedria IA pueda citarlo.
  *
  *   npm run indexar                 # todas las academias
  *   npm run indexar -- academia-demo

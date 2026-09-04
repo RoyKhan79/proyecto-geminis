@@ -27,7 +27,7 @@ const ENLACES = [
   { href: "/campus/calendario", label: "Calendario", icon: CalendarDays },
   { href: "/campus/descargas", label: "Descargas", icon: Download },
   { href: "/campus/salas", label: "Salas", icon: Video },
-  { href: "/campus/ia", label: "Geminis IA", icon: Sparkles },
+  { href: "/campus/ia", label: "Catedria IA", icon: Sparkles },
 ];
 
 /**

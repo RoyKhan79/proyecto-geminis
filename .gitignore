@@ -45,7 +45,7 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# Geminis
+# Catedria
 /.dev/
 /src/generated/
 .env
@@ -54,7 +54,7 @@ next-env.d.ts
 # El manual en un solo archivo. Se genera con `npm run manual:local` a partir
 # de /manual, así que guardarlo aquí sería tener dos manuales que se
 # contradicen, y ocho megas de fotos duplicadas en el histórico.
-/Manual de Geminis.html
+/Manual de Catedria.html
 
 # La referencia del código generada con `npm run docs`. Son miles de archivos
 # y se rehace en segundos: lo que se versiona son los comentarios del código.

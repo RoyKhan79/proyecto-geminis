@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Geminis · cliente SQL mínimo para desarrollo.
+ * Catedria · cliente SQL mínimo para desarrollo.
  *
  * Los binarios de PostgreSQL que usamos en local (@embedded-postgres) incluyen
  * el servidor pero no `psql`/`createdb`, así que hacemos el equivalente con el

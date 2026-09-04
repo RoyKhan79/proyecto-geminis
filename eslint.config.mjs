@@ -16,7 +16,7 @@ const eslintConfig = defineConfig([
     // empaquetado que nadie ha escrito. Se rehace con `npm run docs`.
     "docs/api/**",
     // El manual en un solo archivo, que genera `npm run manual:local`.
-    "Manual de Geminis.html",
+    "Manual de Catedria.html",
     // Lo que genera Prisma a partir del esquema.
     "src/generated/**",
   ]),

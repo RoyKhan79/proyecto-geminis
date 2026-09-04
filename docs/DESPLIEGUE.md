@@ -1,4 +1,4 @@
-# Poner Geminis en producción
+# Poner Catedria en producción
 
 Esta guía cubre lo que **no se puede resolver desde el código**: el cifrado del
 disco, las copias programadas y el resto de la configuración del servidor. Es
@@ -19,7 +19,7 @@ casos, y bancarios en otros.
 
 ## 1 · La base de datos
 
-Geminis necesita PostgreSQL 15 o superior. Sirve cualquiera; lo que cambia es
+Catedria necesita PostgreSQL 15 o superior. Sirve cualquiera; lo que cambia es
 quién se encarga del cifrado del disco.
 
 ### Con un servicio gestionado (lo recomendable)
@@ -45,7 +45,7 @@ El cifrado hay que ponerlo tú, y va en el **volumen**, no en PostgreSQL:
 - **macOS** · FileVault. **Windows** · BitLocker.
 
 PostgreSQL no cifra el disco por su cuenta: eso es una confusión frecuente.
-`pgcrypto` cifra *columnas*, que es lo que Geminis ya hace por su cuenta con los
+`pgcrypto` cifra *columnas*, que es lo que Catedria ya hace por su cuenta con los
 números de cuenta.
 
 ### Los dos roles
@@ -159,7 +159,7 @@ RESTORE_TESTED_CONFIRMED=1
 
 ## 5 · Tareas programadas
 
-No se copian a mano. Están versionadas en `scripts/cron/geminis.crontab` y se
+No se copian a mano. Están versionadas en `scripts/cron/catedria.crontab` y se
 instalan con:
 
 ```bash
@@ -207,7 +207,7 @@ SMTP_FROM="Academia <no-responder@academia.example.com>"
 ```
 
 Delante conviene un proxy inverso que corte HTTPS y limite peticiones por IP.
-El limitador de Geminis cuenta intentos de acceso; el del proxy protege del
+El limitador de Catedria cuenta intentos de acceso; el del proxy protege del
 resto.
 
 ### Antes de abrir al público

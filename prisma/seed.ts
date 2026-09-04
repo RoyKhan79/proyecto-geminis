@@ -26,8 +26,8 @@ import {
 import { createContentNode } from "../src/server/content/tree";
 import { PACKS, resolverDependencias } from "../src/lib/modules/catalogo";
 
-const DEMO_SLUG = "geminis-demo";
-const DEMO_PASSWORD = "Geminis2026!";
+const DEMO_SLUG = "catedria-demo";
+const DEMO_PASSWORD = "Catedria2026!";
 
 /**
  * El superadministrador de la plataforma.
@@ -96,8 +96,8 @@ async function main() {
 
   const academy = await createAcademyWithRoles({
     slug: DEMO_SLUG,
-    name: "Academia Geminis Demo",
-    legalName: "Academia Geminis Demo S.L.",
+    name: "Academia Catedria Demo",
+    legalName: "Academia Catedria Demo S.L.",
     email: "info@academiademo.test",
     planCode: "PRO",
     status: "ACTIVE",
@@ -450,7 +450,7 @@ async function seedAdministrativo(db: ReturnType<typeof tenantDb>, typeId: strin
     data: {
       name: "Curso completo Administrativo 2026",
       slug: "curso-completo-administrativo-2026",
-      description: "Temario, clases en directo, tests, simulacros y Geminis IA.",
+      description: "Temario, clases en directo, tests, simulacros y Catedria IA.",
       priceCents: 6900,
       billing: "MONTHLY",
       status: "ACTIVE",
@@ -603,7 +603,7 @@ async function seedMagisterio(db: ReturnType<typeof tenantDb>, typeId: string) {
   });
 
   /*
-   * Esta oposición existe en la demo justamente para demostrar que Geminis NO
+   * Esta oposición existe en la demo justamente para demostrar que Catedria NO
    * impone la estructura: las secciones se llaman como toca hoy en Magisterio
    * ("Programación de aula", "Situaciones de aprendizaje") y no como se llamaban
    * antes. El día que la ley vuelva a cambiar el nombre, la academia lo edita

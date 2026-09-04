@@ -5,12 +5,12 @@ import { cn } from "@/lib/utils";
  * ────────────
  * Dos piezas, y cada una tiene su sitio:
  *
- *   · **El logotipo** (`LogotipoGeminis`) es la palabra. Sin símbolo: versales
+ *   · **El logotipo** (`LogotipoCatedria`) es la palabra. Sin símbolo: versales
  *     muy espaciadas de la serif del producto entre dos filetes de oro. Manda
  *     en la portada del manual, en la pantalla de acceso y en una factura, que
  *     es donde hay sitio y donde interesa que se lea el nombre.
  *
- *   · **El sello** (`SelloGeminis`) es la inicial dentro de un filete doble.
+ *   · **El sello** (`SelloCatedria`) es la inicial dentro de un filete doble.
  *     Existe porque una palabra no cabe en un cuadrado de 32 píxeles: resuelve
  *     la pestaña del navegador, el icono del móvil y la esquina de la barra
  *     lateral.
@@ -24,14 +24,14 @@ import { cn } from "@/lib/utils";
  * de fino y grueso de verdad, y el oro aparece una sola vez, en el filete.
  *
  * ── SOBRE LA LETRA ─────────────────────────────────────────────────────────
- * La G va con `var(--font-display)`, que en la aplicación es Fraunces. En
+ * La C va con `var(--font-display)`, que en la aplicación es Fraunces. En
  * `scripts/iconos.ts`, que genera los PNG sin navegador, no se puede contar con
  * ella y se cae a Georgia. La diferencia entre las dos a 32 píxeles no la ve
  * nadie; a tamaño de portada sí, y por eso ahí se usa siempre esta versión.
  */
 
 /** El sello suelto, sin fondo: filete doble y la inicial. */
-export function SelloGeminis({ className }: { className?: string }) {
+export function SelloCatedria({ className }: { className?: string }) {
   return (
     <svg
       viewBox="0 0 100 100"
@@ -68,7 +68,7 @@ export function SelloGeminis({ className }: { className?: string }) {
         fontWeight="500"
         fill="currentColor"
       >
-        G
+        C
       </text>
     </svg>
   );
@@ -80,7 +80,7 @@ export function SelloGeminis({ className }: { className?: string }) {
  * La pastilla es tinta, no el azul de antes: sobre un azul encendido el oro se
  * pelea con el fondo, y sobre tinta brilla.
  */
-export function MarcaGeminis({ className = "size-9" }: { className?: string }) {
+export function MarcaCatedria({ className = "size-9" }: { className?: string }) {
   return (
     <span
       className={cn(
@@ -90,7 +90,7 @@ export function MarcaGeminis({ className = "size-9" }: { className?: string }) {
         className,
       )}
     >
-      <SelloGeminis className="size-[78%]" />
+      <SelloCatedria className="size-[78%]" />
     </span>
   );
 }
@@ -107,7 +107,7 @@ export function MarcaGeminis({ className = "size-9" }: { className?: string }) {
  *   en la aplicación, donde ya se sabe dónde está uno; dentro en el manual y en
  *   cualquier cosa que salga de casa.
  */
-export function LogotipoGeminis({
+export function LogotipoCatedria({
   className,
   descriptor = false,
 }: {
@@ -121,7 +121,7 @@ export function LogotipoGeminis({
         className="font-display text-[1.35rem] font-normal uppercase leading-none text-ink"
         style={{ letterSpacing: "0.4em", textIndent: "0.4em" }}
       >
-        Geminis
+        Catedria
       </span>
       <span aria-hidden className="h-px w-14 bg-gold" />
       {descriptor ? (

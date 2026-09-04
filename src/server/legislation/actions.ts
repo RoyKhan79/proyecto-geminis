@@ -8,7 +8,7 @@ import { requirePermission } from "@/lib/auth/context";
 /**
  * NORMATIVA Y ALERTAS DE CAMBIO LEGISLATIVO
  *
- * El módulo que puede diferenciar de verdad a Proyecto Geminis. La pregunta que
+ * El módulo que puede diferenciar de verdad a Catedria. La pregunta que
  * responde es la que quita el sueño a un preparador:
  *
  *   «Ha cambiado el artículo 24 de la Ley 39/2015. ¿Qué temas tengo que
@@ -16,7 +16,7 @@ import { requirePermission } from "@/lib/auth/context";
  *
  * Sin esto, esa respuesta es una tarde entera buscando a mano.
  *
- * ADR-0013: Geminis NUNCA reescribe el contenido de la academia. Calcula el
+ * ADR-0013: Catedria NUNCA reescribe el contenido de la academia. Calcula el
  * impacto, marca lo que puede estar afectado y espera la decisión del profesor.
  */
 

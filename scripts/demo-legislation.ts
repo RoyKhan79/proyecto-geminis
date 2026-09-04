@@ -42,7 +42,7 @@ const normaliza = (t: string) =>
 
 async function main() {
   const academia = await prismaBase.academy.findUnique({
-    where: { slug: "geminis-demo" },
+    where: { slug: "catedria-demo" },
     select: { id: true },
   });
   if (!academia) {

@@ -1,4 +1,4 @@
-# Geminis IA
+# Catedria IA
 
 > Estado: **diseñada y modelada, no implementada**. Corresponde a la fase 5. Este
 > documento fija las reglas antes de escribir el primer prompt, porque son
@@ -8,13 +8,13 @@
 
 ## 1. Qué es y qué no es
 
-Geminis IA no es «ChatGPT dentro del programa». Es una IA vertical que responde
+Catedria IA no es «ChatGPT dentro del programa». Es una IA vertical que responde
 **usando el material de una academia concreta** y que cita de dónde sale cada
 cosa.
 
 Un preparador lleva años construyendo su temario y su criterio. Una IA genérica
 que le contradiga con información de internet no le ayuda: le resta autoridad
-delante de sus alumnos. La regla es que Geminis IA hace al preparador más
+delante de sus alumnos. La regla es que Catedria IA hace al preparador más
 potente, no que lo sustituye.
 
 ---
@@ -177,7 +177,7 @@ IA, esta ya sabe dónde está. No hay que explicárselo (`AIConversation.context
 Al proveedor se le envía lo mínimo: los fragmentos necesarios y la pregunta.
 Nunca la ficha del alumno, ni sus datos de contacto, ni su historial de pagos.
 El perfil de aprendizaje (fortalezas, debilidades, errores recurrentes) se
-calcula en Geminis y, si se usa, se resume en unas líneas sin datos
+calcula en Catedria y, si se usa, se resume en unas líneas sin datos
 identificativos.
 
 ---

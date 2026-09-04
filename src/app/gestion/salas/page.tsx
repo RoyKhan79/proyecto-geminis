@@ -46,7 +46,7 @@ export default async function SalasPage() {
     <>
       <PageHeader
         title="Salas online"
-        description="Aulas virtuales siempre disponibles. El enlace no se muestra al alumnado: se entra por Proyecto Geminis y queda registrado."
+        description="Aulas virtuales siempre disponibles. El enlace no se muestra al alumnado: se entra por Catedria y queda registrado."
         actions={
           puedeEscribir ? (
             <RoomForm

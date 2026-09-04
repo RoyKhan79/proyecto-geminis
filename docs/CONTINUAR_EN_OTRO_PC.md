@@ -40,7 +40,7 @@ que quita el `.env` y la conversación.
 ### Que llegue solo a Google Drive
 
 Instala **Google Drive para escritorio** (google.com/drive/download). A partir
-de ahí, `npm run zip` deja el archivo en `Mi unidad/Proyecto Geminis` y Drive lo
+de ahí, `npm run zip` deja el archivo en `Mi unidad/Catedria` y Drive lo
 sube por su cuenta. No hay que hacer nada más ni dar ninguna credencial.
 
 Si prefieres no instalarlo, la otra vía es `rclone config` una vez —autorización
@@ -67,7 +67,7 @@ Hace falta **Node 22** o superior. En Windows, desde <https://nodejs.org>.
 npm install
 npm run setup     # arranca PostgreSQL embebido, migra, genera y siembra
 npm run demo:todo # temario, preguntas y normativa de la demostración
-npm run indexar   # para que Geminis IA tenga de dónde citar
+npm run indexar   # para que Catedria IA tenga de dónde citar
 npm run dev
 ```
 
@@ -78,11 +78,11 @@ Con eso, <http://localhost:3000> y a entrar:
 
 | Quién | Correo | Contraseña |
 | --- | --- | --- |
-| Administración | `admin@academiademo.test` | `Geminis2026!` |
-| Profesora | `laura@academiademo.test` | `Geminis2026!` |
-| Alumna (curso completo) | `alumno1@academiademo.test` | `Geminis2026!` |
-| Alumno (solo tests) | `alumno2@academiademo.test` | `Geminis2026!` |
-| Alumna de Magisterio | `alumno15@academiademo.test` | `Geminis2026!` |
+| Administración | `admin@academiademo.test` | `Catedria2026!` |
+| Profesora | `laura@academiademo.test` | `Catedria2026!` |
+| Alumna (curso completo) | `alumno1@academiademo.test` | `Catedria2026!` |
+| Alumno (solo tests) | `alumno2@academiademo.test` | `Catedria2026!` |
+| Alumna de Magisterio | `alumno15@academiademo.test` | `Catedria2026!` |
 
 El superadministrador es el correo real que se configuró; su contraseña está en
 la conversación. Se puede cambiar en cualquier momento:
@@ -164,6 +164,6 @@ npm run manual:capturas   # rehace las diecisiete capturas
 npm run manual:local      # las mete en un solo archivo HTML
 ```
 
-Sale un «Manual de Geminis.html» de unos 8 MB que se abre con doble clic, sin
+Sale un «Manual de Catedria.html» de unos 8 MB que se abre con doble clic, sin
 servidor y sin conexión: el texto, los estilos, las tipografías y las fotos van
 dentro. Es lo que se le pasa a una academia.

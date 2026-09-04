@@ -169,7 +169,7 @@ function main() {
   const sufijo = sinSecretos ? "-sin-secretos" : "";
   const zip = path.join(DESTINO, `${NOMBRE}-${fecha}${sufijo}.zip`);
 
-  console.log(`\nEmpaquetando Proyecto Geminis`);
+  console.log(`\nEmpaquetando Catedria`);
   console.log("=".repeat(58));
 
   const temporal = mkdtempSync(path.join(tmpdir(), "geminis-zip-"));
@@ -249,7 +249,7 @@ function main() {
     // ── A Drive, si está instalado ─────────────────────────────────────────
     const drive = carpetaDeDrive();
     if (drive && !args.includes("--destino")) {
-      const carpeta = path.join(drive, "Proyecto Geminis");
+      const carpeta = path.join(drive, "Catedria");
       mkdirSync(carpeta, { recursive: true });
       const copia = path.join(carpeta, path.basename(zip));
       copyFileSync(zip, copia);

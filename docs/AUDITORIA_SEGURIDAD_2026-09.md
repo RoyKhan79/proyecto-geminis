@@ -8,7 +8,7 @@ expresamente y no se cuenta como comprobado.
 
 ## 1. Resumen ejecutivo
 
-Geminis está mejor construido de lo que es habitual en un producto de este
+Catedria está mejor construido de lo que es habitual en un producto de este
 tamaño. El aislamiento entre academias descansa en dos barreras independientes
 que funcionan de verdad —se ha intentado romper con SQL crudo y no cede—, las
 contraseñas usan scrypt con parámetros correctos, las sesiones son opacas y
@@ -420,7 +420,7 @@ cuenta **asciende** a superadministrador o cuando ya pertenece a alguna academia
 `src/server/imports/*.ts`
 
 El limitador estaba donde se ve el ataque de manual —entrar, recuperar la
-contraseña— y en ningún sitio más. Una pregunta a Geminis IA llama a un
+contraseña— y en ningún sitio más. Una pregunta a Catedria IA llama a un
 proveedor externo y **la paga la academia por tokens consumidos**: un alumno con
 el tutor incluido y un bucle de tres líneas puede gastarle el presupuesto del
 mes en una tarde. Se añaden topes por persona a las cuatro acciones de IA y a la
@@ -657,7 +657,7 @@ aplicación, no en la base de datos. Lo definitivo serían claves compuestas con
 
 ## 9. Inteligencia artificial
 
-**No, un alumno no puede obtener material no contratado a través de Geminis IA.**
+**No, un alumno no puede obtener material no contratado a través de Catedria IA.**
 
 El diseño es el correcto y es la razón por la que aguanta: **el filtro va antes
 de buscar, no después**. La recuperación resuelve primero qué nodos puede ver esa

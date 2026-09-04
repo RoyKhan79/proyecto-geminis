@@ -17,7 +17,7 @@ const MES = new Date(2026, 8, 1); // septiembre de 2026
 
 async function main() {
   const academia = await prismaBase.academy.findFirst({
-    where: { slug: "geminis-demo" },
+    where: { slug: "catedria-demo" },
     select: { id: true, name: true },
   });
   if (!academia) throw new Error("Falta la academia demo.");

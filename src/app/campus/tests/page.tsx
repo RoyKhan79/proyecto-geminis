@@ -110,7 +110,7 @@ export default async function CampusTestsPage({
                   </p>
                 </div>
                 <p className="text-xs text-ink-muted">
-                  Geminis lleva la cuenta de cuándo estás a punto de olvidar cada
+                  Catedria lleva la cuenta de cuándo estás a punto de olvidar cada
                   pregunta y te las devuelve justo a tiempo. Es la forma de que lo
                   del tema 1 siga en pie el día del examen.
                 </p>

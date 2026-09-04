@@ -29,7 +29,7 @@ export function ExplainButton({
         <div className="rounded-[var(--radius-control)] border border-accent-soft bg-accent-soft/40 p-3">
           <p className="flex items-center gap-1.5 text-xs font-medium text-ink">
             <Sparkles className="size-3.5 text-accent" aria-hidden />
-            Geminis IA
+            Catedria IA
           </p>
           <p className="mt-1 whitespace-pre-line text-sm text-ink-soft">
             {state.respuesta}

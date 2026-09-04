@@ -31,7 +31,7 @@
  */
 import { prismaBase } from "@/lib/db/client";
 
-const SLUG = process.env.DEMO_SLUG ?? "geminis-demo";
+const SLUG = process.env.DEMO_SLUG ?? "catedria-demo";
 const SEMANAS = 10;
 
 /**

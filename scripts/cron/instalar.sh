@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 #
-# Geminis · instalar las tareas programadas
+# Catedria · instalar las tareas programadas
 # -----------------------------------------
-# Deja el crontab de `geminis.crontab` en el usuario que lo ejecuta, con las
+# Deja el crontab de `catedria.crontab` en el usuario que lo ejecuta, con las
 # rutas de ESTE servidor ya sustituidas.
 #
 #   ./scripts/cron/instalar.sh            → instala (pide confirmación)
 #   ./scripts/cron/instalar.sh --ver      → enseña lo que instalaría y sale
-#   ./scripts/cron/instalar.sh --quitar   → retira solo las líneas de Geminis
+#   ./scripts/cron/instalar.sh --quitar   → retira solo las líneas de Catedria
 #
 # Existe en lugar de dejarlo escrito en la documentación porque un cron que se
 # copia a mano se copia mal: se pega sin la ruta buena, o con el npm que no
@@ -16,7 +16,7 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
-PLANTILLA="$ROOT/scripts/cron/geminis.crontab"
+PLANTILLA="$ROOT/scripts/cron/catedria.crontab"
 MARCA_INICIO="# >>> geminis >>>"
 MARCA_FIN="# <<< geminis <<<"
 
@@ -31,7 +31,7 @@ if [ -z "$NPM" ]; then
   exit 1
 fi
 
-# El crontab actual sin el bloque de Geminis, para poder reinstalar sin duplicar.
+# El crontab actual sin el bloque de Catedria, para poder reinstalar sin duplicar.
 actual_sin_geminis() {
   crontab -l 2>/dev/null | sed "/$MARCA_INICIO/,/$MARCA_FIN/d" || true
 }
@@ -39,7 +39,7 @@ actual_sin_geminis() {
 bloque() {
   echo "$MARCA_INICIO"
   echo "# Generado por scripts/cron/instalar.sh · no editar a mano:"
-  echo "# se pierde al reinstalar. Los cambios van en geminis.crontab."
+  echo "# se pierde al reinstalar. Los cambios van en catedria.crontab."
   sed -e "s|RUTA_PROYECTO|$ROOT|g" -e "s|RUTA_NPM|$NPM|g" "$PLANTILLA"
   echo "$MARCA_FIN"
 }
@@ -51,7 +51,7 @@ case "${1:-}" in
     ;;
   --quitar)
     actual_sin_geminis | crontab -
-    echo "✓ Tareas de Geminis retiradas. El resto de tu crontab sigue igual."
+    echo "✓ Tareas de Catedria retiradas. El resto de tu crontab sigue igual."
     exit 0
     ;;
   "")

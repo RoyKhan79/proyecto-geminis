@@ -272,7 +272,7 @@ export function AsistenteDeTemario({
               </Field>
 
               <Field
-                label="¿Puede usarlo Geminis IA?"
+                label="¿Puede usarlo Catedria IA?"
                 htmlFor="ia"
                 hint="Si lo desactivas, la IA no citará este material."
               >

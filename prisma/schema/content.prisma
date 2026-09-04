@@ -8,7 +8,7 @@
 // Motivo: la terminología cambia por especialidad y por ley. En Magisterio hoy
 // se habla de "Programación de aula" y "Situaciones de aprendizaje" donde antes
 // se decía "programación didáctica" y "unidades didácticas". Si esos nombres
-// estuvieran en el código, Geminis quedaría obsoleto con cada reforma y sería
+// estuvieran en el código, Catedria quedaría obsoleto con cada reforma y sería
 // inútil para cualquier oposición que no encaje en BLOQUE → TEMA → TEST.
 //
 // Por tanto:
@@ -96,7 +96,7 @@ model ContentNode {
   /// Solo en nodos SECTION.
   sectionKind SectionKind?
 
-  /// Nombre visible. LO ESCRIBE LA ACADEMIA. Nunca lo impone Geminis.
+  /// Nombre visible. LO ESCRIBE LA ACADEMIA. Nunca lo impone Catedria.
   label       String
   slug        String
   description String?
@@ -115,7 +115,7 @@ model ContentNode {
   visibleToStudents Boolean  @default(true)
   /// Se puede descargar, o solo visualizar en el visor protegido (§113).
   downloadable      Boolean?
-  /// Geminis IA puede indexar y citar este contenido (§105).
+  /// Catedria IA puede indexar y citar este contenido (§105).
   aiEnabled         Boolean?
   /// Se puede usar como fuente para generar preguntas.
   usableForTests    Boolean?

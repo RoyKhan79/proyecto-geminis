@@ -7,10 +7,10 @@ import { CampusTabBar } from "@/components/campus/tab-bar";
 import { InstallPrompt } from "@/components/campus/install-prompt";
 import { BotonSalir } from "@/components/campus/salir";
 import { Button } from "@/components/ui/button";
-import { MarcaGeminis } from "@/components/marca";
+import { MarcaCatedria } from "@/components/marca";
 
 /**
- * Geminis Campus.
+ * Catedria Campus.
  *
  * Mobile first de verdad (§44): navegación inferior alcanzable con el pulgar,
  * contenido en una sola columna y nada de tablas densas. En pantallas grandes
@@ -39,7 +39,7 @@ export default async function CampusLayout({
     <div className="shell-wash flex min-h-dvh flex-col bg-surface-sunken">
       <header className="sticky top-0 z-20 flex h-15 items-center gap-3 border-b border-line bg-surface/75 px-4 backdrop-blur-xl">
         <Link href="/campus" className="flex items-center gap-2">
-          <MarcaGeminis className="size-9" />
+          <MarcaCatedria className="size-9" />
           <span className="truncate font-display text-[0.9375rem] font-semibold text-ink">
             {ctx.academy.name}
           </span>

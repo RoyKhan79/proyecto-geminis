@@ -3,10 +3,10 @@
 //
 // Decisión ADR-0012: empezamos por el MODELO y el FLUJO DE REVISIÓN, no por un
 // rastreador de boletines (§57). Una academia puede registrar a mano un cambio
-// normativo y Geminis ya calcula qué temas y preguntas quedan afectados. Cuando
+// normativo y Catedria ya calcula qué temas y preguntas quedan afectados. Cuando
 // conectemos fuentes oficiales, solo cambia el origen del dato.
 //
-// Decisión ADR-0013: Geminis NUNCA modifica el contenido de una academia por un
+// Decisión ADR-0013: Catedria NUNCA modifica el contenido de una academia por un
 // cambio legal. Genera una alerta con propuesta y espera decisión humana (§126).
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -139,7 +139,7 @@ model ContentLegislationLink {
   questionId String?
   question   Question?    @relation(fields: [questionId], references: [id], onDelete: Cascade)
 
-  /// MANUAL = lo marcó una persona · DETECTED = lo propuso Geminis al analizar
+  /// MANUAL = lo marcó una persona · DETECTED = lo propuso Catedria al analizar
   /// el texto. Se distingue porque la confianza no es la misma.
   origin     String  @default("MANUAL")
   confidence Decimal? @db.Decimal(4, 3)

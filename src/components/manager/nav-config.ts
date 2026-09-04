@@ -26,7 +26,7 @@ import type { Permission } from "@/lib/auth/permissions";
 import type { IconTone } from "@/components/ui/primitives";
 
 /**
- * Navegación de Geminis Manager.
+ * Navegación de Catedria Manager.
  *
  * `status: "soon"` marca lo que todavía no existe. Se muestra apagado y con la
  * etiqueta "Pronto", nunca como un botón que no lleva a ninguna parte (§80).
@@ -215,7 +215,7 @@ export const MANAGER_NAV: NavSection[] = [
     title: "Academia",
     items: [
       {
-        label: "Geminis IA",
+        label: "Catedria IA",
         href: "/gestion/ia",
         tone: "violet",
         icon: Sparkles,

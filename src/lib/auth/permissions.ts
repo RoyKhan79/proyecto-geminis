@@ -101,13 +101,13 @@ export const PERMISSIONS = {
   "data.export": p("gestion", "Exportar los datos de la academia"),
 
   // ── IA ─────────────────────────────────────────────────────────────────────
-  "ai.student": p("ia", "Usar Geminis IA como alumno"),
+  "ai.student": p("ia", "Usar Catedria IA como alumno"),
   "ai.copilot": p("ia", "Usar el Copiloto del profesor"),
-  "ai.settings": p("ia", "Configurar Geminis IA y sus fuentes"),
+  "ai.settings": p("ia", "Configurar Catedria IA y sus fuentes"),
 
   // ── Acceso a las dos aplicaciones ──────────────────────────────────────────
-  "manager.access": p("plataforma", "Entrar en Geminis Manager"),
-  "campus.access": p("plataforma", "Entrar en Geminis Campus"),
+  "manager.access": p("plataforma", "Entrar en Catedria Manager"),
+  "campus.access": p("plataforma", "Entrar en Catedria Campus"),
 } as const;
 
 /**
@@ -301,7 +301,7 @@ export const SYSTEM_ROLES: Record<
   },
   STUDENT: {
     name: "Alumno",
-    description: "Accede a Geminis Campus con el contenido que tenga contratado.",
+    description: "Accede a Catedria Campus con el contenido que tenga contratado.",
     permissions: STUDENT_PERMISSIONS,
   },
 };

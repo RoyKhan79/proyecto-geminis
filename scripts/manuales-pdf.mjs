@@ -19,8 +19,8 @@ const RAIZ = process.cwd();
 const CARPETA = path.join(RAIZ, "docs", "manuales");
 
 const DOCUMENTOS = [
-  ["manual-academias", "Proyecto Geminis · manual para academias"],
-  ["manual-alumnado", "Proyecto Geminis · manual del alumnado"],
+  ["manual-academias", "Catedria · manual para academias"],
+  ["manual-alumnado", "Catedria · manual del alumnado"],
 ];
 
 const navegador = await chromium.launch();

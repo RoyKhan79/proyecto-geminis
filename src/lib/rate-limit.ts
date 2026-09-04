@@ -87,7 +87,7 @@ export async function rateLimit(
  * la contraseña— y en ningún sitio más. Pero hay operaciones que no dan acceso a
  * nada y aun así no se pueden repetir sin freno:
  *
- *   · una pregunta a Geminis IA llama a un proveedor externo, y eso lo paga la
+ *   · una pregunta a Catedria IA llama a un proveedor externo, y eso lo paga la
  *     academia por tokens consumidos. Un alumno con el tutor incluido y un bucle
  *     de tres líneas puede gastarle el presupuesto del mes en una tarde, y no
  *     hace falta mala fe: basta un script de «resumir todos los temas»;
