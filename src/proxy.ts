@@ -23,14 +23,44 @@ import { NextResponse, type NextRequest } from "next/server";
  * carga uno ya autorizado heredan el permiso, así que no hay que enumerar cada
  * fragmento que Next parta en dos el día que cambie su empaquetado.
  *
- * ── LO QUE NO SE HA QUITADO Y POR QUÉ ───────────────────────────────────────
+ * ── LOS ESTILOS, EN DOS MITADES ─────────────────────────────────────────────
  *
- * `style-src` conserva `unsafe-inline`. No es un olvido: la interfaz usa
- * atributos `style` en varios sitios (la barra de progreso de un test, el color
- * de marca de cada academia) y esos atributos no los cubre un testigo, hace
- * falta `style-src-attr`, cuyo soporte todavía es desigual. El riesgo tampoco
- * es comparable: con CSS en línea se puede afear una página; con JavaScript en
- * línea se roba una sesión. Queda anotado como lo que es, un pendiente.
+ * Con CSS también se roba: un `<style>` inyectado puede sacar el contenido de
+ * un campo carácter a carácter con selectores de atributo y una imagen de
+ * fondo, y puede tapar un botón con otro. Menos grave que un script, pero no
+ * inocuo, y aquí estuvo abierto mucho tiempo con la excusa de que «el soporte
+ * de `style-src-attr` es desigual», que era una suposición y no una medida.
+ *
+ * El problema real era que `style-src` no distingue entre un bloque `<style>`
+ * —que no hace falta ninguno— y un atributo `style=`, que la interfaz sí usa:
+ * la barra de progreso de un test, el color de marca de cada academia. Un
+ * atributo no puede llevar testigo. CSP 3 sí los distingue:
+ *
+ *   · `style-src-elem` — los bloques y las hojas. **Sin `unsafe-inline`.**
+ *   · `style-src-attr` — los atributos. Con `unsafe-inline`, porque no hay
+ *     alternativa mientras la interfaz los use.
+ *   · `style-src` se queda como estaba, y ahí está la gracia: un navegador que
+ *     no entienda las dos anteriores las ignora y cae en ésta. Ninguno queda
+ *     peor que antes, y los que entienden CSP 3 quedan mejor.
+ *
+ * Cerrarlo destapó que la aplicación inyectaba una hoja de estilos en cada
+ * carga sin que nadie la pidiera: `sonner`, la librería de avisos, montada en
+ * el layout y con **cero llamadas a `toast()` en todo el proyecto**. Buscando
+ * qué más inyectaba estilos aparecieron otros catorce paquetes de Radix
+ * declarados y sin usar. Todo fuera. La comprobación de seguridad acabó
+ * encontrando código muerto, que es lo que suele pasar cuando se comprueba en
+ * vez de suponer.
+ *
+ * **Si algún día se añade una librería que cree hojas de estilo al vuelo** —los
+ * diálogos de Radix lo hacen para bloquear el desplazamiento del fondo— hay que
+ * pasarle el testigo o su estilo se bloqueará. Y no se verá al cargar la
+ * página: hará falta abrir el diálogo. Las que usan `react-style-singleton` se
+ * arreglan llamando a `setNonce` de `get-nonce` con la cabecera `x-nonce` desde
+ * un componente de cliente montado en el layout.
+ *
+ * En desarrollo, `style-src-elem` sí lleva `unsafe-inline`: Turbopack inyecta
+ * los estilos en bloques dentro del documento. Y lo lleva **en vez de** testigo,
+ * no además: cuando hay testigo, la norma dice que `unsafe-inline` se ignora.
  *
  * `unsafe-eval` sigue solo en desarrollo, donde React lo necesita para
  * reconstruir las trazas de error del servidor en el navegador. En producción
@@ -60,9 +90,15 @@ export function proxy(request: NextRequest) {
     "default-src 'self'",
     // El testigo y `strict-dynamic`: se acabó `unsafe-inline` para scripts.
     `script-src 'self' 'nonce-${testigo}' 'strict-dynamic'${enDesarrollo ? " 'unsafe-eval'" : ""}`,
-    // Pendiente: quitar `unsafe-inline` de aquí requiere sacar los atributos
-    // `style` de la interfaz. Ver la explicación de arriba.
+    // El respaldo para navegadores sin CSP 3, que ignoran las dos siguientes.
     "style-src 'self' 'unsafe-inline'",
+    // Los bloques `<style>` y las hojas: nada en línea. En desarrollo sí,
+    // porque Turbopack inyecta los estilos dentro del documento.
+    enDesarrollo
+      ? "style-src-elem 'self' 'unsafe-inline'"
+      : `style-src-elem 'self' 'nonce-${testigo}'`,
+    // Los atributos `style=`, que la interfaz usa y no pueden llevar testigo.
+    "style-src-attr 'unsafe-inline'",
     // `https:` para las imágenes porque el temario de una academia puede
     // enlazar ilustraciones alojadas fuera; `blob:` lo usa la mochila sin
     // conexión, que reconstruye los documentos guardados en el dispositivo.

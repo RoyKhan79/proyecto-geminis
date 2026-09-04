@@ -336,8 +336,22 @@ petición lleva ahora su propio testigo aleatorio, con `strict-dynamic`. Las
 cuatro páginas que se prerenderizaban pasan a dinámicas: una página generada en
 la compilación no puede llevar un testigo que aún no existía.
 
-`style-src` conserva `unsafe-inline` y queda anotado como pendiente: la interfaz
-usa atributos `style` y esos no los cubre un testigo. El riesgo no es comparable.
+**`style-src` ya no depende de `unsafe-inline` para los bloques.** CSP 3 separa
+los bloques `<style>` (`style-src-elem`) de los atributos `style=`
+(`style-src-attr`). Los atributos hay que dejarlos —la interfaz los usa y no
+pueden llevar testigo—; los bloques no hacía falta ninguno. `style-src` se queda
+como respaldo para navegadores sin CSP 3, así que ninguno queda peor que antes.
+
+Cerrarlo destapó código muerto. Con la política estricta salían dos violaciones
+por carga: una hoja vacía de React y la de `sonner`, la librería de avisos, que
+inyecta su CSS al arrancar sin aceptar testigo. Estaba montada en el layout con
+**cero llamadas a `toast()` en todo el proyecto**. Buscando qué más inyectaba
+estilos aparecieron otros catorce paquetes de Radix declarados y sin usar: solo
+se usa `react-slot`. Fuera los quince.
+
+Comprobado sobre la compilación de producción, servida por HTTPS y con sesión
+real, en ocho pantallas de gestión y campus: ni una violación de CSP, ni un
+error de página y los estilos aplicados.
 
 Las respuestas de `/api` llevan una política aparte y más cerrada, con
 `script-src 'none'`: ninguna es un documento con scripts, y eso da una capa más

@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from "next";
 import { Fraunces, JetBrains_Mono, Manrope } from "next/font/google";
-import { Toaster } from "sonner";
 import { BRAND } from "@/lib/brand";
 import "./globals.css";
 
@@ -91,7 +90,6 @@ export default function RootLayout({
     >
       <body className="antialiased">
         {children}
-        <Toaster position="top-center" richColors closeButton />
       </body>
     </html>
   );
