@@ -792,3 +792,47 @@ módulo de su menú y seguiría recibiendo alertas por detrás.
 **Una alerta por norma y anuncio.** El sumario de un día no cambia y
 reprocesarlo es normal; sin esa restricción, una modificación publicada el lunes
 abriría una alerta nueva cada mañana.
+
+### ADR-0063 · La tercera barrera son disparadores, no claves compuestas ⭐
+**Decisión.** Que una fila no pueda apuntar a una entidad de otra academia se
+comprueba **en la base de datos**, con un disparador por cada una de las 108
+claves foráneas entre modelos de academia. Se generan con `npm run
+barrera:generar` desde `src/lib/db/tenant-relations.ts`, que sigue siendo la
+única lista.
+
+**El agujero que cierra.** Una fila de la academia A podía apuntar a una entidad
+de la B, y las dos barreras existentes lo dejaban pasar cada una por su motivo:
+la guardia de aplicación mira a qué registro se apunta cuando el `where` señala
+uno, pero al **crear** no hay registro al que apuntar; y PostgreSQL comprueba
+contra la política la fila que se escribe —que es legítima, es de A—, mientras
+que la integridad referencial se verifica aparte y por diseño saltándose Row
+Level Security, así que la entidad de B «existe» a esos efectos.
+
+**Por qué no claves compuestas**, que es la solución de libro
+(`(academyId, oppositionId) → oppositions(academyId, id)`):
+
+1. Son 108 claves sobre 71 modelos. En Prisma significa reescribir todas las
+   relaciones y añadir un índice único a cada modelo: es un proyecto, y uno
+   donde un error se paga caro.
+2. Y hacerlo en SQL a mano no vale: **Prisma las borraría**. Se comprobó con
+   `prisma migrate diff` —una restricción que no esté en el esquema aparece como
+   sobrante y la primera migración que alguien genere la elimina, en silencio—.
+   Los disparadores, como las políticas de RLS, Prisma no los ve y sobreviven.
+
+**Cómo se comporta con RLS.** El disparador busca el padre con los permisos de
+quien escribe: si es de otra academia no lo ve, y no verlo se trata como error.
+Es correcto, porque si el padre no existiera de verdad la clave foránea normal
+ya habría rechazado la fila antes. Cuando no hay academia fijada —las tareas del
+sistema— la política deja verlo todo y entonces se comparan los `academyId`.
+
+**Una función por relación, no una genérica.** Medido sobre mil inserciones:
+25 ms sin barrera, 39 ms con la consulta escrita dentro, **110 ms** componiéndola
+al vuelo con `EXECUTE format(...)`, porque así PostgreSQL no puede guardar el
+plan. Se escribió primero de la forma genérica y se cambió al medirlo.
+
+**Probado con SQL crudo**, saltándose la guardia entera
+(`tests/barrera-relaciones.test.ts`): si la prueba pasara por `tenantDb` estaría
+midiendo la barrera de arriba otra vez. Cubre crear, reapuntar una fila
+existente, mudarla de academia dejando el padre atrás, y el caso sin academia
+fijada. Y una prueba de cobertura comprueba que las 108 relaciones de la lista
+tienen su disparador puesto: se verificó quitando uno, y falla nombrándolo.

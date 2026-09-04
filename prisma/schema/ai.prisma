@@ -85,6 +85,16 @@ model DocumentChunk {
   @@unique([sourceId, position])
   @@index([academyId, nodeId])
   @@index([academyId, editionId])
+  /// Trigramas para la búsqueda aproximada de Catedria IA: es la red que
+  /// recoge las erratas y los números de artículo cuando el lematizador no
+  /// encuentra nada.
+  ///
+  /// Va declarado aquí y no solo en la migración porque Prisma sí sabe leer un
+  /// índice sobre una columna, y lo que no está en el esquema lo borra: se
+  /// comprobó con `prisma migrate diff` y salía un DROP INDEX. El otro índice
+  /// de búsqueda, el del lematizador, va sobre una expresión y ése Prisma no lo
+  /// toca porque no sabe representarlo.
+  @@index([content(ops: raw("gin_trgm_ops"))], type: Gin)
   @@map("document_chunks")
 }
 

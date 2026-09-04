@@ -663,9 +663,16 @@ se ha comprobado ejecutándolo:
 - Los archivos tienen su propia segunda barrera: la clave de todo objeto empieza
   por su academia y se comprueba antes de devolver un byte.
 
-Con una salvedad honesta: la comprobación de claves foráneas vive en la
-aplicación, no en la base de datos. Lo definitivo serían claves compuestas con
-`academyId`, y eso está pendiente.
+- **Y una tercera barrera**: 108 disparadores en la base impiden que una fila
+  apunte a una entidad de otra academia (ADR-0063). Antes esa comprobación vivía
+  solo en la aplicación. `tests/barrera-relaciones.test.ts` lo ataca con SQL
+  crudo, saltándose la guardia, y no lo consigue: ni creando, ni reapuntando una
+  fila existente, ni mudándola de academia.
+
+Lo que sigue sin ser una clave foránea compuesta de verdad es la forma: son
+disparadores, no restricciones. Se eligió así a sabiendas —las 108 claves
+compuestas serían un proyecto sobre 71 modelos, y Prisma las borraría por no
+estar en su esquema— y da la misma garantía en el mismo sitio.
 
 ---
 

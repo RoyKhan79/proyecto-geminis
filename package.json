@@ -58,7 +58,8 @@
     "docs": "typedoc",
     "docs:faltan": "node scripts/docs-faltan.mjs",
     "zip": "node scripts/empaquetar.mjs",
-    "manual:publicar": "node scripts/publicar-manual.mjs"
+    "manual:publicar": "node scripts/publicar-manual.mjs",
+    "barrera:generar": "node --import tsx scripts/generar-barrera-relaciones.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.7.1",
