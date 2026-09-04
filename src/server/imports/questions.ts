@@ -1,5 +1,6 @@
 import type { ImportRowStatus } from "@/generated/prisma/enums";
 import type { TenantClient } from "@/lib/db/tenant";
+import { BuscadorDeParecidas, revisarOpciones } from "./parecido";
 
 /**
  * CATEDRIA IMPORT · banco de preguntas
@@ -17,10 +18,16 @@ import type { TenantClient } from "@/lib/db/tenant";
  *   · **Entran como borrador.** Un banco heredado suele traer erratas, opciones
  *     que ya no aplican y respuestas mal marcadas. Publicarlas de golpe pondría
  *     esas preguntas en el examen de un alumno mañana.
- *   · **Se avisa de las duplicadas.** Un banco de veinte años tiene la misma
- *     pregunta cuatro veces con distinta redacción. Se comparan enunciados
- *     normalizados, dentro de la academia, y la fila se marca en lugar de
- *     entrar dos veces.
+ *   · **Se avisa de las duplicadas y de las parecidas.** Un banco de veinte
+ *     años tiene la misma pregunta cuatro veces con distinta redacción. Las
+ *     idénticas se detectan por enunciado normalizado; las reescritas, por las
+ *     palabras que llevan dentro (`parecido.ts`). Nadie copia y pega: la gente
+ *     reescribe, así que detectar solo lo idéntico dejaba fuera el caso
+ *     frecuente.
+ *   · **Se avisa de las ambiguas.** Opciones que casi dicen lo mismo, opciones
+ *     que remiten a las demás —«todas las anteriores», que al importar cambian
+ *     de sentido porque cambia el orden— y opciones de relleno. Son las que
+ *     acaban en impugnación.
  */
 
 export type QuestionFieldKey =
@@ -250,8 +257,20 @@ export async function evaluateQuestionRows(
   });
   const yaEnElBanco = new Set(existentes.map((q) => huellaDeEnunciado(q.statement)));
 
+  /*
+   * Y las mismas preguntas otra vez, para buscar las que se PARECEN.
+   *
+   * La huella exacta solo caza el copia y pega. Un banco heredado tiene la
+   * misma pregunta reescrita: «¿Cuál es el plazo máximo para resolver?» y
+   * «Indique el plazo máximo de resolución». Normalizadas son dos cadenas
+   * distintas; por las palabras que llevan dentro son la misma pregunta.
+   */
+  const parecidasEnElBanco = new BuscadorDeParecidas();
+  for (const q of existentes) parecidasEnElBanco.añadir("el banco", q.statement);
+
   // Repetidas dentro del propio archivo.
   const vistasEnElArchivo = new Map<string, number>();
+  const parecidasEnElArchivo = new BuscadorDeParecidas();
 
   const valor = (fila: Record<string, string>, campo: QuestionFieldKey) => {
     const columna = mapping[campo];
@@ -321,6 +340,21 @@ export async function evaluateQuestionRows(
       }
     }
 
+    /*
+     * AMBIGÜEDADES
+     *
+     * Lo idéntico ya se ha mirado arriba. Aquí van las opciones que **casi**
+     * dicen lo mismo, las que remiten a las demás —«todas las anteriores»,
+     * que al importar cambian de sentido porque cambia el orden— y el relleno.
+     *
+     * Va después de resolver la correcta a propósito: si la que remite a las
+     * demás es justamente la marcada, el aviso es más serio y hay que decirlo.
+     */
+    for (const problema of revisarOpciones(opcionesTexto, correctIndex)) {
+      messages.push({ level: problema.nivel, text: problema.texto });
+      if (problema.nivel === "error") status = "ERROR";
+    }
+
     // Duplicados: primero contra el banco, después contra el propio archivo.
     if (enunciado && status !== "ERROR") {
       const huella = huellaDeEnunciado(enunciado);
@@ -350,6 +384,33 @@ export async function evaluateQuestionRows(
       } else {
         vistasEnElArchivo.set(huella, fila.rowNumber);
       }
+
+      /*
+       * Parecidas, no idénticas. Esto NUNCA salta la fila aunque se haya
+       * elegido «saltar duplicadas», ni siquiera cuando el parecido es muy
+       * alto: dos preguntas pueden diferenciarse en una palabra y ser dos
+       * preguntas distintas —«tres meses» y «seis meses»—, y saltarse una
+       * buena en silencio es peor que importar una repetida, que se ve y se
+       * borra. Se avisa y decide la persona.
+       *
+       * Solo se busca si no se ha encontrado ya la idéntica, para no dar dos
+       * avisos de lo mismo.
+       */
+      if (!yaEnElBanco.has(huella) && anterior === undefined) {
+        const enElBanco = parecidasEnElBanco.buscar(enunciado);
+        const enElArchivo = parecidasEnElArchivo.buscar(enunciado);
+        const cerca = enElBanco ?? enElArchivo;
+        if (cerca) {
+          messages.push({
+            level: "warning",
+            text:
+              `Se parece mucho (${Math.round(cerca.parecido * 100)} %) a una ` +
+              `pregunta que ya está en ${cerca.referencia}. Revisa si es la ` +
+              "misma con otra redacción.",
+          });
+        }
+      }
+      parecidasEnElArchivo.añadir(`la fila ${fila.rowNumber}`, enunciado);
     }
 
     // Tema: se resuelve por nombre. Si no coincide, no es un error —la pregunta

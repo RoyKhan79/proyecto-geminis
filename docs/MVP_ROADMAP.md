@@ -96,7 +96,8 @@ Modelo ya listo: `ImportJob`, `ImportRow`.
   erratas (ADR-0061). Sin vectores: `pgvector` no está en todos los entornos
   y los embeddings exigirían contratar una API, que es justo lo que el
   producto promete que no hace falta
-- Detección de duplicados y ambigüedades — pendiente
+- Detección de duplicados, de preguntas reescritas y de opciones ambiguas al
+  importar el banco (`src/server/imports/parecido.ts`)
 - Asistente guiado de importación de temario ✅ (ADR-0054)
 
 ## ✅ Fase 6 — Normativa *(E)* · **terminada**
