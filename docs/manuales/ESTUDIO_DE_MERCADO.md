@@ -84,9 +84,9 @@ alumno**. Eso es cómodo de entender y desastroso en los extremos:
 
 | Academia | Catedria Completo hoy | Coste por alumno | Contra el mercado |
 |---|---|---|---|
-| 30 alumnos | 393 €/mes | **13,10 €** | evolCampus 80 €. **Se pierde la venta** |
-| 150 alumnos | 393 €/mes | 2,62 € | Competitivo y justo |
-| 500 alumnos | 393 €/mes | **0,79 €** | Classlife cobraría varias veces eso. **Se regala dinero** |
+| 30 alumnos | 314 €/mes | **10,47 €** | evolCampus 80 €. **Se pierde la venta** |
+| 150 alumnos | 314 €/mes | 2,09 € | Competitivo y justo |
+| 500 alumnos | 314 €/mes | **0,63 €** | Classlife cobraría varias veces eso. **Se regala dinero** |
 
 Un precio plano es simultáneamente demasiado caro para la academia pequeña y
 demasiado barato para la grande. Es el fallo comercial más serio del producto
@@ -119,13 +119,18 @@ Resultado para el pack Completo:
 
 | Tramo | Precio/mes | Por alumno (en el tope del tramo) |
 |---|---|---|
-| ≤ 50 | **236 €** | 4,72 € |
-| 51 – 150 | **393 €** | 2,62 € |
-| 151 – 350 | **590 €** | 1,69 € |
-| 351 – 700 | **825 €** | 1,18 € |
+| ≤ 50 | **189 €** | 3,78 € |
+| 51 – 150 | **314 €** | 2,09 € |
+| 151 – 350 | **472 €** | 1,35 € |
+| 351 – 700 | **660 €** | 0,94 € |
+
+Esas cifras **ya llevan dentro el descuento por número de módulos** que el
+catálogo aplicaba desde el principio: la suma bruta del pack Completo son 393 €
+y se cobran 314 €. Conviene enseñar las dos, porque un 20 % que el cliente ve
+restado vende más que un precio bajo sin explicación.
 
 El coste por alumno baja según crece la academia, que es lo que hace que un
-cliente grande no se plantee irse, y el precio de entrada baja a 236 € para la
+cliente grande no se plantee irse, y el precio de entrada baja a 189 € para la
 pequeña, que es lo que hace que llegue a plantearse entrar.
 
 ### Lo que va incluido siempre, y conviene que se note
@@ -151,10 +156,9 @@ pequeña, que es lo que hace que llegue a plantearse entrar.
 
 ## 5 · Lo que hay que arreglar antes de mandar el mailing
 
-1. **El coeficiente de tramo no está implementado.** El catálogo tiene
-   `precioCents` plano y no hay noción de tramo por alumnado activo. Si la
-   tarifa se anuncia, hay que poder facturarla. Es un cambio pequeño y acotado
-   en `catalogo.ts` y en el alta de academias, pero hay que hacerlo.
+1. ~~El coeficiente de tramo no está implementado.~~ **Hecho.** Está en
+   `TRAMOS` y `calcularPresupuesto` (`src/lib/modules/catalogo.ts`), con el
+   alumnado activo como entrada. Lo que se anuncia se puede facturar.
 2. **Cinco requisitos de infraestructura siguen pendientes** (`npm run
    desplegar:comprobar`): SMTP, copias programadas y restauradas, cifrado de
    disco y de bucket, y los dos cron. Sin SMTP no salen ni los avisos del BOE ni
