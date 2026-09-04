@@ -249,7 +249,7 @@ servidor, o un paso de integración continua mal configurado.
 preparación, así que ninguna prueba llega a ejecutarse. La pregunta que se hace
 no es «¿parece de producción?» —una lista de sospechas siempre se queda corta—
 sino «¿se puede afirmar que es de desarrollo?». Anfitrión local **y** nombre
-reconocible. Hay una salida explícita, `GEMINIS_BASE_DE_PRUEBAS=confirmo`, que
+reconocible. Hay una salida explícita, `CATEDRIA_BASE_DE_PRUEBAS=confirmo`, que
 hay que escribir a mano.
 
 **Verificado ejecutándolo** contra una URL de producción simulada: la suite se

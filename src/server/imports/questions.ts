@@ -2,7 +2,7 @@ import type { ImportRowStatus } from "@/generated/prisma/enums";
 import type { TenantClient } from "@/lib/db/tenant";
 
 /**
- * GEMINIS IMPORT · banco de preguntas
+ * CATEDRIA IMPORT · banco de preguntas
  *
  * La segunda barrera para que una academia cambie de programa —después de tener
  * a sus alumnos en otro sitio— es tener veinte años de preguntas en un Excel.

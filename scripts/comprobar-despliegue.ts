@@ -103,7 +103,7 @@ async function main() {
       ? `«${rol[0]?.rolname}» se salta las políticas: la segunda barrera no protege nada`
       : `«${rol[0]?.rolname}», sin superusuario ni BYPASSRLS`,
     comoSeArregla:
-      "DATABASE_URL debe apuntar a geminis_app, no al dueño de las tablas",
+      "DATABASE_URL debe apuntar a catedria_app, no al dueño de las tablas",
   });
 
   const politicas = await prismaBase.$queryRaw<{ n: number }[]>`

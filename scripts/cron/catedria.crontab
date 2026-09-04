@@ -15,16 +15,16 @@ PATH=/usr/local/bin:/usr/bin:/bin
 
 # Radar del BOE: convocatorias nuevas de las ramas que vigila cada academia.
 # Solo actúa sobre las que tienen contratado el módulo «Normativa».
-30 8 * * *  cd RUTA_PROYECTO && RUTA_NPM run radar >> /var/log/geminis-radar.log 2>&1
+30 8 * * *  cd RUTA_PROYECTO && RUTA_NPM run radar >> /var/log/catedria-radar.log 2>&1
 
 # Por si el servidor estuvo caído: los domingos recupera la última semana.
 # Sin esto, un corte de un día se convierte en una convocatoria que nadie vio.
-15 9 * * 0  cd RUTA_PROYECTO && RUTA_NPM run radar -- --dias 7 >> /var/log/geminis-radar.log 2>&1
+15 9 * * 0  cd RUTA_PROYECTO && RUTA_NPM run radar -- --dias 7 >> /var/log/catedria-radar.log 2>&1
 
 # Avisos de impago: reclama los recibos vencidos y, pasado el plazo que haya
 # puesto cada academia, pausa el acceso. Después del radar y antes de que abra
 # la academia, para que si alguien llama ya se sepa qué se le ha mandado.
-0 9 * * *  cd RUTA_PROYECTO && RUTA_NPM run avisos >> /var/log/geminis-avisos.log 2>&1
+0 9 * * *  cd RUTA_PROYECTO && RUTA_NPM run avisos >> /var/log/catedria-avisos.log 2>&1
 
 # Mantenimiento: sesiones caducadas, tokens usados y ficheros huérfanos.
-40 4 * * *  cd RUTA_PROYECTO && RUTA_NPM run mantenimiento >> /var/log/geminis-mantenimiento.log 2>&1
+40 4 * * *  cd RUTA_PROYECTO && RUTA_NPM run mantenimiento >> /var/log/catedria-mantenimiento.log 2>&1

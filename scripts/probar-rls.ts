@@ -89,7 +89,7 @@ function comoLaAcademia<T>(
   fn: (tx: Parameters<Parameters<typeof prismaBase.$transaction>[0]>[0]) => Promise<T>,
 ): Promise<T> {
   return prismaBase.$transaction(async (tx) => {
-    await tx.$executeRaw`SELECT set_config('geminis.academy_id', ${academyId}, true)`;
+    await tx.$executeRaw`SELECT set_config('catedria.academy_id', ${academyId}, true)`;
     return fn(tx);
   });
 }

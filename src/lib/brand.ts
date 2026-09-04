@@ -4,7 +4,7 @@
  * El nombre está en un único sitio porque es provisional: cuando se decida el
  * definitivo se cambia aquí y no hay que buscarlo por toda la aplicación.
  * Los identificadores internos (paquete npm, base de datos, rutas) siguen
- * usando `geminis` a propósito: renombrarlos no aporta nada y rompe cosas.
+ * usando `catedria` a propósito: renombrarlos no aporta nada y rompe cosas.
  *
  * Aquí solo van los textos. El **signo** está en `src/components/marca.tsx`
  * —para la pantalla— y en `scripts/iconos.ts` —para los PNG del icono

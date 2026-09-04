@@ -105,7 +105,7 @@ podía enseñar en el esquema, y su efecto real era cero. Se descubrió al escri
 la prueba que intentaba leer datos de otra academia con una consulta cruda: los
 leyó todos.
 
-Corregido creando el rol `geminis_app` —sin superusuario, sin `BYPASSRLS` y sin
+Corregido creando el rol `catedria_app` —sin superusuario, sin `BYPASSRLS` y sin
 ser dueño de las tablas— y separando dos conexiones: la de la aplicación y la
 del dueño, que solo usan las migraciones. Con prueba permanente:
 `npm run rls:probar` falla si alguien vuelve a conectar con un rol privilegiado.

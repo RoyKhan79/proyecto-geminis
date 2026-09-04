@@ -336,7 +336,7 @@ gastado y la recuperación no funcionaría nunca en esos dominios.
 
 ### ADR-0040 · Row Level Security como segunda barrera, con rol propio ⭐
 **Decisión.** Las 50 tablas con datos de academia llevan RLS activado y forzado.
-La guardia fija `geminis.academy_id` al principio de cada operación y la política
+La guardia fija `catedria.academy_id` al principio de cada operación y la política
 solo deja ver las filas de esa academia.
 **Por qué.** Hasta ahora el aislamiento descansaba en una sola barrera. Tres
 cosas la rodean sin querer: una consulta con `$queryRaw`, un fallo futuro al
@@ -345,7 +345,7 @@ fusionar el `where`, o una operación de Prisma que la extensión no contemple.
 aplicación se conectaba con el rol dueño de las tablas, que además era
 superusuario, y un superusuario se salta RLS incluso con FORCE. Se vio al
 escribir la prueba que intentaba leer datos de otra academia con una consulta
-cruda: los leía todos. Por eso existe el rol `geminis_app`, sin superusuario y
+cruda: los leía todos. Por eso existe el rol `catedria_app`, sin superusuario y
 sin BYPASSRLS, y por eso hay dos URL de conexión: la de la aplicación y la del
 dueño, que solo usan las migraciones.
 **Coste medido.** `npm run rls:medir`: unos 3 ms por consulta, del orden de

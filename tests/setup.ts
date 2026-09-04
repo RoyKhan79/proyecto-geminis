@@ -40,7 +40,7 @@ try {
 
 const motivos = motivosParaNoEjecutar(process.env.DATABASE_URL, {
   NODE_ENV: process.env.NODE_ENV,
-  GEMINIS_BASE_DE_PRUEBAS: process.env.GEMINIS_BASE_DE_PRUEBAS,
+  CATEDRIA_BASE_DE_PRUEBAS: process.env.CATEDRIA_BASE_DE_PRUEBAS,
 });
 
 if (motivos.length > 0) {

@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────────────────────
-// GEMINIS IA · Base de conocimiento privada por academia
+// CATEDRIA IA · Base de conocimiento privada por academia
 //
 // Decisión ADR-0010: los fragmentos indexados llevan SIEMPRE `academyId` y una
 // copia de los identificadores que permiten filtrar por derechos de acceso

@@ -68,7 +68,7 @@ seguridad que va por detrás del código es peor que no tenerla: alguien puede
 decidir en función de lo que lee.
 
 Cómo funciona: cada operación de academia se envuelve en una transacción que
-fija `geminis.academy_id`, y PostgreSQL aplica una política de aislamiento sobre
+fija `catedria.academy_id`, y PostgreSQL aplica una política de aislamiento sobre
 cada tabla con datos de academia —hoy **57**—. Cuando la variable no está puesta
 (migraciones, semillas, consola de plataforma, autenticación) la política deja
 pasar: esos usos son deliberados y la auditoría interna los revisa uno a uno.
@@ -77,7 +77,7 @@ Tres cosas que hacen que esta barrera sea real y no decorativa:
 
 - **`FORCE ROW LEVEL SECURITY`** en todas. Sin `FORCE`, el dueño de la tabla se
   salta las políticas.
-- **La aplicación NO se conecta como dueño.** Se conecta con `geminis_app`, un
+- **La aplicación NO se conecta como dueño.** Se conecta con `catedria_app`, un
   rol sin `SUPERUSER` y sin `BYPASSRLS`. Cuando no era así, RLS estaba activada
   y no protegía absolutamente nada; lo cuenta la migración
   `rol_de_aplicacion_sin_bypass`, que existe porque eso llegó a pasar.

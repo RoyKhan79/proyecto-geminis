@@ -77,7 +77,7 @@ No debe quedar ningún ✗. Y además:
   conocida y publicada en el repositorio.
 - **`APP_URL` con https**, no http.
 - **`sslmode=require`** en la conexión a la base de datos.
-- **`DB_RLS=on`** y que la aplicación se conecte con `geminis_app`, nunca con el
+- **`DB_RLS=on`** y que la aplicación se conecte con `catedria_app`, nunca con el
   dueño. Es la mitad del aislamiento entre academias.
 
 ---

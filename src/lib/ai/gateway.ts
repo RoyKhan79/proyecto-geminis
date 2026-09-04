@@ -2,7 +2,7 @@ import { prismaBase } from "@/lib/db/client";
 import { env } from "@/lib/env";
 
 /**
- * GEMINIS AI GATEWAY
+ * CATEDRIA AI GATEWAY
  *
  * Punto ÚNICO por el que la aplicación habla con un proveedor de inteligencia
  * artificial. Ningún módulo llama nunca a un SDK directamente.

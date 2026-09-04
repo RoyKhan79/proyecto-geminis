@@ -114,6 +114,26 @@ const pantallasAlumna = [
 ];
 for (const [ruta, nombre] of pantallasAlumna) await foto(alumna, ruta, nombre);
 
+/**
+ * Pulsa algo y dice si pudo.
+ *
+ * Cada respuesta del test es una acción de servidor: al contestar, la página se
+ * vuelve a pintar y el botón que se acaba de pulsar deja de existir. Playwright
+ * lo reintenta hasta agotar el tiempo y lanza. Aquí eso no es un error: es lo
+ * normal, y lo único que hay que hacer es seguir.
+ *
+ * Antes iba sin proteger y una sola pulsación fallida tumbaba la tanda entera,
+ * dejando sin hacer el móvil y la portada.
+ */
+async function pulsar(loc) {
+  try {
+    await loc.click({ timeout: 10000 });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 /*
  * UN TEST HECHO DE VERDAD
  *
@@ -135,7 +155,10 @@ async function hacerUnTest(p) {
     console.log("  (sin preguntas disponibles: no se hace el test)");
     return;
   }
-  await empezar.first().click();
+  if (!(await pulsar(empezar.first()))) {
+    console.log("  (no se pudo empezar el test)");
+    return;
+  }
   await p.waitForURL(/\/campus\/tests\/[^/]+/, { timeout: 20000 });
   await p.waitForLoadState("networkidle");
 
@@ -145,8 +168,8 @@ async function hacerUnTest(p) {
     const opciones = p.locator('form button[type="submit"]').filter({ hasText: /\S/ });
     const cuantas = await opciones.count();
     if (cuantas > 1) {
-      await opciones.nth(Math.min(1, cuantas - 1)).click();
-      await p.waitForLoadState("networkidle");
+      await pulsar(opciones.nth(Math.min(1, cuantas - 1)));
+      await p.waitForLoadState("networkidle").catch(() => {});
       await p.waitForTimeout(300);
     }
 
@@ -154,15 +177,15 @@ async function hacerUnTest(p) {
 
     const siguiente = p.getByRole("link", { name: "Siguiente" });
     if (await siguiente.count()) {
-      await siguiente.first().click();
-      await p.waitForLoadState("networkidle");
+      if (!(await pulsar(siguiente.first()))) break;
+      await p.waitForLoadState("networkidle").catch(() => {});
       continue;
     }
 
     const entregar = p.getByRole("button", { name: /^Entregar test$/ });
     if (await entregar.count()) {
-      await entregar.first().click();
-      await p.waitForLoadState("networkidle");
+      await pulsar(entregar.first());
+      await p.waitForLoadState("networkidle").catch(() => {});
       await p.waitForTimeout(1500);
       break;
     }
@@ -173,7 +196,11 @@ async function hacerUnTest(p) {
   console.log("  test entregado ·", p.url().replace(BASE, ""));
 }
 
-await hacerUnTest(alumna);
+// Aun con las pulsaciones protegidas, esto es lo unico del guion que navega a
+// ciegas por una interfaz: si algo se tuerce, se pierde el test pero no la tanda.
+await hacerUnTest(alumna).catch((e) => {
+  console.log("  FALLO haciendo el test:", String(e.message).split("\n")[0]);
+});
 
 // El inicio y los tests, ya con historial detrás.
 await foto(alumna, "/campus", "c-inicio");

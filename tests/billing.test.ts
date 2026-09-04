@@ -81,8 +81,8 @@ describe("limpiarParaSepa", () => {
 
 describe("generarReferenciaMandato", () => {
   it("es estable para el mismo alumno", () => {
-    const a = generarReferenciaMandato("GEMINIS", "0195c0de-1234-7890-abcd-ef0123456789");
-    const b = generarReferenciaMandato("GEMINIS", "0195c0de-1234-7890-abcd-ef0123456789");
+    const a = generarReferenciaMandato("CATEDRIA", "0195c0de-1234-7890-abcd-ef0123456789");
+    const b = generarReferenciaMandato("CATEDRIA", "0195c0de-1234-7890-abcd-ef0123456789");
     expect(a).toBe(b);
   });
 

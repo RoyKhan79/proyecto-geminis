@@ -44,15 +44,15 @@ ALTER TABLE "academy_modules" FORCE ROW LEVEL SECURITY;
 DROP POLICY IF EXISTS "aislamiento_academia" ON "academy_modules";
 CREATE POLICY "aislamiento_academia" ON "academy_modules"
   USING (
-    "academyId" = current_setting('geminis.academy_id', true)
-    OR coalesce(current_setting('geminis.academy_id', true), '') = ''
+    "academyId" = current_setting('catedria.academy_id', true)
+    OR coalesce(current_setting('catedria.academy_id', true), '') = ''
   )
   WITH CHECK (
-    "academyId" = current_setting('geminis.academy_id', true)
-    OR coalesce(current_setting('geminis.academy_id', true), '') = ''
+    "academyId" = current_setting('catedria.academy_id', true)
+    OR coalesce(current_setting('catedria.academy_id', true), '') = ''
   );
 
-GRANT SELECT, INSERT, UPDATE, DELETE ON "academy_modules" TO geminis_app;
+GRANT SELECT, INSERT, UPDATE, DELETE ON "academy_modules" TO catedria_app;
 
 -- ── Las academias que ya existen se quedan con todo ──────────────────────────
 --

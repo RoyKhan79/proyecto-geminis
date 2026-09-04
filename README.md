@@ -150,8 +150,8 @@ prisma/schema/        Esquema dividido por dominios
 src/
   app/                Rutas (Next.js App Router)
     entrar/           Acceso
-    gestion/          GEMINIS MANAGER  · academia
-    campus/           GEMINIS CAMPUS   · alumno
+    gestion/          CATEDRIA MANAGER  · academia
+    campus/           CATEDRIA CAMPUS   · alumno
     plataforma/       Consola de superadmin
   components/
     ui/               Design system (sin lógica de negocio)
@@ -180,7 +180,7 @@ subir temario.
 
 ```bash
 # En el crontab del servidor, a las 8:30
-30 8 * * *  cd /ruta/proyecto && npm run radar >> /var/log/geminis-radar.log 2>&1
+30 8 * * *  cd /ruta/proyecto && npm run radar >> /var/log/catedria-radar.log 2>&1
 ```
 
 Nunca crea una oposición por su cuenta: avisa y decide una persona.

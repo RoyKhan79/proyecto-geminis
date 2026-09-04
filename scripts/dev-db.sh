@@ -26,10 +26,10 @@ case "$(uname -s 2>/dev/null || echo desconocido)" in
 esac
 PGDATA="$ROOT/.dev/pgdata"
 PGLOG="$ROOT/.dev/postgres.log"
-PGPORT="${GEMINIS_DB_PORT:-55432}"
-PGUSER_NAME="geminis"
-PGPASSWORD_VALUE="geminis"
-PGDB="geminis"
+PGPORT="${CATEDRIA_DB_PORT:-55432}"
+PGUSER_NAME="catedria"
+PGPASSWORD_VALUE="catedria"
+PGDB="catedria"
 
 if [ ! -x "$PGBIN/pg_ctl$EXE" ]; then
   echo "✗ No encuentro los binarios de PostgreSQL. Ejecuta 'npm install' primero." >&2
@@ -72,12 +72,12 @@ cmd_start() {
     # tres: el registro ya se lo lleva `-l`.
     "$PGBIN/pg_ctl$EXE" -D "$PGDATA" -l "$PGLOG" -w start </dev/null >/dev/null 2>&1
   fi
-  GEMINIS_DB_PORT="$PGPORT" node "$ROOT/scripts/db-sql.mjs" ensure-db
+  CATEDRIA_DB_PORT="$PGPORT" node "$ROOT/scripts/db-sql.mjs" ensure-db
   # El rol con el que entra la aplicación. Se crea aquí y no en la migración
   # que lo configura, porque allí habría que escribir la contraseña y en una
   # migración no van secretos. Al crearlo antes, aquella se limita a ajustarle
   # los privilegios y le respeta la contraseña.
-  GEMINIS_DB_PORT="$PGPORT" node "$ROOT/scripts/db-sql.mjs" ensure-app-role
+  CATEDRIA_DB_PORT="$PGPORT" node "$ROOT/scripts/db-sql.mjs" ensure-app-role
   echo "✓ PostgreSQL escuchando en 127.0.0.1:$PGPORT · base de datos '$PGDB'"
 }
 
@@ -86,7 +86,7 @@ cmd_stop() {
 }
 
 cmd_status() { "$PGBIN/pg_ctl$EXE" -D "$PGDATA" status; }
-cmd_psql() { GEMINIS_DB_PORT="$PGPORT" exec node "$ROOT/scripts/db-sql.mjs" query "$@"; }
+cmd_psql() { CATEDRIA_DB_PORT="$PGPORT" exec node "$ROOT/scripts/db-sql.mjs" query "$@"; }
 cmd_logs() { tail -n 80 "$PGLOG"; }
 
 cmd_reset() {

@@ -123,7 +123,7 @@ describe("Row Level Security · cobertura", () => {
       // WITH CHECK es lo que impide ESCRIBIR una fila de otra academia. Una
       // política solo con USING deja leer bien y escribir mal, que es peor que
       // no tenerla, porque parece que está.
-      if (!suyas.some((p) => p.comprobando?.includes("geminis.academy_id"))) {
+      if (!suyas.some((p) => p.comprobando?.includes("catedria.academy_id"))) {
         sinComprobacion.push(`${modelo} (${tabla})`);
       }
     }

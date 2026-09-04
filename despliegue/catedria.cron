@@ -1,5 +1,5 @@
 # ─────────────────────────────────────────────────────────────────────────────
-# GEMINIS · tareas programadas
+# CATEDRIA · tareas programadas
 #
 # Instalar:   crontab despliegue/catedria.cron
 # Comprobar:  crontab -l
@@ -34,4 +34,4 @@ MAILTO=""
 # es una copia, es un archivo. Crea una base desechable, mete dentro la copia
 # más reciente, comprueba que las claves foráneas vuelven a crearse y la borra.
 # Si falla, te enteras un lunes cualquiera y no el día del desastre.
-0 5 * * 1 cd /srv/catedria && npm run copia:probar -- "$(ls -t .dev/copias/geminis-completa-*.json | head -1)" >> /var/log/catedria/copia-probar.log 2>&1
+0 5 * * 1 cd /srv/catedria && npm run copia:probar -- "$(ls -t .dev/copias/catedria-completa-*.json | head -1)" >> /var/log/catedria/copia-probar.log 2>&1

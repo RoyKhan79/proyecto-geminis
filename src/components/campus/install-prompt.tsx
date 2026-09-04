@@ -17,7 +17,7 @@ type PromptEvent = Event & {
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 };
 
-const CLAVE_DESCARTADO = "geminis:instalacion-descartada";
+const CLAVE_DESCARTADO = "catedria:instalacion-descartada";
 
 /**
  * El aviso para instalar la aplicación en el móvil.

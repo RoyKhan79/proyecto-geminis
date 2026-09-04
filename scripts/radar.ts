@@ -8,7 +8,7 @@
  * Pensado para lanzarse desde cron en el servidor, de modo que la academia no
  * necesita tener nada abierto. Ejemplo de crontab (8:30 cada mañana):
  *
- *   30 8 * * *  cd /ruta/proyecto && /usr/bin/npm run radar >> /var/log/geminis-radar.log 2>&1
+ *   30 8 * * *  cd /ruta/proyecto && /usr/bin/npm run radar >> /var/log/catedria-radar.log 2>&1
  *
  * Es idempotente: si se ejecuta dos veces el mismo día, la segunda no hace nada.
  */

@@ -103,10 +103,10 @@ export function versionDeLaMochila(): number {
   return version;
 }
 
-const CACHE = "geminis-mochila-v1";
-const INDICE = "geminis.mochila.indice";
+const CACHE = "catedria-mochila-v1";
+const INDICE = "catedria.mochila.indice";
 /** De quién es lo guardado. Un móvil se comparte más de lo que parece. */
-const DUENO = "geminis.mochila.dueno";
+const DUENO = "catedria.mochila.dueno";
 
 /** URL interna bajo la que se guarda cada documento. No existe en el servidor:
  *  es una clave, y así nunca choca con una petición real. */

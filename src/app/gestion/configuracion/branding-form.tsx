@@ -53,7 +53,7 @@ export function BrandingForm({
         const url = URL.createObjectURL(blob);
         const enlace = document.createElement("a");
         enlace.href = url;
-        enlace.download = `proyecto-geminis-export-${new Date().toISOString().slice(0, 10)}.json`;
+        enlace.download = `proyecto-catedria-export-${new Date().toISOString().slice(0, 10)}.json`;
         enlace.click();
         URL.revokeObjectURL(url);
         setAviso("Exportación descargada.");

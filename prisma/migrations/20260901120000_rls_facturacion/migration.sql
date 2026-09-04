@@ -19,7 +19,7 @@
 -- la comprobación de despliegue cuenta las políticas antes de dejar arrancar.
 --
 -- Las políticas son idénticas a las de la migración original, con el mismo
--- criterio: cuando `geminis.academy_id` no está fijada —migraciones, semillas,
+-- criterio: cuando `catedria.academy_id` no está fijada —migraciones, semillas,
 -- consola de plataforma, autenticación— se deja pasar, porque esos usos son
 -- deliberados y se revisan uno a uno.
 --
@@ -51,12 +51,12 @@ BEGIN
     EXECUTE format($politica$
       CREATE POLICY "aislamiento_academia" ON %I
         USING (
-          "academyId" = current_setting('geminis.academy_id', true)
-          OR coalesce(current_setting('geminis.academy_id', true), '') = ''
+          "academyId" = current_setting('catedria.academy_id', true)
+          OR coalesce(current_setting('catedria.academy_id', true), '') = ''
         )
         WITH CHECK (
-          "academyId" = current_setting('geminis.academy_id', true)
-          OR coalesce(current_setting('geminis.academy_id', true), '') = ''
+          "academyId" = current_setting('catedria.academy_id', true)
+          OR coalesce(current_setting('catedria.academy_id', true), '') = ''
         )
     $politica$, tabla);
   END LOOP;
@@ -70,4 +70,4 @@ $$;
 GRANT SELECT, INSERT, UPDATE, DELETE ON
   "billing_profiles", "recurring_charges", "direct_debit_runs",
   "invoice_series", "invoices", "invoice_lines"
-TO "geminis_app";
+TO "catedria_app";

@@ -61,7 +61,7 @@ export async function limpiarDispositivo(): Promise<void> {
       const claves = await caches.keys();
       await Promise.all(
         claves
-          .filter((clave) => clave.startsWith("geminis-"))
+          .filter((clave) => clave.startsWith("catedria-"))
           .map((clave) => caches.delete(clave)),
       );
     }

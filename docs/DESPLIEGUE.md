@@ -56,16 +56,16 @@ porque el rol se la saltaba.
 
 ```bash
 # La aplicación: sin superusuario, sin BYPASSRLS, no es dueña de nada
-DATABASE_URL="postgresql://geminis_app:CONTRASEÑA@servidor:5432/geminis?sslmode=require"
+DATABASE_URL="postgresql://catedria_app:CONTRASEÑA@servidor:5432/catedria?sslmode=require"
 
 # El dueño: SOLO para migraciones y semillas
-DATABASE_URL_OWNER="postgresql://geminis:CONTRASEÑA@servidor:5432/geminis?sslmode=require"
+DATABASE_URL_OWNER="postgresql://catedria:CONTRASEÑA@servidor:5432/catedria?sslmode=require"
 ```
 
-El rol `geminis_app` lo crea la migración `20260811003000`. Ponle contraseña:
+El rol `catedria_app` lo crea la migración `20260811003000`. Ponle contraseña:
 
 ```sql
-ALTER ROLE geminis_app WITH PASSWORD 'una contraseña larga y aleatoria';
+ALTER ROLE catedria_app WITH PASSWORD 'una contraseña larga y aleatoria';
 ```
 
 `sslmode=require` no es opcional en producción: sin él, las consultas viajan en
@@ -126,7 +126,7 @@ Dos tipos, porque resuelven dos miedos distintos:
 
 ```bash
 # Completa (desastre) + por academia (error humano acotado)
-30 3 * * *  cd /ruta/geminis && npm run copia >> /var/log/geminis-copia.log 2>&1
+30 3 * * *  cd /ruta/catedria && npm run copia >> /var/log/catedria-copia.log 2>&1
 ```
 
 Las copias por academia son las que de verdad se acaban usando: cuando alguien
@@ -137,7 +137,7 @@ por delante el trabajo de las demás academias desde esa copia.
 el caso que importa. Con S3, por ejemplo:
 
 ```bash
-0 4 * * *  aws s3 sync /ruta/geminis/.dev/copias s3://copias-geminis/ --sse AES256
+0 4 * * *  aws s3 sync /ruta/catedria/.dev/copias s3://copias-catedria/ --sse AES256
 ```
 
 Y lo que casi nadie hace y es lo único que convierte un archivo en una copia:

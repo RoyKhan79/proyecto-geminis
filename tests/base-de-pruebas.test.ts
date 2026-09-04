@@ -13,21 +13,21 @@ import { motivosParaNoEjecutar } from "./base-de-pruebas";
  * una guarda desactivada no protege de nada.
  */
 
-const DEV = "postgresql://geminis:geminis@127.0.0.1:55432/geminis";
+const DEV = "postgresql://catedria:catedria@127.0.0.1:55432/catedria";
 
 describe("guarda de la base de pruebas · lo que NO puede pasar", () => {
   const prohibidas: [string, string][] = [
     [
       "un servidor remoto cualquiera",
-      "postgresql://u:p@db.ejemplo.com:5432/geminis",
+      "postgresql://u:p@db.ejemplo.com:5432/catedria",
     ],
     [
       "un servicio gestionado con SSL",
-      "postgresql://u:p@ep-cool-1234.eu-central-1.aws.neon.tech/geminis?sslmode=require",
+      "postgresql://u:p@ep-cool-1234.eu-central-1.aws.neon.tech/catedria?sslmode=require",
     ],
     [
       "una base que se llama producción",
-      "postgresql://u:p@10.0.0.5:5432/geminis_prod",
+      "postgresql://u:p@10.0.0.5:5432/catedria_prod",
     ],
     [
       "una base con otro nombre en un servidor remoto",
@@ -64,10 +64,10 @@ describe("guarda de la base de pruebas · lo que NO puede pasar", () => {
 describe("guarda de la base de pruebas · lo que SÍ tiene que pasar", () => {
   const permitidas: [string, string][] = [
     ["la base que crea `npm run db:start`", DEV],
-    ["localhost por su nombre", "postgresql://u:p@localhost:5432/geminis"],
-    ["una base llamada geminis_test", "postgresql://u:p@localhost:5432/geminis_test"],
-    ["el servicio de docker-compose", "postgresql://u:p@postgres:5432/geminis"],
-    ["IPv6 local", "postgresql://u:p@[::1]:5432/geminis"],
+    ["localhost por su nombre", "postgresql://u:p@localhost:5432/catedria"],
+    ["una base llamada catedria_test", "postgresql://u:p@localhost:5432/catedria_test"],
+    ["el servicio de docker-compose", "postgresql://u:p@postgres:5432/catedria"],
+    ["IPv6 local", "postgresql://u:p@[::1]:5432/catedria"],
   ];
 
   for (const [caso, cadena] of permitidas) {
@@ -79,13 +79,13 @@ describe("guarda de la base de pruebas · lo que SÍ tiene que pasar", () => {
   it("la confirmación explícita abre la puerta, y solo esa palabra", () => {
     const remota = "postgresql://u:p@ci.interno:5432/lo_que_sea";
 
-    expect(motivosParaNoEjecutar(remota, { GEMINIS_BASE_DE_PRUEBAS: "confirmo" })).toEqual([]);
+    expect(motivosParaNoEjecutar(remota, { CATEDRIA_BASE_DE_PRUEBAS: "confirmo" })).toEqual([]);
 
     // Cualquier otro valor no vale: la idea es que haya que escribirlo a
     // conciencia, no que valga un «1» o un «true» puestos de pasada.
     for (const valor of ["1", "true", "si", "yes", "", "CONFIRMO"]) {
       expect(
-        motivosParaNoEjecutar(remota, { GEMINIS_BASE_DE_PRUEBAS: valor }).length,
+        motivosParaNoEjecutar(remota, { CATEDRIA_BASE_DE_PRUEBAS: valor }).length,
       ).toBeGreaterThan(0);
     }
   });

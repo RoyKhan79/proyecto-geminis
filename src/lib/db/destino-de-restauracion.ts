@@ -20,7 +20,7 @@
  *
  * `restauracion` está porque es el nombre que se genera solo en `--probar`.
  * Los demás son los que usa la gente para sus pruebas. Deliberadamente NO está
- * `geminis` a secas: es el nombre de la base de desarrollo con la que se
+ * `catedria` a secas: es el nombre de la base de desarrollo con la que se
  * trabaja todos los días, y machacarla sería perder el trabajo del día aunque
  * no sea producción.
  */
@@ -64,7 +64,7 @@ export type EntornoDeRestauracion = {
    * servidor de recuperación cuyo nombre no reconocemos. Hay que escribirla a
    * mano, que es exactamente lo que un despiste no hace.
    */
-  GEMINIS_RESTAURAR_AQUI?: string;
+  CATEDRIA_RESTAURAR_AQUI?: string;
 };
 
 /**
@@ -76,7 +76,7 @@ export type EntornoDeRestauracion = {
  *
  * @example
  * ```ts
- * motivoParaNoRestaurar("postgresql://u:p@localhost:5432/geminis_restauracion_x", {});
+ * motivoParaNoRestaurar("postgresql://u:p@localhost:5432/catedria_restauracion_x", {});
  * // → null
  * motivoParaNoRestaurar(process.env.DATABASE_URL!, { DATABASE_URL: "…" });
  * // → { motivo: "es la base con la que funciona la aplicación", … }
@@ -118,13 +118,13 @@ export function motivoParaNoRestaurar(
     }
   }
 
-  if (entorno.GEMINIS_RESTAURAR_AQUI === "confirmo") return null;
+  if (entorno.CATEDRIA_RESTAURAR_AQUI === "confirmo") return null;
 
   if (!NOMBRES_DESECHABLES.test(donde.base)) {
     return {
       motivo: `«${donde.base}» no parece una base desechable`,
       salida:
-        "Usa un nombre con «restauracion», «prueba» o «test», o escribe GEMINIS_RESTAURAR_AQUI=confirmo si sabes lo que haces.",
+        "Usa un nombre con «restauracion», «prueba» o «test», o escribe CATEDRIA_RESTAURAR_AQUI=confirmo si sabes lo que haces.",
     };
   }
 

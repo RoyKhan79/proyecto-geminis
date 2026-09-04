@@ -13,7 +13,7 @@
  * disco del navegador dejaría material de pago accesible después de una baja.
  */
 
-const VERSION = "geminis-v1";
+const VERSION = "catedria-v1";
 /*
  * Lo que se guarda al instalar. `/campus` estaba aquí y ya no: es una pantalla
  * con datos de una persona concreta, así que precargarla significaba dejarla en
@@ -29,7 +29,7 @@ const ESENCIALES = ["/sin-conexion"];
  * distinción importa: material de pago en un disco ajeno es una decisión del
  * alumno, no un efecto secundario de haber abierto una página.
  */
-const MOCHILA = "geminis-mochila-v1";
+const MOCHILA = "catedria-mochila-v1";
 
 self.addEventListener("install", (event) => {
   event.waitUntil(

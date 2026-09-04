@@ -61,7 +61,7 @@ function ejecutar(comando: string, args: string[]): Promise<string> {
  */
 async function copiaCompleta() {
   const url = env.DATABASE_URL_OWNER ?? env.DATABASE_URL;
-  const destino = path.join(CARPETA, `geminis-${marca()}.sql`);
+  const destino = path.join(CARPETA, `catedria-${marca()}.sql`);
 
   await mkdir(CARPETA, { recursive: true });
 
@@ -100,7 +100,7 @@ async function copiaCompleta() {
  * quedarse sin nada.
  */
 async function copiaCompletaSinPgDump() {
-  const destino = path.join(CARPETA, `geminis-completa-${marca()}.json`);
+  const destino = path.join(CARPETA, `catedria-completa-${marca()}.json`);
   await mkdir(CARPETA, { recursive: true });
 
   const tablas = await prismaBase.$queryRaw<{ tablename: string }[]>`

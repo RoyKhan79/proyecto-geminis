@@ -95,7 +95,7 @@ async function login(email, password = PASSWORD) {
     redirect: "manual",
   });
   return (res.headers.getSetCookie?.() ?? [])
-    .find((c) => c.startsWith("geminis_session="))
+    .find((c) => c.startsWith("catedria_session="))
     ?.split(";")[0];
 }
 
@@ -189,7 +189,7 @@ async function main() {
     redirect: "manual",
   });
   const cookieMala = (malIntento.headers.getSetCookie?.() ?? []).find((c) =>
-    c.startsWith("geminis_session="),
+    c.startsWith("catedria_session="),
   );
   comprobar("una contraseña incorrecta no crea sesión", !cookieMala);
 
@@ -230,7 +230,7 @@ async function main() {
   comprobar("el administrador entra", Boolean(admin));
   comprobar("el alumnado entra", Boolean(alumna));
 
-  const cookieFalsa = "geminis_session=" + "a".repeat(43);
+  const cookieFalsa = "catedria_session=" + "a".repeat(43);
   const conFalsa = await pedir(cookieFalsa, "/gestion");
   comprobar(
     "una cookie de sesión inventada no sirve",
@@ -450,7 +450,7 @@ async function main() {
   // ── 8b. Catedria IA ────────────────────────────────────────────────────────
   // La IA es material de la academia servido a través de otra puerta. Se
   // comprueba que esa puerta tiene la misma cerradura que las demás.
-  console.log("\n8b. GEMINIS IA");
+  console.log("\n8b. CATEDRIA IA");
 
   const iaAlumna = await pedir(alumna, "/campus/ia");
   comprobar(

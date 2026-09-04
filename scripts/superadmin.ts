@@ -97,7 +97,7 @@ function motivoDeRechazo(password: string): string | null {
   if (new Set(password).size < 5) return "Tiene demasiados caracteres repetidos.";
 
   const habituales = [
-    "contraseña", "password", "123456", "qwerty", "admin", "geminis",
+    "contraseña", "password", "123456", "qwerty", "admin", "catedria",
     "superadmin", "academia",
   ];
   const minusculas = password.toLowerCase();

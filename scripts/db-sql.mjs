@@ -12,9 +12,9 @@
  */
 import pg from "pg";
 
-const PORT = Number(process.env.GEMINIS_DB_PORT ?? 55432);
-const BASE = { host: "127.0.0.1", port: PORT, user: "geminis", password: "geminis" };
-const DB_NAME = "geminis";
+const PORT = Number(process.env.CATEDRIA_DB_PORT ?? 55432);
+const BASE = { host: "127.0.0.1", port: PORT, user: "catedria", password: "catedria" };
+const DB_NAME = "catedria";
 
 /*
  * El rol con el que entra la aplicación, que no es el dueño de las tablas: va
@@ -26,8 +26,8 @@ const DB_NAME = "geminis";
  * es esa parte. La contraseña de local es la que ya está en `.env.example`; en
  * producción la pone quien despliega y esto no se ejecuta nunca.
  */
-const APP_ROLE = "geminis_app";
-const APP_PASSWORD = process.env.GEMINIS_APP_PASSWORD ?? "geminis_app";
+const APP_ROLE = "catedria_app";
+const APP_PASSWORD = process.env.CATEDRIA_APP_PASSWORD ?? "catedria_app";
 
 async function withClient(database, fn) {
   const client = new pg.Client({ ...BASE, database });

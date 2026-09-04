@@ -15,8 +15,8 @@ import {
  * pieza cuyo fallo no se puede deshacer.
  */
 
-const VIVA = "postgresql://app:secreto@db.geminis.es:5432/geminis";
-const OWNER = "postgresql://owner:secreto@db.geminis.es:5432/geminis";
+const VIVA = "postgresql://app:secreto@db.catedria.es:5432/catedria";
+const OWNER = "postgresql://owner:secreto@db.catedria.es:5432/catedria";
 const ENTORNO = { DATABASE_URL: VIVA, DATABASE_URL_OWNER: OWNER };
 
 describe("dónde NO se puede restaurar", () => {
@@ -34,10 +34,10 @@ describe("dónde NO se puede restaurar", () => {
     // Lo que identifica a una base es anfitrión y nombre. Quien vaya a pisar la
     // de producción no lo hará escribiendo la URL exacta del .env.
     const disfraces = [
-      "postgresql://otro:otra@db.geminis.es:5432/geminis",
-      "postgresql://app:x@DB.GEMINIS.ES:5432/geminis",
-      "postgresql://app:x@db.geminis.es:5432/GEMINIS",
-      "postgresql://app:x@db.geminis.es:5432/geminis?sslmode=require",
+      "postgresql://otro:otra@db.catedria.es:5432/catedria",
+      "postgresql://app:x@DB.CATEDRIA.ES:5432/catedria",
+      "postgresql://app:x@db.catedria.es:5432/CATEDRIA",
+      "postgresql://app:x@db.catedria.es:5432/catedria?sslmode=require",
     ];
     for (const url of disfraces) {
       expect(motivoParaNoRestaurar(url, ENTORNO), url).not.toBeNull();
@@ -49,7 +49,7 @@ describe("dónde NO se puede restaurar", () => {
     // servicio y se usan las herramientas de PostgreSQL, no este script.
     const r = motivoParaNoRestaurar(VIVA, {
       ...ENTORNO,
-      GEMINIS_RESTAURAR_AQUI: "confirmo",
+      CATEDRIA_RESTAURAR_AQUI: "confirmo",
     });
     expect(r).not.toBeNull();
   });
@@ -65,7 +65,7 @@ describe("dónde NO se puede restaurar", () => {
 
   it("la base de desarrollo de todos los días tampoco es desechable", () => {
     // No es producción, pero machacarla pierde el trabajo del día.
-    const r = motivoParaNoRestaurar("postgresql://u:p@127.0.0.1:55432/geminis", {});
+    const r = motivoParaNoRestaurar("postgresql://u:p@127.0.0.1:55432/catedria", {});
     expect(r).not.toBeNull();
   });
 
@@ -84,12 +84,12 @@ describe("dónde NO se puede restaurar", () => {
 
 describe("dónde SÍ se puede restaurar", () => {
   it("en la base desechable que crea --probar", () => {
-    const destino = "postgresql://u:p@127.0.0.1:55432/geminis_restauracion_1788329";
+    const destino = "postgresql://u:p@127.0.0.1:55432/catedria_restauracion_1788329";
     expect(motivoParaNoRestaurar(destino, ENTORNO)).toBeNull();
   });
 
   it("en nombres que se reconocen como de usar y tirar", () => {
-    for (const base of ["geminis_test", "geminis_prueba", "restore_2026", "scratch"]) {
+    for (const base of ["catedria_test", "catedria_prueba", "restore_2026", "scratch"]) {
       const url = `postgresql://u:p@127.0.0.1:55432/${base}`;
       expect(motivoParaNoRestaurar(url, ENTORNO), base).toBeNull();
     }
@@ -98,7 +98,7 @@ describe("dónde SÍ se puede restaurar", () => {
   it("y en cualquier otra si se escribe la confirmación a mano", () => {
     const r = motivoParaNoRestaurar("postgresql://u:p@recuperacion.es:5432/copia", {
       ...ENTORNO,
-      GEMINIS_RESTAURAR_AQUI: "confirmo",
+      CATEDRIA_RESTAURAR_AQUI: "confirmo",
     });
     expect(r).toBeNull();
   });
@@ -112,8 +112,8 @@ describe("comparar dos direcciones", () => {
   it("el puerto cuenta: 5432 y 55432 son servidores distintos", () => {
     expect(
       esLaMismaBase(
-        "postgresql://u:p@127.0.0.1:5432/geminis",
-        "postgresql://u:p@127.0.0.1:55432/geminis",
+        "postgresql://u:p@127.0.0.1:5432/catedria",
+        "postgresql://u:p@127.0.0.1:55432/catedria",
       ),
     ).toBe(false);
   });
@@ -121,8 +121,8 @@ describe("comparar dos direcciones", () => {
   it("y el puerto que no se escribe es el 5432", () => {
     expect(
       esLaMismaBase(
-        "postgresql://u:p@db.geminis.es/geminis",
-        "postgresql://u:p@db.geminis.es:5432/geminis",
+        "postgresql://u:p@db.catedria.es/catedria",
+        "postgresql://u:p@db.catedria.es:5432/catedria",
       ),
     ).toBe(true);
   });
@@ -130,8 +130,8 @@ describe("comparar dos direcciones", () => {
   it("dos bases distintas en el mismo servidor no son la misma", () => {
     expect(
       esLaMismaBase(
-        "postgresql://u:p@127.0.0.1:55432/geminis",
-        "postgresql://u:p@127.0.0.1:55432/geminis_test",
+        "postgresql://u:p@127.0.0.1:55432/catedria",
+        "postgresql://u:p@127.0.0.1:55432/catedria_test",
       ),
     ).toBe(false);
   });

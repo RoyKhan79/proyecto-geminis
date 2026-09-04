@@ -4,7 +4,7 @@ import type { TenantClient } from "@/lib/db/tenant";
 import { addMemberToAcademy } from "@/server/academies/provision";
 
 /**
- * GEMINIS IMPORT · alumnos
+ * CATEDRIA IMPORT · alumnos
  *
  * El proceso es siempre el mismo y en este orden:
  *

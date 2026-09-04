@@ -68,7 +68,7 @@ for (const linea of lineas) {
     convencion += 1;
     continue;
   }
-  pendientes.push({ nombre, tipo, archivo: archivo.replace(/^geminis\//, "") });
+  pendientes.push({ nombre, tipo, archivo: archivo.replace(/^catedria\//, "") });
 }
 
 const porArchivo = new Map();

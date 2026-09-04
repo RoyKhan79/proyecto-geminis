@@ -156,7 +156,7 @@ async function probarEnBaseDesechable(
     return false;
   }
 
-  const nombre = `geminis_restauracion_${Date.now()}`;
+  const nombre = `catedria_restauracion_${Date.now()}`;
   const destino = conBase(base, nombre);
 
   const rechazo = motivoParaNoRestaurar(destino, {

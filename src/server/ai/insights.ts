@@ -3,7 +3,7 @@ import type { StudentGrants } from "@/lib/access/content-access";
 import { studentNodeWhere } from "@/lib/access/content-access";
 
 /**
- * GEMINIS IA · lo que propone por su cuenta
+ * CATEDRIA IA · lo que propone por su cuenta
  *
  * Un asistente que solo responde cuando le preguntan no sirve de mucho: el
  * alumno que va mal es precisamente el que no pregunta. Esto mira sus datos

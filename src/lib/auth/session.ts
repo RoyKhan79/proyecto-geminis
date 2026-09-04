@@ -17,7 +17,7 @@ import { env, isProduction } from "@/lib/env";
  */
 
 /** Nombre de la cookie de sesión. Se exporta porque lo usa el arnés de pruebas. */
-export const SESSION_COOKIE = "geminis_session";
+export const SESSION_COOKIE = "catedria_session";
 
 const SESSION_MS = env.SESSION_DAYS * 24 * 60 * 60 * 1000;
 /// A partir de la mitad de vida, la sesión se renueva sola al usarla.

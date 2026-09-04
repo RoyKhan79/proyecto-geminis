@@ -22,7 +22,7 @@ import {
 } from "@/lib/ai/retrieval";
 
 /**
- * GEMINIS IA · acciones
+ * CATEDRIA IA · acciones
  *
  * Dos usos, el mismo motor de recuperación y las mismas reglas:
  *   · el alumno pregunta sobre lo que tiene contratado,
@@ -153,7 +153,7 @@ export async function askStudentAction(
     ok: true,
     content: contenido,
     provider: motor === "modelo" ? "proveedor" : "motor-local",
-    model: motor === "modelo" ? "configurado" : "geminis-local",
+    model: motor === "modelo" ? "configurado" : "catedria-local",
     promptTokens: 0,
     completionTokens: 0,
   };
@@ -305,7 +305,7 @@ export async function generateQuestionsAction(
 
   let generadas: Generada[] = [];
   let motorUsado: "modelo" | "local" = "local";
-  let modelo = "geminis-local";
+  let modelo = "catedria-local";
   let proveedor = "motor-local";
 
   if (aiDisponible()) {

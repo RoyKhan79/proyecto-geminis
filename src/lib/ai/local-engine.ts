@@ -1,7 +1,7 @@
 import type { Fragmento } from "./retrieval";
 
 /**
- * MOTOR LOCAL DE GEMINIS IA
+ * MOTOR LOCAL DE CATEDRIA IA
  *
  * Responde usando el material de la academia SIN ningún proveedor externo.
  *

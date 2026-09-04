@@ -143,7 +143,7 @@ export function generarReferenciaMandato(
   prefijoAcademia: string,
   studentId: string,
 ): string {
-  const prefijo = limpiarParaSepa(prefijoAcademia).slice(0, 8) || "GEMINIS";
+  const prefijo = limpiarParaSepa(prefijoAcademia).slice(0, 8) || "CATEDRIA";
   const sufijo = studentId.replace(/-/g, "").slice(-12).toUpperCase();
   return `${prefijo}-${sufijo}`;
 }

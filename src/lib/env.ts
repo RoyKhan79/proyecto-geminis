@@ -83,7 +83,7 @@ const schema = z.object({
   /// Segunda barrera de aislamiento: Row Level Security de PostgreSQL.
   ///
   /// Con `on`, cada consulta de una academia se envuelve en una transacción que
-  /// fija `geminis.academy_id`, y la base de datos comprueba la academia por su
+  /// fija `catedria.academy_id`, y la base de datos comprueba la academia por su
   /// cuenta además de la guardia de aplicación. Cuesta unos milisegundos por
   /// consulta y se explica en docs/SECURITY_MODEL.md.
   ///

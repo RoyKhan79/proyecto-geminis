@@ -9,7 +9,7 @@ import { createContentNode } from "@/server/content/tree";
 import { construirContexto, recuperarFragmentos } from "@/lib/ai/retrieval";
 
 /**
- * ATACAR A GEMINIS IA
+ * ATACAR A CATEDRIA IA
  *
  * `tests/security.test.ts` ya comprueba lo básico: que un alumno con solo tests
  * no recupera temario y que no se cruzan academias. Esto va un paso más allá y
@@ -44,7 +44,7 @@ let alumnoDeB: { id: string };
 /** El texto que solo debería poder ver quien ha pagado el temario. */
 const SECRETO =
   "El plazo maximo para resolver el procedimiento sancionador es de seis meses " +
-  "contados desde el acuerdo de incoacion, segun la instruccion interna GEMINISSECRETO.";
+  "contados desde el acuerdo de incoacion, segun la instruccion interna CATEDRIASECRETO.";
 
 beforeAll(async () => {
   academiaA = await createAcademyWithRoles({ slug: `ia-a-${SUF}`, name: "IA A" });
@@ -228,7 +228,7 @@ describe("IA · el escenario está montado de verdad", () => {
       alumnoCompleto.id,
       "plazo maximo resolver procedimiento sancionador",
     );
-    expect(contexto).toContain("GEMINISSECRETO");
+    expect(contexto).toContain("CATEDRIASECRETO");
   });
 });
 
@@ -239,7 +239,7 @@ describe("IA · un alumno intenta sacar material que no ha pagado", () => {
       "plazo maximo resolver procedimiento sancionador incoacion",
     );
     expect(fragmentos).toHaveLength(0);
-    expect(contexto).not.toContain("GEMINISSECRETO");
+    expect(contexto).not.toContain("CATEDRIASECRETO");
   });
 
   it("no lo consigue apuntando al identificador del tema", async () => {
@@ -251,7 +251,7 @@ describe("IA · un alumno intenta sacar material que no ha pagado", () => {
       temaSecreto.id,
     );
     expect(fragmentos).toHaveLength(0);
-    expect(contexto).not.toContain("GEMINISSECRETO");
+    expect(contexto).not.toContain("CATEDRIASECRETO");
   });
 
   it("no lo consigue apuntando a la SECCIÓN padre (el fallo H-07)", async () => {
@@ -263,7 +263,7 @@ describe("IA · un alumno intenta sacar material que no ha pagado", () => {
       temarioA.id,
     );
     expect(fragmentos).toHaveLength(0);
-    expect(contexto).not.toContain("GEMINISSECRETO");
+    expect(contexto).not.toContain("CATEDRIASECRETO");
   });
 
   it("no lo consigue escribiendo la pregunta como una orden al modelo", async () => {
@@ -281,7 +281,7 @@ describe("IA · un alumno intenta sacar material que no ha pagado", () => {
       // NUNCA llega al modelo. No se está confiando en que el modelo obedezca
       // sus instrucciones; se está confiando en que no tiene qué filtrar.
       expect(fragmentos, `ha recuperado algo con: ${pregunta}`).toHaveLength(0);
-      expect(contexto).not.toContain("GEMINISSECRETO");
+      expect(contexto).not.toContain("CATEDRIASECRETO");
     }
   });
 });
@@ -292,8 +292,8 @@ describe("IA · un alumno intenta ver material de OTRA academia", () => {
       alumnoDeB.id,
       "plazo maximo resolver procedimiento sancionador",
     );
-    expect(contexto).not.toContain("GEMINISSECRETO");
-    for (const f of fragmentos) expect(f.content).not.toContain("GEMINISSECRETO");
+    expect(contexto).not.toContain("CATEDRIASECRETO");
+    for (const f of fragmentos) expect(f.content).not.toContain("CATEDRIASECRETO");
   });
 
   it("no recupera nada apuntando al identificador de un tema ajeno", async () => {
@@ -303,7 +303,7 @@ describe("IA · un alumno intenta ver material de OTRA academia", () => {
       temaSecreto.id,
     );
     expect(fragmentos).toHaveLength(0);
-    expect(contexto).not.toContain("GEMINISSECRETO");
+    expect(contexto).not.toContain("CATEDRIASECRETO");
   });
 
   it("tampoco al revés: quien tiene todo en A no ve el material de B", async () => {
@@ -323,7 +323,7 @@ describe("IA · un alumno intenta ver material de OTRA academia", () => {
       esPersonal: true,
       pregunta: "plazo maximo resolver procedimiento sancionador",
     });
-    for (const f of fragmentos) expect(f.content).not.toContain("GEMINISSECRETO");
+    for (const f of fragmentos) expect(f.content).not.toContain("CATEDRIASECRETO");
   });
 });
 

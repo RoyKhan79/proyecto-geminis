@@ -25,17 +25,17 @@ const ANFITRIONES_LOCALES = new Set([
 /**
  * Un nombre de base de datos que se reconoce como de pruebas.
  *
- * `geminis` a secas vale porque es la que crea `npm run db:start` en el
- * portátil, y exigir que se llamara `geminis_test` obligaría a todo el mundo a
+ * `catedria` a secas vale porque es la que crea `npm run db:start` en el
+ * portátil, y exigir que se llamara `catedria_test` obligaría a todo el mundo a
  * rehacer su entorno. Lo que la hace segura no es el nombre: es que además
  * tiene que estar en un anfitrión local.
  */
-const NOMBRES_DE_DESARROLLO = /^(geminis|geminis_dev|geminis_test|postgres|test|dev)/i;
+const NOMBRES_DE_DESARROLLO = /^(catedria|catedria_dev|catedria_test|postgres|test|dev)/i;
 
 export type Entorno = {
   NODE_ENV?: string;
   /** La confirmación explícita que permite ejecutar contra otra base. */
-  GEMINIS_BASE_DE_PRUEBAS?: string;
+  CATEDRIA_BASE_DE_PRUEBAS?: string;
 };
 
 /**
@@ -52,8 +52,8 @@ export type Entorno = {
  *
  * @example
  * ```ts
- * motivosParaNoEjecutar("postgresql://u:p@localhost:5432/geminis", {});  // []
- * motivosParaNoEjecutar("postgresql://u:p@db.acme.com/geminis", {});     // 1 motivo
+ * motivosParaNoEjecutar("postgresql://u:p@localhost:5432/catedria", {});  // []
+ * motivosParaNoEjecutar("postgresql://u:p@db.acme.com/catedria", {});     // 1 motivo
  * ```
  */
 export function motivosParaNoEjecutar(
@@ -65,7 +65,7 @@ export function motivosParaNoEjecutar(
   // La confirmación explícita existe para el caso legítimo —una base de pruebas
   // en un servidor de integración con otro nombre— y hay que escribirla a mano,
   // que es justo lo que un despiste no hace.
-  if (entorno.GEMINIS_BASE_DE_PRUEBAS === "confirmo") return [];
+  if (entorno.CATEDRIA_BASE_DE_PRUEBAS === "confirmo") return [];
 
   let url: URL;
   try {
@@ -138,7 +138,7 @@ export function explicarRechazo(cadena: string, motivos: string[]): string {
     "    npm run db:start",
     "",
     "  Si de verdad es una base de pruebas y solo tiene otro nombre:",
-    "    GEMINIS_BASE_DE_PRUEBAS=confirmo npm test",
+    "    CATEDRIA_BASE_DE_PRUEBAS=confirmo npm test",
     "",
     "═".repeat(72),
     "",

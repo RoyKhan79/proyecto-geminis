@@ -40,7 +40,7 @@ const DESTINO =
     : path.join(homedir(), "Desktop");
 
 const RAIZ = process.cwd();
-const NOMBRE = "proyecto-geminis";
+const NOMBRE = "proyecto-catedria";
 
 /**
  * Busca la carpeta de Google Drive sincronizada en este ordenador.
@@ -172,7 +172,7 @@ function main() {
   console.log(`\nEmpaquetando Catedria`);
   console.log("=".repeat(58));
 
-  const temporal = mkdtempSync(path.join(tmpdir(), "geminis-zip-"));
+  const temporal = mkdtempSync(path.join(tmpdir(), "catedria-zip-"));
   const raizTemporal = path.join(temporal, NOMBRE);
 
   try {

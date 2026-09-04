@@ -17,8 +17,8 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 PLANTILLA="$ROOT/scripts/cron/catedria.crontab"
-MARCA_INICIO="# >>> geminis >>>"
-MARCA_FIN="# <<< geminis <<<"
+MARCA_INICIO="# >>> catedria >>>"
+MARCA_FIN="# <<< catedria <<<"
 
 if [ ! -f "$PLANTILLA" ]; then
   echo "✗ No encuentro $PLANTILLA" >&2
@@ -32,7 +32,7 @@ if [ -z "$NPM" ]; then
 fi
 
 # El crontab actual sin el bloque de Catedria, para poder reinstalar sin duplicar.
-actual_sin_geminis() {
+actual_sin_catedria() {
   crontab -l 2>/dev/null | sed "/$MARCA_INICIO/,/$MARCA_FIN/d" || true
 }
 
@@ -50,7 +50,7 @@ case "${1:-}" in
     exit 0
     ;;
   --quitar)
-    actual_sin_geminis | crontab -
+    actual_sin_catedria | crontab -
     echo "✓ Tareas de Catedria retiradas. El resto de tu crontab sigue igual."
     exit 0
     ;;
@@ -75,8 +75,8 @@ case "$respuesta" in
     ;;
 esac
 
-{ actual_sin_geminis; bloque; } | crontab -
+{ actual_sin_catedria; bloque; } | crontab -
 
 echo "✓ Instalado. Compruébalo con: crontab -l"
-echo "· El radar deja su registro en /var/log/geminis-radar.log"
+echo "· El radar deja su registro en /var/log/catedria-radar.log"
 echo "· Si deja de correr, el panel de Plataforma → Salud lo avisa."

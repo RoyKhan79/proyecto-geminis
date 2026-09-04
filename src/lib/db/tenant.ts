@@ -41,7 +41,7 @@ import { RELACIONES_DE_TENANT } from "./tenant-relations";
  * ── LA SEGUNDA BARRERA ──────────────────────────────────────────────────────
  * Todo lo anterior vive en la aplicación, y una sola barrera es una sola
  * barrera. Debajo hay otra: cada operación de academia se ejecuta dentro de una
- * transacción que fija `geminis.academy_id`, y PostgreSQL aplica sus políticas
+ * transacción que fija `catedria.academy_id`, y PostgreSQL aplica sus políticas
  * de Row Level Security sobre las 50 tablas con datos de academia.
  *
  * Sirve exactamente para lo que la de arriba no puede cubrir: una consulta con
@@ -200,7 +200,7 @@ export async function transaccionDeAcademia<T>(
     async (tx) => {
       if (RLS_ACTIVO) {
         await tx.$executeRawUnsafe(
-          `SELECT set_config('geminis.academy_id', '${academyId}', true)`,
+          `SELECT set_config('catedria.academy_id', '${academyId}', true)`,
         );
       }
       return enTransaccion.run({ academyId }, () => fn(tx));
@@ -210,7 +210,7 @@ export async function transaccionDeAcademia<T>(
 }
 
 /**
- * Ejecuta una operación con `geminis.academy_id` fijado.
+ * Ejecuta una operación con `catedria.academy_id` fijado.
  *
  * El tercer argumento de `set_config` es `true`: la variable es local a la
  * transacción. Es imprescindible. Si fuera de sesión se quedaría pegada a una
@@ -241,7 +241,7 @@ async function conRls<T>(
   // comprobado que es un UUID y no deja pasar otra cosa.
   return prismaBase.$transaction(async (tx) => {
     await tx.$executeRawUnsafe(
-      `SELECT set_config('geminis.academy_id', '${academyId}', true)`,
+      `SELECT set_config('catedria.academy_id', '${academyId}', true)`,
     );
 
     const enTx = (tx as unknown as Record<string, Record<string, unknown>>)[
@@ -410,7 +410,7 @@ export function tenantDb(academyId: string) {
   };
 
   return prismaBase.$extends({
-    name: "geminis-tenant-guard",
+    name: "catedria-tenant-guard",
     query: {
       $allModels: {
         async $allOperations({ model, operation, args, query }) {

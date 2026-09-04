@@ -13,7 +13,7 @@ try {
  * La conexión con la que Prisma migra y siembra.
  *
  * Tiene que ser la del DUEÑO de las tablas. La aplicación se conecta con un rol
- * restringido —`geminis_app`, sin BYPASSRLS y sin poder tocar la estructura— y
+ * restringido —`catedria_app`, sin BYPASSRLS y sin poder tocar la estructura— y
  * eso no es una precaución sino la mitad del modelo de aislamiento: si el
  * servidor web se conectara con el dueño, PostgreSQL se saltaría las políticas
  * de Row Level Security y la segunda barrera dejaría de existir. Está contado

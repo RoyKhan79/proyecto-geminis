@@ -1,5 +1,5 @@
 /**
- * ACADEMIA GEMINIS DEMO (§62)
+ * ACADEMIA CATEDRIA DEMO (§62)
  *
  * Datos ficticios pero realistas para poder trabajar sobre la interfaz sin
  * usar jamás datos personales reales. Se puede ejecutar varias veces: primero

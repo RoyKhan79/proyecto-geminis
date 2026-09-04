@@ -41,12 +41,19 @@ import sharp from "sharp";
  * librsvg no entiende oklch(). El azul es tinta, no el azul encendido de antes:
  * sobre un azul saturado el oro se pelea con el fondo, y sobre tinta brilla.
  */
+/*
+ * Los colores salen del logotipo original, muestreados del archivo
+ * `docs/marca/logo-original.png` en vez de escritos a ojo.
+ */
 const MARCA = {
-  fondoA: "#232c44",
-  fondoB: "#151b2c",
-  letra: "#f4f1e9",
-  oro: "#c9a227",
-  oroApagado: "#a8871f",
+  navy: "#0b1c4f",
+  azulA: "#1c47e8",
+  azulB: "#0a2fc4",
+  azulC: "#0f7ff0",
+  cian: "#22cbfe",
+  claro: "#f4f1e9",
+  fondoA: "#16255e",
+  fondoB: "#0b132c",
 };
 
 /**
@@ -65,36 +72,74 @@ const MARCA = {
  * @param cx,cy centro del sello.
  * @param caja lado útil del icono, sin el margen.
  */
-function sello(cx: number, cy: number, caja: number): string {
-  /*
-   * EL SELLO SE SIMPLIFICA AL ENCOGER, que es lo que hace cualquier identidad
-   * que se haya usado de verdad.
-   *
-   * A 512 px el filete doble es el detalle que lo levanta. A 32 los dos anillos
-   * se funden en un churro y se comen la letra, y lo que llega al usuario es un
-   * borrón dorado. Así que por debajo de cierto tamaño se queda un solo filete
-   * y la letra crece para ocupar el sitio que deja.
-   */
-  const pequeno = caja < 96;
-  const radioExterior = caja * (pequeno ? 0.395 : 0.4);
-  const grueso = Math.max(caja * (pequeno ? 0.03 : 0.018), 1.3);
-  const cuerpo = caja * (pequeno ? 0.44 : 0.4);
+/**
+ * EL SÍMBOLO: el pórtico con el libro que se deshace en píxeles.
+ *
+ * Es el logotipo que eligió la academia, redibujado en vectorial. El original
+ * (`docs/marca/logo-original.png`) es un PNG, y un PNG a tamaño de favicon es
+ * una mancha: hace falta trazado para que a 32 píxeles se siga viendo un
+ * pórtico. Los colores están muestreados de ese archivo, no elegidos a ojo.
+ *
+ * Qué dice el dibujo, porque conviene que no se pierda: la cátedra sostiene el
+ * libro, y el libro se convierte en píxeles. Lo de siempre, en digital.
+ *
+ * AVISO: esto es una reconstrucción a mano, fiel pero no idéntica al píxel.
+ * Para papel y para material impreso conviene encargar una vectorización
+ * profesional del original.
+ *
+ * @param sobreOscuro dibuja el pórtico en crema en vez de en tinta. Sobre un
+ *   fondo oscuro el navy desaparece; los azules del libro aguantan solos.
+ */
+function simbolo(
+  cx: number,
+  cy: number,
+  caja: number,
+  sobreOscuro: boolean,
+): string {
+  // Se dibuja en un lienzo de 400x470 y se traslada/escala al sitio pedido.
+  const k = caja / 470;
+  const dx = cx - (400 * k) / 2;
+  const dy = cy - (470 * k) / 2;
+  const tinta = sobreOscuro ? MARCA.claro : MARCA.navy;
+  const tinta2 = sobreOscuro ? "#d9d3c4" : "#14286e";
+  const id = sobreOscuro ? "c" : "o";
 
-  const anillos = [
-    `<circle cx="${cx}" cy="${cy}" r="${radioExterior}" fill="none" stroke="${MARCA.oro}" stroke-width="${grueso}"/>`,
-  ];
-  if (!pequeno) {
-    anillos.push(
-      `<circle cx="${cx}" cy="${cy}" r="${caja * 0.348}" fill="none" stroke="${MARCA.oro}" stroke-width="${grueso * 0.45}" opacity="0.5"/>`,
-    );
+  // ── El pórtico: cuatro pilares, tres arcos y los pies escalonados ─────────
+  const x0 = 62, x1 = 344, yTop = 300, yBot = 462;
+  const arco = 48, r = arco / 2, pilar = (x1 - x0 - 3 * arco) / 4;
+  const yArco = yTop + 46;
+  const pie = 10;
+  let arcada = `M ${x0} ${yTop} L ${x1} ${yTop} L ${x1} ${yBot - pie} L ${x1 - pie} ${yBot} L ${x1 - pilar} ${yBot} L ${x1 - pilar} ${yArco}`;
+  for (let i = 2; i >= 0; i -= 1) {
+    const ax = x0 + pilar + i * (arco + pilar);
+    arcada += ` A ${r} ${r} 0 0 0 ${ax} ${yArco} L ${ax} ${yBot} L ${ax - pilar} ${yBot} L ${ax - pilar} ${yArco}`;
   }
+  arcada += ` L ${x0 + pie} ${yBot} L ${x0} ${yBot - pie} L ${x0} ${yTop} Z`;
 
-  return [
-    ...anillos,
-    `<text x="${cx}" y="${cy}" dy="0.345em" text-anchor="middle"`,
-    `  font-family="Georgia, 'Times New Roman', serif"`,
-    `  font-size="${cuerpo}" font-weight="600" fill="${MARCA.letra}">C</text>`,
-  ].join("\n  ");
+  return `<defs>
+    <linearGradient id="izq-${id}" x1="0" y1="0" x2="0.9" y2="1">
+      <stop offset="0" stop-color="${MARCA.azulA}"/><stop offset="1" stop-color="${MARCA.azulB}"/>
+    </linearGradient>
+    <linearGradient id="der-${id}" x1="0" y1="1" x2="1" y2="0">
+      <stop offset="0" stop-color="${MARCA.azulC}"/><stop offset="1" stop-color="${MARCA.cian}"/>
+    </linearGradient>
+  </defs>
+  <g transform="translate(${dx} ${dy}) scale(${k})">
+    <path d="${arcada}" fill="${tinta}"/>
+    <path d="M 46 272 L 360 272 L 344 300 L 62 300 Z" fill="${tinta}"/>
+    <path d="M 12 234 L 197 252 L 197 266 L 44 266 Z" fill="${tinta}"/>
+    <path d="M 394 234 L 203 252 L 203 266 L 358 266 Z" fill="${tinta2}"/>
+    <path d="M 24 110 L 193 156 L 197 244 L 24 188 Z" fill="url(#izq-${id})"/>
+    <path d="M 207 156 L 376 126 L 376 210 L 203 244 Z" fill="url(#der-${id})"/>
+    <g fill="${MARCA.cian}">
+      <rect x="333" y="50" width="30" height="30" rx="4"/>
+      <rect x="279" y="90" width="34" height="34" rx="4"/>
+      <rect x="350" y="96" width="26" height="26" rx="4"/>
+      <rect x="309" y="138" width="20" height="20" rx="3"/>
+      <rect x="358" y="150" width="22" height="22" rx="3"/>
+      <rect x="324" y="184" width="15" height="15" rx="2"/>
+    </g>
+  </g>`;
 }
 
 /**
@@ -127,63 +172,42 @@ function svg(tamano: number, zonaSegura: number, conFondoCompleto: boolean): str
          <rect x="${margen}" y="${margen}" width="${caja}" height="${caja}" rx="${radio}" fill="url(#filo)"/>`
   }
 
-  ${sello(tamano / 2, tamano / 2, caja)}
+  ${simbolo(tamano / 2, tamano / 2, caja * 0.94, true)}
 </svg>`;
 }
 
 /**
- * EL LOGOTIPO: la palabra y nada más.
+ * EL LOGOTIPO: el símbolo encima y el nombre debajo.
  *
- * El espaciado entre letras es casi todo el diseño. Con el tracking normal esto
- * es un nombre escrito; a 0,4 em es un logotipo. Los dos filetes de oro, cortos
- * y centrados, son lo único que se le añade.
+ * En vertical y no en fila, que es como está compuesto el original: el pórtico
+ * sostiene el libro y el nombre va debajo, como el friso de un edificio. Puesto
+ * en fila se pierde esa lectura.
  *
- * Va sin el sello al lado a propósito. Poner los dos juntos es la solución
- * cómoda y es la que hace que ninguna de las dos piezas mande: el sello tiene
- * su sitio —el favicon, el móvil, la barra lateral— y aquí sobra.
+ * El nombre va en versales espaciadas. El original usa una tipografía con los
+ * remates cortados en diagonal que no está aquí, así que se aproxima con una
+ * sans geométrica: la proporción y el espaciado son lo que hace el parecido.
  *
- * @param colorTexto tinta del nombre. Oscuro para fondo claro y al revés.
+ * @param colorTexto tinta del nombre.
+ * @param sobreOscuro si el pórtico se dibuja en crema en vez de en tinta.
  */
-function logotipo(colorTexto: string): string {
-  const ancho = 680;
-  const alto = 190;
-  const cuerpo = 54;
-  const espaciado = cuerpo * 0.4;
-  const cx = ancho / 2;
-
-  /*
-   * El espaciado se añade DESPUÉS de cada letra, también de la última, así que
-   * el bloque queda descentrado hacia la izquierda por medio espacio. Se
-   * compensa aquí. Es el fallo clásico de los logotipos muy espaciados y se ve
-   * a simple vista en cuanto hay algo centrado encima o debajo.
-   */
-  const centro = cx + espaciado / 2;
-  const filete = 108;
+function logotipo(colorTexto: string, sobreOscuro: boolean): string {
+  const ancho = 620;
+  const alto = 340;
+  const simboloAlto = 210;
 
   return `<svg xmlns="http://www.w3.org/2000/svg" width="${ancho}" height="${alto}" viewBox="0 0 ${ancho} ${alto}">
-  <rect x="${cx - filete / 2}" y="48" width="${filete}" height="1.6" fill="${MARCA.oro}"/>
+  ${simbolo(ancho / 2, simboloAlto / 2 + 10, simboloAlto, sobreOscuro)}
 
   <text
-    x="${centro}"
-    y="102"
-    text-anchor="middle"
-    font-family="Georgia, 'Times New Roman', serif"
-    font-size="${cuerpo}"
-    letter-spacing="${espaciado}"
-    fill="${colorTexto}"
-  >CATEDRIA</text>
-
-  <rect x="${cx - filete / 2}" y="122" width="${filete}" height="1.6" fill="${MARCA.oro}"/>
-
-  <text
-    x="${cx + 2}"
-    y="152"
+    x="${ancho / 2 + 7}"
+    y="292"
     text-anchor="middle"
     font-family="Helvetica, Arial, sans-serif"
-    font-size="12"
-    letter-spacing="4"
-    fill="${MARCA.oroApagado}"
-  >ACADEMIAS DE OPOSICIONES</text>
+    font-size="76"
+    font-weight="600"
+    letter-spacing="14"
+    fill="${colorTexto}"
+  >CATEDRIA</text>
 </svg>`;
 }
 
@@ -216,8 +240,8 @@ async function main() {
   // Y el logotipo horizontal, que es lo que se pone en una portada, una firma
   // de correo o una factura. En dos versiones porque un logotipo con el texto
   // oscuro desaparece sobre fondo azul, y es justo lo que acaba pasando.
-  await writeFile("public/logo.svg", logotipo("#14181f"));
-  await writeFile("public/logo-claro.svg", logotipo("#fefdfb"));
+  await writeFile("public/logo.svg", logotipo("#0b1c4f", false));
+  await writeFile("public/logo-claro.svg", logotipo("#f4f1e9", true));
   console.log("  ✓ public/logo.svg y public/logo-claro.svg");
 }
 
