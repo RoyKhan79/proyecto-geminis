@@ -44,9 +44,12 @@ export const metadata: Metadata = {
     "Plataforma de gestión, campus e inteligencia artificial para academias de oposiciones.",
   applicationName: BRAND.name,
   icons: {
+    // Solo PNG: la marca es el archivo del cliente, no un dibujo vectorial que
+    // podamos rehacer a cualquier tamaño. Un SVG con el PNG dentro pesaría más
+    // y no se vería mejor.
     icon: [
-      { url: "/icono.svg", type: "image/svg+xml" },
       { url: "/favicon-32.png", sizes: "32x32", type: "image/png" },
+      { url: "/icono-192.png", sizes: "192x192", type: "image/png" },
     ],
     apple: "/apple-icon.png",
   },

@@ -1,251 +1,202 @@
 /**
- * Genera el logotipo y los iconos de la aplicación instalable.
+ * Recorta el logotipo y genera los iconos de la aplicación instalable.
  *
  *   npm run iconos
  *
- * Se generan aquí y no en un editor de imagen por una razón concreta: el color
- * de marca es un token del design system, y si una academia lo cambia (§60,
- * white-label) los iconos tienen que poder regenerarse con un comando en lugar
- * de con una tarde de diseño.
+ * ── DE DÓNDE SALE LA MARCA ─────────────────────────────────────────────────
  *
- * ── LA MARCA ───────────────────────────────────────────────────────────────
+ * De `docs/marca/logo-original.png`, que es el archivo que entregó el cliente.
+ * Nada de lo que hay aquí dibuja la marca: la recorta, le quita el fondo y la
+ * escala.
  *
- * Dos columnas iguales unidas por arriba y por abajo: el signo de Géminis, que
- * es el de los gemelos. No es una floritura sobre el nombre, es literalmente lo
- * que hace el producto: **dos aplicaciones —la de la academia y la del
- * alumnado— sobre un mismo sistema**. Las columnas son iguales porque ninguna
- * de las dos es la de verdad y la otra un añadido.
+ * Esto **es un cambio deliberado**. Antes este archivo redibujaba el pórtico y
+ * el libro con paths de SVG a mano, con el argumento de que un vectorial
+ * escala mejor. El argumento era correcto y el resultado no: lo que salía se
+ * parecía al original de lejos —el pórtico más ancho que el libro, cuatro
+ * pilares en vez de tres, y el nombre en una tipografía del sistema
+ * espaciada— pero no era el logotipo del cliente. Un logotipo parecido no vale
+ * de nada.
  *
- * La base va en oro, que es el único acento de la identidad. Es lo que
- * comparten: los mismos datos por debajo, de modo que la matrícula que firma
- * hoy la secretaria es el acceso que tiene esta tarde el alumno en el móvil.
+ * Así que manda el archivo. Si algún día hace falta vectorial de verdad —para
+ * imprenta grande, o para poder recolorear la marca por academia— hay que
+ * encargar una vectorización profesional del original y volver a poner paths
+ * aquí, esta vez calcados.
  *
- * Antes había aquí una «G» en Georgia. Se entendía, pero no decía nada: una
- * inicial en una tipografía del sistema es lo que se pone cuando todavía no se
- * ha decidido la marca.
+ * ── EL FONDO ───────────────────────────────────────────────────────────────
  *
- * Los remates SOBRESALEN de las columnas a propósito. Sin ese vuelo el dibujo
- * se cierra y se lee como un rectángulo o una puerta, no como el símbolo.
+ * El original viene sobre blanco opaco, sin canal alfa. Para poder ponerlo
+ * sobre la barra lateral o sobre la pastilla oscura hay que recortarlo.
  *
- * Salen cinco archivos, más el SVG suelto y el logotipo horizontal:
- *   · icono-192 y icono-512 · el icono normal, con su margen.
- *   · icono-mascara · versión «maskable» de Android, que recorta el icono con
- *     la forma que use el sistema. Lleva el 20 % de zona segura a cada lado o
- *     el sistema se comería la marca.
+ * Fuera todo lo que sea casi blanco, esté donde esté. La primera versión solo
+ * quitaba el blanco conectado con el borde, por miedo a comerse los degradados
+ * del libro; el miedo era infundado —el azul más claro del libro sigue teniendo
+ * el rojo a cero— y a cambio dejaba opacas las líneas blancas que separan las
+ * molduras del pórtico. Sobre papel blanco esas líneas son la separación; sobre
+ * la pastilla oscura salían como rayas grises cruzando la piedra.
+ *
+ * El borde queda duro, sin suavizado, y da igual: todo lo que se genera aquí
+ * se ve reducido —el sello a 36 px, el logotipo a unos 200— y al reducir con
+ * Lanczos el borde se vuelve a suavizar solo. Lo que no se puede recuperar es
+ * un color mal calculado, y por eso los colores salen intactos del original.
  */
-import { writeFile } from "node:fs/promises";
+
 import sharp from "sharp";
 
+const ORIGINAL = "docs/marca/logo-original.png";
+
 /*
- * Los mismos valores que los tokens de `globals.css`, en hexadecimal porque
- * librsvg no entiende oklch(). El azul es tinta, no el azul encendido de antes:
- * sobre un azul saturado el oro se pelea con el fondo, y sobre tinta brilla.
+ * Los recortes, medidos sobre el archivo (1448 × 1086) buscando dónde hay
+ * tinta. Están escritos y no calculados en cada ejecución para que el
+ * resultado sea siempre el mismo: si el original se cambia, se vuelven a medir
+ * y se cambian aquí.
+ *
+ *   · el símbolo: pórtico, libro y los píxeles que se desprenden.
+ *   · el logotipo: lo anterior más la palabra CATEDRIA debajo.
  */
-/*
- * Los colores salen del logotipo original, muestreados del archivo
- * `docs/marca/logo-original.png` en vez de escritos a ojo.
- */
-const MARCA = {
-  navy: "#0b1c4f",
-  azulA: "#1c47e8",
-  azulB: "#0a2fc4",
-  azulC: "#0f7ff0",
-  cian: "#22cbfe",
-  claro: "#f4f1e9",
-  fondoA: "#16255e",
-  fondoB: "#0b132c",
-};
+const SIMBOLO = { left: 530, top: 204, width: 384, height: 451 };
+const LOGOTIPO = { left: 163, top: 204, width: 1134, height: 628 };
+
+/** El crema de la identidad, para cuando la marca va sobre fondo oscuro. */
+const CREMA = { r: 244, g: 241, b: 233 };
+
+/** El fondo de la pastilla del sello. */
+const FONDO_A = "#16255e";
+const FONDO_B = "#0b132c";
 
 /**
- * EL SELLO, dibujado.
+ * El original con el fondo blanco convertido en transparencia.
  *
- * La inicial dentro de un filete doble. Un anillo solo se lee como un borde;
- * dos, como un sello, y esa es toda la diferencia entre parecer una aplicación
- * y parecer una institución.
- *
- * La letra va en serif genérica y no en Fraunces porque esto se dibuja sin
- * navegador: `sharp` usa las fuentes del sistema y no se puede contar con que
- * la del producto esté instalada. A tamaño de icono la diferencia no la ve
- * nadie; donde sí se nota es en la portada de un manual, y allí se usa la
- * versión de `src/components/marca.tsx`, que sí lleva la buena.
- *
- * @param cx,cy centro del sello.
- * @param caja lado útil del icono, sin el margen.
+ * @returns Los píxeles en RGBA y sus dimensiones.
  */
-/**
- * EL SÍMBOLO: el pórtico con el libro que se deshace en píxeles.
- *
- * Es el logotipo que eligió la academia, redibujado en vectorial. El original
- * (`docs/marca/logo-original.png`) es un PNG, y un PNG a tamaño de favicon es
- * una mancha: hace falta trazado para que a 32 píxeles se siga viendo un
- * pórtico. Los colores están muestreados de ese archivo, no elegidos a ojo.
- *
- * Qué dice el dibujo, porque conviene que no se pierda: la cátedra sostiene el
- * libro, y el libro se convierte en píxeles. Lo de siempre, en digital.
- *
- * AVISO: esto es una reconstrucción a mano, fiel pero no idéntica al píxel.
- * Para papel y para material impreso conviene encargar una vectorización
- * profesional del original.
- *
- * @param sobreOscuro dibuja el pórtico en crema en vez de en tinta. Sobre un
- *   fondo oscuro el navy desaparece; los azules del libro aguantan solos.
- */
-function simbolo(
-  cx: number,
-  cy: number,
-  caja: number,
-  sobreOscuro: boolean,
-): string {
-  // Se dibuja en un lienzo de 400x470 y se traslada/escala al sitio pedido.
-  const k = caja / 470;
-  const dx = cx - (400 * k) / 2;
-  const dy = cy - (470 * k) / 2;
-  const tinta = sobreOscuro ? MARCA.claro : MARCA.navy;
-  const tinta2 = sobreOscuro ? "#d9d3c4" : "#14286e";
-  const id = sobreOscuro ? "c" : "o";
+async function sinFondo() {
+  const { data, info } = await sharp(ORIGINAL)
+    .ensureAlpha()
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+  const { width: W, height: H } = info;
 
-  // ── El pórtico: cuatro pilares, tres arcos y los pies escalonados ─────────
-  const x0 = 62, x1 = 344, yTop = 300, yBot = 462;
-  const arco = 48, r = arco / 2, pilar = (x1 - x0 - 3 * arco) / 4;
-  const yArco = yTop + 46;
-  const pie = 10;
-  let arcada = `M ${x0} ${yTop} L ${x1} ${yTop} L ${x1} ${yBot - pie} L ${x1 - pie} ${yBot} L ${x1 - pilar} ${yBot} L ${x1 - pilar} ${yArco}`;
-  for (let i = 2; i >= 0; i -= 1) {
-    const ax = x0 + pilar + i * (arco + pilar);
-    arcada += ` A ${r} ${r} 0 0 0 ${ax} ${yArco} L ${ax} ${yBot} L ${ax - pilar} ${yBot} L ${ax - pilar} ${yArco}`;
+  // Casi blanco es fondo. El umbral va sobre el canal más bajo: el azul más
+  // claro del libro es (0, 208, 240) y no llega ni de lejos.
+  for (let p = 0; p < W * H; p++) {
+    const i = p * 4;
+    const min = Math.min(data[i], data[i + 1], data[i + 2]);
+    data[i + 3] = min > 235 ? 0 : 255;
   }
-  arcada += ` L ${x0 + pie} ${yBot} L ${x0} ${yBot - pie} L ${x0} ${yTop} Z`;
 
-  return `<defs>
-    <linearGradient id="izq-${id}" x1="0" y1="0" x2="0.9" y2="1">
-      <stop offset="0" stop-color="${MARCA.azulA}"/><stop offset="1" stop-color="${MARCA.azulB}"/>
-    </linearGradient>
-    <linearGradient id="der-${id}" x1="0" y1="1" x2="1" y2="0">
-      <stop offset="0" stop-color="${MARCA.azulC}"/><stop offset="1" stop-color="${MARCA.cian}"/>
-    </linearGradient>
-  </defs>
-  <g transform="translate(${dx} ${dy}) scale(${k})">
-    <path d="${arcada}" fill="${tinta}"/>
-    <path d="M 46 272 L 360 272 L 344 300 L 62 300 Z" fill="${tinta}"/>
-    <path d="M 12 234 L 197 252 L 197 266 L 44 266 Z" fill="${tinta}"/>
-    <path d="M 394 234 L 203 252 L 203 266 L 358 266 Z" fill="${tinta2}"/>
-    <path d="M 24 110 L 193 156 L 197 244 L 24 188 Z" fill="url(#izq-${id})"/>
-    <path d="M 207 156 L 376 126 L 376 210 L 203 244 Z" fill="url(#der-${id})"/>
-    <g fill="${MARCA.cian}">
-      <rect x="333" y="50" width="30" height="30" rx="4"/>
-      <rect x="279" y="90" width="34" height="34" rx="4"/>
-      <rect x="350" y="96" width="26" height="26" rx="4"/>
-      <rect x="309" y="138" width="20" height="20" rx="3"/>
-      <rect x="358" y="150" width="22" height="22" rx="3"/>
-      <rect x="324" y="184" width="15" height="15" rx="2"/>
-    </g>
-  </g>`;
+  return { data, W, H };
 }
 
 /**
- * El icono, en SVG.
+ * La versión para fondo oscuro: el azul tinta pasa a crema.
  *
- * @param zonaSegura proporción del lienzo que se deja de margen. 0.08 para el
- *   icono normal; 0.2 para el «maskable», que el sistema recorta.
+ * Se distingue por el canal azul, que es lo único que separa de verdad las dos
+ * familias de color del logotipo: el tinta del pórtico y de la palabra tiene el
+ * azul bajo (79 sobre 255) y los azules del libro lo tienen muy alto (196 y
+ * más). Por luminosidad no se podrían separar, porque el azul intenso del libro
+ * es casi tan oscuro como el tinta.
  */
-function svg(tamano: number, zonaSegura: number, conFondoCompleto: boolean): string {
-  const margen = tamano * zonaSegura;
-  const caja = tamano - margen * 2;
-  const radio = conFondoCompleto ? 0 : caja * 0.235;
-
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${tamano}" height="${tamano}" viewBox="0 0 ${tamano} ${tamano}">
-  <defs>
-    <linearGradient id="fondo" x1="0" y1="0" x2="0.35" y2="1">
-      <stop offset="0" stop-color="${MARCA.fondoA}"/>
-      <stop offset="1" stop-color="${MARCA.fondoB}"/>
-    </linearGradient>
-    <linearGradient id="filo" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#ffffff" stop-opacity="0.28"/>
-      <stop offset="0.5" stop-color="#ffffff" stop-opacity="0"/>
-    </linearGradient>
-  </defs>
-
-  ${
-    conFondoCompleto
-      ? `<rect width="${tamano}" height="${tamano}" fill="url(#fondo)"/>`
-      : `<rect x="${margen}" y="${margen}" width="${caja}" height="${caja}" rx="${radio}" fill="url(#fondo)"/>
-         <rect x="${margen}" y="${margen}" width="${caja}" height="${caja}" rx="${radio}" fill="url(#filo)"/>`
+function aClaro(px: Buffer) {
+  const salida = Buffer.from(px);
+  for (let i = 0; i < salida.length; i += 4) {
+    if (salida[i + 3] === 0) continue;
+    const b = salida[i + 2];
+    const alto = Math.max(salida[i], salida[i + 1], b);
+    if (b < 140 && alto < 150) {
+      salida[i] = CREMA.r;
+      salida[i + 1] = CREMA.g;
+      salida[i + 2] = CREMA.b;
+    }
   }
+  return salida;
+}
 
-  ${simbolo(tamano / 2, tamano / 2, caja * 0.94, true)}
-</svg>`;
+/** Guarda un recorte de los píxeles ya sin fondo. */
+async function recortar(
+  px: Buffer,
+  W: number,
+  H: number,
+  caja: { left: number; top: number; width: number; height: number },
+  archivo: string,
+) {
+  await sharp(px, { raw: { width: W, height: H, channels: 4 } })
+    .extract(caja)
+    .png({ compressionLevel: 9 })
+    .toFile(archivo);
+  console.log(`  ✓ ${archivo}  ${caja.width}×${caja.height}`);
 }
 
 /**
- * EL LOGOTIPO: el símbolo encima y el nombre debajo.
+ * Un icono: el símbolo claro centrado sobre la pastilla oscura.
  *
- * En vertical y no en fila, que es como está compuesto el original: el pórtico
- * sostiene el libro y el nombre va debajo, como el friso de un edificio. Puesto
- * en fila se pierde esa lectura.
- *
- * El nombre va en versales espaciadas. El original usa una tipografía con los
- * remates cortados en diagonal que no está aquí, así que se aproxima con una
- * sans geométrica: la proporción y el espaciado son lo que hace el parecido.
- *
- * @param colorTexto tinta del nombre.
- * @param sobreOscuro si el pórtico se dibuja en crema en vez de en tinta.
+ * @param zona Margen libre alrededor, en tanto por uno. Android recorta el
+ *   icono «maskable» con la forma que use el sistema y sin margen se comería
+ *   parte de la marca.
+ * @param redondeado Si la pastilla lleva esquinas redondeadas. En los iconos
+ *   que recorta el sistema, no: el sistema pone su propia forma.
  */
-function logotipo(colorTexto: string, sobreOscuro: boolean): string {
-  const ancho = 620;
-  const alto = 340;
-  const simboloAlto = 210;
+async function icono(
+  simboloClaro: Buffer,
+  archivo: string,
+  tamano: number,
+  zona: number,
+  redondeado: boolean,
+) {
+  const radio = Math.round(tamano * 0.22);
+  const fondo = Buffer.from(
+    `<svg xmlns="http://www.w3.org/2000/svg" width="${tamano}" height="${tamano}">
+      <defs><linearGradient id="f" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="${FONDO_A}"/>
+        <stop offset="1" stop-color="${FONDO_B}"/>
+      </linearGradient></defs>
+      <rect width="${tamano}" height="${tamano}"
+        ${redondeado ? `rx="${radio}" ry="${radio}"` : ""} fill="url(#f)"/>
+    </svg>`,
+  );
 
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${ancho}" height="${alto}" viewBox="0 0 ${ancho} ${alto}">
-  ${simbolo(ancho / 2, simboloAlto / 2 + 10, simboloAlto, sobreOscuro)}
+  // El símbolo es más alto que ancho: manda la altura para que no se salga.
+  const alto = Math.round(tamano * (1 - 2 * zona) * 0.78);
+  const marca = await sharp(simboloClaro)
+    .resize({ height: alto, fit: "inside" })
+    .toBuffer();
+  const meta = await sharp(marca).metadata();
 
-  <text
-    x="${ancho / 2 + 7}"
-    y="292"
-    text-anchor="middle"
-    font-family="Helvetica, Arial, sans-serif"
-    font-size="76"
-    font-weight="600"
-    letter-spacing="14"
-    fill="${colorTexto}"
-  >CATEDRIA</text>
-</svg>`;
+  await sharp(fondo)
+    .composite([
+      {
+        input: marca,
+        left: Math.round((tamano - (meta.width ?? 0)) / 2),
+        top: Math.round((tamano - (meta.height ?? 0)) / 2),
+      },
+    ])
+    .png({ compressionLevel: 9 })
+    .toFile(archivo);
+  console.log(`  ✓ ${archivo}  ${tamano}×${tamano}`);
 }
 
 async function main() {
-  const salidas: { archivo: string; tamano: number; zona: number; lleno: boolean }[] = [
-    { archivo: "public/icono-192.png", tamano: 192, zona: 0.06, lleno: false },
-    { archivo: "public/icono-512.png", tamano: 512, zona: 0.06, lleno: false },
-    { archivo: "public/icono-mascara.png", tamano: 512, zona: 0.2, lleno: true },
-    // iOS no usa el manifiesto para el icono de la pantalla de inicio: usa
-    // apple-touch-icon, y sin fondo opaco lo pinta negro.
-    { archivo: "public/apple-icon.png", tamano: 180, zona: 0, lleno: true },
-    { archivo: "public/favicon-32.png", tamano: 32, zona: 0, lleno: true },
-  ];
+  const { data, W, H } = await sinFondo();
+  const claro = aClaro(data);
 
-  for (const salida of salidas) {
-    const png = await sharp(
-      Buffer.from(svg(salida.tamano, salida.zona, salida.lleno)),
-    )
-      .png({ compressionLevel: 9 })
-      .toBuffer();
+  console.log("La marca, recortada del original:");
+  await recortar(data, W, H, SIMBOLO, "public/simbolo.png");
+  await recortar(claro, W, H, SIMBOLO, "public/simbolo-claro.png");
+  await recortar(data, W, H, LOGOTIPO, "public/logo.png");
+  await recortar(claro, W, H, LOGOTIPO, "public/logo-claro.png");
 
-    await writeFile(salida.archivo, png);
-    console.log(`  ✓ ${salida.archivo} (${salida.tamano}px)`);
-  }
+  // El símbolo claro suelto, que es el que va dentro de la pastilla.
+  const simboloClaro = await sharp(claro, { raw: { width: W, height: H, channels: 4 } })
+    .extract(SIMBOLO)
+    .png()
+    .toBuffer();
 
-  // El SVG suelto sirve para el favicon y para cualquier material comercial.
-  await writeFile("public/icono.svg", svg(512, 0.06, false));
-  console.log("  ✓ public/icono.svg");
+  console.log("\nLos iconos de la aplicación instalable:");
+  await icono(simboloClaro, "public/icono-192.png", 192, 0.06, true);
+  await icono(simboloClaro, "public/icono-512.png", 512, 0.06, true);
+  await icono(simboloClaro, "public/icono-mascara.png", 512, 0.2, false);
+  await icono(simboloClaro, "public/apple-icon.png", 180, 0.04, false);
+  await icono(simboloClaro, "public/favicon-32.png", 32, 0.04, true);
 
-  // Y el logotipo horizontal, que es lo que se pone en una portada, una firma
-  // de correo o una factura. En dos versiones porque un logotipo con el texto
-  // oscuro desaparece sobre fondo azul, y es justo lo que acaba pasando.
-  await writeFile("public/logo.svg", logotipo("#0b1c4f", false));
-  await writeFile("public/logo-claro.svg", logotipo("#f4f1e9", true));
-  console.log("  ✓ public/logo.svg y public/logo-claro.svg");
+  console.log("\nHecho.");
 }
 
-main().catch((error) => {
-  console.error("✗", error);
-  process.exit(1);
-});
+void main();

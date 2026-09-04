@@ -112,19 +112,12 @@ body {
   align-items: flex-start;
   gap: 2.5mm;
 }
+/* El logotipo entero, tal cual: el nombre va dentro de la imagen y no se
+   compone con una fuente del sistema, que no es la suya. */
 .marca-portada .simbolo {
-  width: 17mm;
-  height: 20mm;
+  width: 46mm;
+  height: auto;
   display: block;
-}
-.marca-portada .palabra {
-  font-size: 15pt;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.18em;
-  text-indent: 0.18em;
-  line-height: 1;
-  color: #fff;
 }
 .marca-portada .descriptor {
   font-size: 6.5pt;

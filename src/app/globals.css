@@ -668,3 +668,38 @@
     );
   }
 }
+
+/*
+ * LA MARCA EN LOS DOS TEMAS
+ *
+ * El logotipo es un archivo de imagen, no un SVG que se pueda teñir con
+ * `currentColor`: es el original del cliente y tiene tipografía propia y
+ * degradados. Así que hay dos versiones —tinta para fondo claro, crema para
+ * fondo oscuro— y se enseña la que toque.
+ *
+ * Los tres estados son los mismos que usa el resto del archivo: sin
+ * `data-theme` manda el sistema, y con él manda el usuario.
+ */
+.en-tema-oscuro {
+  display: none;
+}
+@media (prefers-color-scheme: dark) {
+  :where(:root:not([data-theme="light"])) .en-tema-claro {
+    display: none;
+  }
+  :where(:root:not([data-theme="light"])) .en-tema-oscuro {
+    display: block;
+  }
+}
+:where(:root[data-theme="dark"]) .en-tema-claro {
+  display: none;
+}
+:where(:root[data-theme="dark"]) .en-tema-oscuro {
+  display: block;
+}
+:where(:root[data-theme="light"]) .en-tema-claro {
+  display: block;
+}
+:where(:root[data-theme="light"]) .en-tema-oscuro {
+  display: none;
+}

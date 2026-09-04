@@ -141,33 +141,43 @@ croma** que tenían (0,105 frente a 0,155). Se probó bajarlos a 0,045 y era
 demasiado: la identidad de cada área se perdía y la barra entera se leía como
 una lista de texto gris. Lo que sobraba no era el color, era la caja.
 
-El icono de la aplicación se **genera** con `npm run iconos`
-([`scripts/iconos.ts`](../scripts/iconos.ts)): el sello —la inicial dentro de un
-filete doble de oro— sobre tinta. Se genera y no se dibuja a mano porque el
-color es un token: si una academia cambia su acento, los iconos se rehacen con
-un comando.
+Los archivos de la marca se **recortan** con `npm run iconos`
+([`scripts/iconos.ts`](../scripts/iconos.ts)) del original del cliente,
+`docs/marca/logo-original.png`. El guion no dibuja la marca: le quita el fondo
+blanco, saca la versión crema para fondo oscuro y la escala.
 
-El sello **se simplifica al encoger**: por debajo de 96 px se queda un solo
-filete y la letra crece. Con los dos anillos, a 32 px se funden en un churro y
-se comen la inicial.
+Hubo una versión que sí la dibujaba, con paths de SVG, para poder teñirla con
+`currentColor`. Escalaba mejor y no era el logotipo —el pórtico salía más ancho
+que el libro, con cuatro pilares en vez de tres, y el nombre en una tipografía
+del sistema en lugar de la suya, que lleva los acentos en cian—. Parecerse no
+sirve. Si algún día hace falta vectorial de verdad, se encarga una vectorización
+profesional del original.
 
-Salidas: `icono-192`, `icono-512`, `icono-mascara` (con el 20 % de zona segura
-que Android recorta), `apple-icon` (iOS no usa el manifiesto y sin fondo opaco
-lo pinta negro), `favicon-32`, `icono.svg` y el logotipo horizontal `logo.svg` /
-`logo-claro.svg`.
+Salidas: `simbolo` y `logo`, cada uno con su `-claro` para fondo oscuro;
+`icono-192`, `icono-512`, `icono-mascara` (con el 20 % de zona segura que
+Android recorta), `apple-icon` (iOS no usa el manifiesto y sin fondo opaco lo
+pinta negro) y `favicon-32`.
 
 ## La identidad
 
+El pórtico sostiene el libro, y el libro se deshace en píxeles: es lo que vende
+el producto, así que el dibujo no es decoración.
+
 Dos piezas, en [`src/components/marca.tsx`](../src/components/marca.tsx):
 
-- **El logotipo** es la palabra: versales muy espaciadas (0,4 em) de la serif
-  del producto entre dos filetes de oro. Manda donde hay sitio —la pantalla de
-  acceso, la portada de un manual, una factura—. El espaciado se aplica también
-  detrás de la última letra, así que lleva un `text-indent` que lo recentra; sin
-  él los filetes quedan medio carácter descuadrados.
-- **El sello** es la inicial en el filete doble. Existe porque una palabra no
-  cabe en un cuadrado de 32 px: resuelve la pestaña, el icono del móvil y la
-  esquina de la barra lateral.
+- **El logotipo** es el bloque entero: símbolo arriba y CATEDRIA debajo. Manda
+  donde hay sitio —la pantalla de acceso, la portada de un manual—. Va de una
+  pieza, como imagen, porque el nombre tiene tipografía propia y detalles en
+  cian que no se imitan escribiendo el texto con una fuente del sistema.
+- **El sello** es el símbolo solo dentro de su pastilla oscura. Existe porque el
+  bloque entero no cabe en un cuadrado de 32 px: resuelve la pestaña, el icono
+  del móvil y la esquina de la barra lateral.
+
+Al ser imágenes y no un vectorial que se pueda teñir, hay **dos versiones de
+cada una** —tinta para fondo claro, crema para fondo oscuro— y las clases
+`en-tema-claro` y `en-tema-oscuro` de `globals.css` enseñan la que toca. Dentro
+de la pastilla va siempre la crema, porque la pastilla es oscura en los dos
+temas.
 
 ---
 
