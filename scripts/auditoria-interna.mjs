@@ -476,10 +476,34 @@ async function main() {
   );
 
   const retrieval = await readFile("src/lib/ai/retrieval.ts", "utf8");
+
+  /*
+   * Que los permisos se resuelvan ANTES de buscar, y que la búsqueda los use.
+   *
+   * La comprobación anterior era `indexOf(permisos) < indexOf(consulta)`, y
+   * tenía un agujero: si un día desaparecía la llamada a los permisos, su
+   * indexOf valía -1, seguía siendo menor que el de la consulta y la
+   * comprobación pasaba. Daba por bueno justo el caso que tiene que cazar.
+   *
+   * Ahora se exige que las dos cosas existan, en ese orden, y que la consulta
+   * lleve dentro los dos filtros: la academia y la lista de nodos permitidos.
+   */
+  const dondeLosPermisos = retrieval.indexOf("loadStudentGrants");
+  const dondeLaConsulta = retrieval.indexOf("FROM document_chunks");
+
   comprobar(
     "la recuperación filtra por permisos ANTES de buscar",
-    retrieval.indexOf("loadStudentGrants") < retrieval.indexOf("documentChunk.findMany"),
+    dondeLosPermisos >= 0 &&
+      dondeLaConsulta >= 0 &&
+      dondeLosPermisos < dondeLaConsulta,
     "si se filtrara después, el sistema ya habría leído material ajeno",
+  );
+
+  comprobar(
+    "la consulta de búsqueda lleva dentro la academia y los nodos permitidos",
+    /c\."academyId" = \$\{/.test(retrieval) &&
+      /c\."nodeId" = ANY\(/.test(retrieval),
+    "sin esos dos filtros la búsqueda alcanzaría material de otra academia",
   );
 
   // ── 10. Documentación al día ──────────────────────────────────────────────

@@ -712,3 +712,45 @@ dibuja fuera, no ocupa sitio y se ve sobre cualquier fondo.
 misma tipografía que su etiqueta no destaca: parece un dato más de un
 formulario. Con la serif, cifras tabulares y ese tamaño se lee desde el otro
 lado de la mesa, que es para lo que existe un panel.
+
+### ADR-0061 · La búsqueda de la IA se hace en la base, en español, sin vectores
+**Decisión.** La recuperación de fragmentos se puntúa dentro de PostgreSQL con
+su buscador de texto, sobre una configuración propia (`catedria_es`) que es la
+de español con `unaccent` delante del lematizador. Si no hay ninguna
+coincidencia se reintenta por trigramas. **No hay búsqueda vectorial.**
+
+**Qué reemplaza.** ADR-0011 dejó la columna vectorial para «la fase de IA» y
+mientras tanto la búsqueda era léxica en JavaScript: se traían 400 fragmentos y
+se comparaban palabras sueltas.
+
+**Por qué se cambia ahora.** No por elegancia, por un fallo. El tope de 400 no
+tenía criterio de ordenación: con más de 400 fragmentos indexados se buscaba en
+un trozo arbitrario del material y la IA contestaba «no encuentro esa
+información» sobre cosas que sí estaban. Una academia con temario de verdad pasa
+de 400 enseguida, y el síntoma es indistinguible de que el material no lo cubra,
+así que nadie lo habría reportado como error.
+
+Además la comparación era por palabra exacta con un apaño de prefijo de cinco
+letras: «plazos» no encontraba «plazo» y «administracion» sin tilde no
+encontraba nada. Se escribe sin tildes constantemente.
+
+**Por qué no vectores.** Harían falta dos cosas que hoy no hay: la extensión
+`pgvector`, que no está en todos los entornos donde esto corre —el PostgreSQL
+embebido del entorno de desarrollo no la trae—, y un modelo de embeddings, que
+significa contratar una API. Lo segundo choca de frente con lo que el producto
+promete: que Catedria IA funciona sin contratar nada. Escribir código que solo
+se puede ejecutar en un entorno al que no llegamos y no se puede probar aquí es
+peor que no escribirlo.
+
+**Los términos se unen con O, no con Y.** `plainto_tsquery` los une con Y, y así
+una pregunta escrita como habla una persona no casa entera y no devuelve nada.
+Con O, cuantos más términos aparezcan mejor puntúa el fragmento, que es lo que
+hace falta: se busca lo más parecido, no lo idéntico.
+
+**Cuándo revisarlo.** Cuando el despliegue garantice `pgvector` y haya un modelo
+de embeddings que se pueda ejecutar sin salir de la máquina. Se sustituye solo
+`recuperarFragmentos`: el filtro de permisos, las citas y el resto del flujo no
+dependen de cómo se busque.
+
+**Probado.** `tests/recuperacion-busqueda.test.ts` cubre los tres fallos, y las
+cuatro pruebas correspondientes fallan contra el código anterior.

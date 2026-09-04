@@ -17,11 +17,28 @@ import {
  * significa que el sistema ya ha leído material que esa persona no puede ver, y
  * basta un descuido para que acabe en la respuesta.
  *
- * ADR-0011: todavía sin vectores. La búsqueda es léxica sobre los fragmentos
- * indexados, con puntuación por coincidencia de términos. Cuando el entorno
- * tenga pgvector se sustituye SOLO esta función: el filtro de permisos, las
- * citas y el resto del flujo no cambian. Es deliberado que lo que condiciona el
- * diseño esté hecho y lo que es sustituible se pueda sustituir.
+ * CÓMO SE BUSCA (ADR-0011, revisado)
+ *
+ * Dentro de la base, con el buscador de texto de PostgreSQL sobre una
+ * configuración de español a la que se le ha puesto `unaccent` delante del
+ * lematizador. Así «plazos» encuentra «plazo», «recurrir» encuentra «recurso» y
+ * «administracion» sin tilde encuentra «administración», que es como escribe
+ * quien tiene prisa.
+ *
+ * Antes se traían 400 fragmentos a la aplicación y se puntuaban comparando
+ * palabras sueltas en JavaScript. Eso tenía un fallo que no daba la cara: con
+ * más de 400 fragmentos indexados se buscaba en un trozo arbitrario del
+ * material. Una academia con temario de verdad pasa de 400 enseguida, y la IA
+ * habría dicho «no encuentro esa información» sobre cosas que sí estaban.
+ *
+ * Si el lematizador no encuentra nada se reintenta por trigramas, que es lo que
+ * salva las erratas y los números de artículo («art. 103» / «articulo 103»).
+ *
+ * Lo que NO se hace es búsqueda vectorial. Haría falta `pgvector` —que no está
+ * en todos los entornos donde esto corre— y un modelo de embeddings, que
+ * significa contratar una API: justo lo que el producto promete que no hace
+ * falta. Cuando ambas cosas estén disponibles se sustituye SOLO esta función:
+ * el filtro de permisos, las citas y el resto del flujo no cambian.
  */
 
 export type Fragmento = {
@@ -146,54 +163,107 @@ export async function recuperarFragmentos(params: {
   // clave, que es lo que causó el fallo.
   const nodosFinales = rama ?? nodosPermitidos;
 
-  // 2. Fragmentos de fuentes indexadas y activas, dentro de esos nodos.
-  const fragmentos = await prismaBase.documentChunk.findMany({
-    where: {
-      academyId: params.academyId,
-      source: { status: "INDEXED" },
-      ...(nodosFinales ? { nodeId: { in: nodosFinales } } : {}),
-      // Solo material que la academia ha autorizado para la IA.
-      OR: [
-        { node: { aiEnabled: true } },
-        { node: { aiEnabled: null } },
-        { nodeId: null },
-      ],
-    },
-    select: {
-      id: true,
-      content: true,
-      locator: true,
-      sourceId: true,
-      source: { select: { title: true } },
-      node: { select: { label: true } },
-    },
-    take: 400,
-  });
+  // 2. La búsqueda, dentro de la base.
+  //
+  //    Los términos se unen con O, no con Y. `plainto_tsquery` los une con Y, y
+  //    con eso una pregunta escrita como habla una persona —«¿qué plazos tiene
+  //    la administración para resolver?»— casi nunca casa entera y no devuelve
+  //    nada. Con O, cuantos más términos aparezcan mejor puntúa el fragmento,
+  //    que es justo lo que hace falta aquí: se busca lo más parecido, no lo
+  //    idéntico.
+  //
+  //    Los términos salen de `terminos()`, que solo deja letras y dígitos, así
+  //    que no hay forma de colar sintaxis de `to_tsquery` desde la pregunta.
+  //
+  //    `aiEnabled IS NOT FALSE` cubre de una vez los tres casos de antes: el
+  //    nodo lo permite, el nodo no dice nada, o el fragmento no cuelga de
+  //    ningún nodo. Con un `LEFT JOIN`, cuando no hay nodo la columna es nula y
+  //    `IS NOT FALSE` da verdadero.
+  //
+  //    El filtro de nodos permitidos va como una sola condición sobre una sola
+  //    lista, igual que antes: es lo que evita repetir el fallo H-07.
+  const todoElMaterial = nodosFinales === null;
+  const nodos = nodosFinales ?? [];
 
-  // 3. Puntuación léxica. Simple y explicable; se sustituirá por vectores.
-  const puntuados = fragmentos
-    .map((fragmento) => {
-      const texto = terminos(fragmento.content);
-      const conjunto = new Set(texto);
-      let score = 0;
-      for (const clave of claves) {
-        if (conjunto.has(clave)) score += 2;
-        else if (texto.some((t) => t.startsWith(clave.slice(0, 5)))) score += 1;
-      }
-      return {
-        chunkId: fragmento.id,
-        sourceId: fragmento.sourceId,
-        sourceTitle: fragmento.source.title,
-        nodeLabel: fragmento.node?.label ?? null,
-        locator: fragmento.locator,
-        content: fragmento.content,
-        score,
-      };
-    })
-    .filter((f) => f.score > 0)
-    .sort((a, b) => b.score - a.score);
+  const filas = await prismaBase.$queryRaw<FilaDeBusqueda[]>`
+    WITH consulta AS (
+      SELECT to_tsquery('catedria_es', ${claves.join(" | ")}) AS q
+    )
+    SELECT
+      c.id,
+      c.content,
+      c.locator,
+      c."sourceId",
+      s.title AS "sourceTitle",
+      n.label AS "nodeLabel",
+      ts_rank_cd(to_tsvector('catedria_es', c.content), consulta.q) AS puntos
+    FROM document_chunks c
+    JOIN knowledge_sources s ON s.id = c."sourceId"
+    LEFT JOIN content_nodes n ON n.id = c."nodeId"
+    CROSS JOIN consulta
+    WHERE c."academyId" = ${params.academyId}
+      AND s.status = 'INDEXED'::"KnowledgeSourceStatus"
+      AND n."aiEnabled" IS NOT FALSE
+      AND (${todoElMaterial} OR c."nodeId" = ANY(${nodos}))
+      AND to_tsvector('catedria_es', c.content) @@ consulta.q
+    ORDER BY puntos DESC, c.position ASC
+    LIMIT ${limite}
+  `;
 
-  return puntuados.slice(0, limite);
+  if (filas.length > 0) return filas.map(aFragmento);
+
+  // 3. Nada por lematización. Se reintenta por parecido de trigramas, que es lo
+  //    que salva una errata o una forma que el diccionario no relaciona. El
+  //    umbral es bajo a propósito: aquí ya sabemos que la alternativa es no
+  //    devolver nada.
+  const aproximadas = await prismaBase.$queryRaw<FilaDeBusqueda[]>`
+    SELECT
+      c.id,
+      c.content,
+      c.locator,
+      c."sourceId",
+      s.title AS "sourceTitle",
+      n.label AS "nodeLabel",
+      word_similarity(${params.pregunta}, c.content) AS puntos
+    FROM document_chunks c
+    JOIN knowledge_sources s ON s.id = c."sourceId"
+    LEFT JOIN content_nodes n ON n.id = c."nodeId"
+    WHERE c."academyId" = ${params.academyId}
+      AND s.status = 'INDEXED'::"KnowledgeSourceStatus"
+      AND n."aiEnabled" IS NOT FALSE
+      AND (${todoElMaterial} OR c."nodeId" = ANY(${nodos}))
+      AND word_similarity(${params.pregunta}, c.content) > 0.35
+    ORDER BY puntos DESC, c.position ASC
+    LIMIT ${limite}
+  `;
+
+  return aproximadas.map(aFragmento);
+}
+
+/** Una fila tal como la devuelve la consulta de búsqueda. */
+type FilaDeBusqueda = {
+  id: string;
+  content: string;
+  locator: string | null;
+  sourceId: string;
+  sourceTitle: string;
+  nodeLabel: string | null;
+  puntos: number;
+};
+
+function aFragmento(f: FilaDeBusqueda): Fragmento {
+  return {
+    chunkId: f.id,
+    sourceId: f.sourceId,
+    sourceTitle: f.sourceTitle,
+    nodeLabel: f.nodeLabel,
+    locator: f.locator,
+    content: f.content,
+    // `ts_rank_cd` devuelve números pequeños y `word_similarity` va de 0 a 1.
+    // Quien lo consume solo los usa para ordenar, así que se deja el valor tal
+    // cual en lugar de inventar una escala común que no significaría nada.
+    score: Number(f.puntos),
+  };
 }
 
 /**

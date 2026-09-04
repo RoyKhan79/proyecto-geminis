@@ -92,7 +92,10 @@ Modelo ya listo: `ImportJob`, `ImportRow`.
 - **Motor propio: funciona sin contratar ninguna API** ✅ (ADR-0028)
 - Explicación de por qué has fallado cada pregunta ✅
 - Propuestas diarias con su motivo, sin que nadie pregunte ✅ (ADR-0030)
-- Búsqueda vectorial con `pgvector` — pendiente (ADR-0011); hoy es léxica
+- Búsqueda en la base con lematizador de español y tolerancia a tildes y
+  erratas (ADR-0061). Sin vectores: `pgvector` no está en todos los entornos
+  y los embeddings exigirían contratar una API, que es justo lo que el
+  producto promete que no hace falta
 - Detección de duplicados y ambigüedades — pendiente
 - Asistente guiado de importación de temario ✅ (ADR-0054)
 
